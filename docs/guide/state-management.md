@@ -57,7 +57,7 @@ const dispatch = useAppDispatch()
 dispatch(damagePlayer(30))
 ```
 
-`RootState` is `{ app, game, health, player, streaming }` — the union of every
+`RootState` is `{ app, faction, game, health, injury, inventory, player, streaming }` — the union of every
 slice's state. Adding a slice to `configureStore` automatically widens
 `RootState`, so selectors and the typed hooks stay correct with no extra
 plumbing.
@@ -97,6 +97,23 @@ Score and other per-run counters.
 - **State:** `{ score: number }` (`GameState`).
 - **Actions:** `addScore(n: number)`, `resetScore()`.
 - **Read via:** `useAppSelector((s) => s.game.score)`.
+
+### `factionSlice` — player faction and reputation
+
+The Redux bridge for the pure faction model in `src/game/faction/`. It is
+self-contained in E4.1: no live scene, AI targeting, or save-schema wiring reads
+it yet.
+
+- **State:** `{ playerFactionId: FactionId; reputation: ReputationMap }`
+  (`FactionState`), defaulting the player to `neutral`.
+- **Actions:** `setPlayerFaction(id)`, `setFactionReputation({ factionId, value })`,
+  `adjustFactionReputation({ factionId, amount })`, `resetFaction()`,
+  `restoreFaction(state)`.
+- **Selectors:** `selectPlayerFactionId(state)`, `selectPlayerFaction(state)`,
+  `selectFactionReputation(state, factionId)`, `selectFactionReputationMap(state)`.
+- **Domain rules:** faction ids, definitions, reputation clamping, and
+  `resolveStance(a, b)` live in [Faction system](./faction-system), not in the
+  slice.
 
 ### `healthSlice` — player health
 

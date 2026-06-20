@@ -36,6 +36,7 @@ korovany/
 | Reusable UI (buttons, HUD)     | `src/components/`                    |
 | Game logic (no React/Babylon)  | `src/game/`                         |
 | Seeded RNG (reproducible rolls)| `src/game/util/rng.ts` — see [Seeded RNG](./seeded-rng) |
+| Faction definitions/reputation | `src/game/faction/` + `src/store/factionSlice.ts` — see [Faction system](./faction-system) |
 | Asset streaming (GLB on demand)| `src/game/streaming/`               |
 | Persistent enemy corpses       | `src/game/corpses/` + `src/scenes/corpseManager.ts` — see [Corpses](./corpses) |
 | Save/load (IndexedDB)          | `src/game/save/`                    |

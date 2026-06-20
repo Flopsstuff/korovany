@@ -45,6 +45,7 @@ export default defineConfig({
           { text: 'Enemy AI', link: '/guide/enemy-ai' },
           { text: 'Caravans', link: '/guide/caravans' },
           { text: 'Seeded RNG', link: '/guide/seeded-rng' },
+          { text: 'Faction system', link: '/guide/faction-system' },
           { text: 'Testing', link: '/guide/testing' },
         ],
       },

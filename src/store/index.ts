@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
 import { appReducer } from './appSlice'
+import { factionReducer } from './factionSlice'
 import { gameReducer } from './gameSlice'
 import { healthReducer } from './healthSlice'
 import { injuryReducer } from './injurySlice'
@@ -11,6 +12,7 @@ import { streamingReducer } from './streamingSlice'
 export const store = configureStore({
   reducer: {
     app: appReducer,
+    faction: factionReducer,
     game: gameReducer,
     health: healthReducer,
     injury: injuryReducer,
@@ -28,6 +30,18 @@ export const useAppSelector = useSelector.withTypes<RootState>()
 
 export { continueGame, returnToMenu, startNewGame, togglePause } from './appSlice'
 export type { AppPhase, AppState } from './appSlice'
+export {
+  adjustFactionReputation,
+  resetFaction,
+  restoreFaction,
+  selectFactionReputation,
+  selectFactionReputationMap,
+  selectPlayerFaction,
+  selectPlayerFactionId,
+  setFactionReputation,
+  setPlayerFaction,
+} from './factionSlice'
+export type { FactionReputationChange, FactionReputationSet, FactionState } from './factionSlice'
 export { addScore, resetScore } from './gameSlice'
 export type { GameState } from './gameSlice'
 export {

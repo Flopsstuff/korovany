@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { describe, expect, it } from 'vitest'
 import { appReducer } from './appSlice'
+import { factionReducer } from './factionSlice'
 import { gameReducer } from './gameSlice'
 import { streamingReducer } from './streamingSlice'
 import { playerReducer } from './playerSlice'
@@ -26,6 +27,7 @@ function makeStore() {
   return configureStore({
     reducer: {
       app: appReducer,
+      faction: factionReducer,
       game: gameReducer,
       streaming: streamingReducer,
       player: playerReducer,
