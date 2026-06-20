@@ -4,16 +4,16 @@ import {
   Engine,
   HemisphericLight,
   MeshBuilder,
-  Scene as BabylonScene,
+  Scene,
   Vector3,
 } from '@babylonjs/core'
 
 /**
  * Minimal Babylon.js canvas — a single rotating cube on a lit scene.
  * Exists to prove the Babylon + React + Vite build path works end-to-end.
- * The real game scene replaces this later.
+ * The real game scenes live alongside this under `src/scenes/`.
  */
-export function Scene() {
+export function MainScene() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export function Scene() {
     if (!canvas) return
 
     const engine = new Engine(canvas, true)
-    const scene = new BabylonScene(engine)
+    const scene = new Scene(engine)
 
     const camera = new ArcRotateCamera('camera', Math.PI / 4, Math.PI / 3, 6, Vector3.Zero(), scene)
     camera.attachControl(canvas, true)

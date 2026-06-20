@@ -1,53 +1,74 @@
 # Korovany
 
+🎮 **Live app: <https://korovany.aimost.pl/>** · 📚 **Docs: <https://fl0p.github.io/korovany/>**
+
 3D action game / browser SPA.
 
-**Stack:** TypeScript · React 19 · Babylon.js · Redux Toolkit · Vite. Deployed to
-**Cloudflare Pages** via **GitHub Actions**.
+**Stack:** TypeScript · React 19 · Babylon.js · Redux Toolkit · Vite 6.
+App deploys to **Cloudflare Pages**; docs deploy to **GitHub Pages** — both via **GitHub Actions**.
 
 ## Local development
 
 ```bash
+git lfs install   # one time per machine (binary assets use Git LFS)
 npm install
-npm run dev      # start the dev server (http://localhost:5173)
-npm run build    # type-check + production build into ./dist
-npm run preview  # serve the production build locally
+npm run dev       # dev server (http://localhost:5173)
+npm test          # run the test suite (Vitest)
+npm run build     # type-check + production build into ./dist
+npm run preview   # serve the production build locally
+npm run docs:dev  # preview the documentation site
 ```
+
+## Project rules
+
+These apply to every contributor — human or agent. Full version:
+[`docs/guide/project-rules.md`](docs/guide/project-rules.md). For automated
+contributors see [`AGENTS.md`](AGENTS.md) and [`CLAUDE.md`](CLAUDE.md).
+
+1. **TypeScript `strict`, no `any`.** React function components only; 3D via
+   Babylon.js; shared state via Redux Toolkit slices in `src/store/`.
+2. **House style:** 2-space indent, single quotes, no semicolons; named exports.
+3. **Branch per issue** (`flo-<issue>-<slug>`); keep `main` green and deployable;
+   reference the issue in commits.
+4. **Tests are mandatory** — every change ships with Vitest tests; `npm test`
+   runs in CI and must pass.
+5. **Docs are mandatory and never deferred** — update `docs/` in the same change;
+   it auto-publishes to GitHub Pages.
+6. **Binary assets via Git LFS** (`.gitattributes`): source binaries in
+   `/assets`, bundled assets in `src/assets/`.
+7. **Never commit secrets** — deploy creds live in GitHub Actions secrets.
+
+## Project structure
+
+```
+src/app/        app shell & composition        src/store/    Redux Toolkit store + slices
+src/scenes/     Babylon.js scenes              src/components/ reusable React UI
+src/game/       engine-agnostic game logic     src/hooks/    shared React hooks
+src/assets/     bundled assets                 src/types/    shared types
+assets/         source binaries (Git LFS)      docs/         VitePress docs → GitHub Pages
+public/         static files served as-is      .github/workflows/  CI/CD
+```
+
+See [`docs/guide/architecture.md`](docs/guide/architecture.md) for where new code belongs.
 
 ## Deployment
 
-Every push to `main` runs `.github/workflows/deploy.yml`, which builds the SPA and
-deploys `./dist` to Cloudflare Pages (project `korovany`) using
-[`cloudflare/wrangler-action`](https://github.com/cloudflare/wrangler-action).
-Pull requests run the build as a CI signal but do **not** deploy.
+Two independent targets, both on push to `main` (details:
+[`docs/operations/deployment.md`](docs/operations/deployment.md)):
 
-Until the Cloudflare secrets below are set, the deploy step **skips gracefully**
-(the build still runs, so `main` stays green) and prints a notice. Once the
-secrets are added, deploy activates automatically on the next push to `main` — or
-trigger it manually from the **Actions** tab (the workflow has `workflow_dispatch`).
+- **App → Cloudflare Pages** via `.github/workflows/deploy.yml`
+  (`cloudflare/wrangler-action`). PRs build + test but don't deploy. The deploy
+  step skips gracefully until the Cloudflare secrets exist, then activates
+  automatically; `workflow_dispatch` allows manual runs.
+- **Docs → GitHub Pages** via `.github/workflows/docs.yml` (VitePress).
 
-### Required GitHub Actions secrets
+### Required GitHub Actions secrets (app deploy)
 
-The deploy step needs two repository secrets
-(**Settings → Secrets and variables → Actions**):
+| Secret                  | What it is                                                            |
+| ----------------------- | -------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | Cloudflare API token with the **Cloudflare Pages: Edit** permission  |
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID                                           |
 
-| Secret                  | What it is                                                        |
-| ----------------------- | ---------------------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`  | Cloudflare API token with the **Cloudflare Pages: Edit** permission |
-| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID                                        |
-
-These are stored as **GitHub Actions secrets**, not Paperclip project env vars,
-because the deploy runs inside GitHub's runners and only GitHub secrets are
-exposed there.
-
-### One-time Cloudflare Pages project setup
-
-The Pages project must exist before the first deploy. Create it once with Wrangler
-(or in the Cloudflare dashboard → Workers & Pages → Create → Pages):
-
-```bash
-npx wrangler pages project create korovany --production-branch=main
-```
-
-See `docs/operations/cloudflare-deploy.md` for the full credential-provisioning
-playbook.
+Stored as **GitHub Actions secrets** (not project env vars) because the deploy
+runs on GitHub's runners. Full credential playbook:
+[`docs/operations/cloudflare-deploy.md`](docs/operations/cloudflare-deploy.md).

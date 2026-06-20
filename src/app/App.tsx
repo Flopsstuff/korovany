@@ -1,5 +1,5 @@
-import { Scene } from './Scene'
-import { addScore, useAppDispatch, useAppSelector } from './store'
+import { MainScene } from '../scenes/MainScene'
+import { addScore, useAppDispatch, useAppSelector } from '../store'
 
 export function App() {
   const score = useAppSelector((state) => state.game.score)
@@ -21,7 +21,7 @@ export function App() {
         GitHub Actions.
       </p>
 
-      <Scene />
+      <MainScene />
 
       <p style={{ marginTop: '1rem' }}>
         Score (Redux): <strong>{score}</strong>{' '}
