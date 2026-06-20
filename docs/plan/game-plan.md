@@ -126,9 +126,9 @@ E1.2→E1.3, E1.1→E1.4, and {E1.0,E1.1,E1.3,E1.4}→E1.5.
   - [ ] Capsule controller: WASD move, sprint, gravity, ground collision.
   - [ ] Jump with coyote-time; cannot double-jump.
   - [ ] Third-person follow camera with collision-aware boom.
-- **E1.2 Asset streaming manager** `[ ]` — FLO-294 (Soren)
-  - [ ] Asset registry (id → URL + metadata); `streaming/` loads GLB on demand, caches, disposes.
-  - [ ] Loading state surfaced to HUD; graceful fallback placeholder while loading.
+- **E1.2 Asset streaming manager** `[x]` — FLO-294 (Soren) ✅ merged 5ace1aa
+  - [x] Asset registry (id → URL + metadata); `streaming/` loads GLB on demand, caches, disposes.
+  - [x] Loading state surfaced to HUD; graceful fallback placeholder while loading.
 - **E1.3 First zone (forest stub)** `[ ]` — FLO-295 (Lyra, blocked by FLO-294; **needs assets FLO-299**)
   - [ ] Ground/terrain mesh for a small forest clearing with collision.
   - [ ] Scatter a handful of streamed tree + hut GLBs (static, no LOD yet).
