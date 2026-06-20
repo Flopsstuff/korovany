@@ -108,7 +108,7 @@ Epic: **[FLO-277](/FLO/issues/FLO-277)** — board plan approved 2026-06-20.
 - **E0.3 Input system** `[x]` — FLO-279 (PR #3)
   - [x] Keyboard/mouse intent mapping; pointer-lock for mouselook; rebindable map (data-driven).
 
-### Phase 1 — Vertical slice: "An elf in the forest" `[~]`
+### Phase 1 — Vertical slice: "An elf in the forest" `[x]`
 
 Goal: a deployed build where you start a new game, spawn as an elf in a small
 forest, walk/run/jump with a third-person camera over solid ground, and your
@@ -136,16 +136,20 @@ E1.2→E1.3, E1.1→E1.4, and {E1.0,E1.1,E1.3,E1.4}→E1.5.
   - [x] 12 trees + 3 huts scattered via streaming system (placeholder → GLB swap).
   - [x] Full gameplay spine: CharacterController + ThirdPersonCamera over solid ground.
   - [x] `?dev=forest` browser-QA flag; 6 new tests → 120 total.
-- **E1.4 Save/load (IndexedDB)** `[ ]` — FLO-296 (Wayland, unblocked ✅ — FLO-293 done)
-  - [ ] Serialize player transform + health + zone id to IndexedDB; restore on Continue.
-  - [ ] Save-slot UI (≥1 slot); autosave on pause.
-- **E1.5 Deploy the slice** `[ ]` — FLO-297 (Wayland, blocked by FLO-292/293/295/296)
-  - [ ] Wire GameScene into the app; ship to korovany.aimost.pl; smoke in a real browser.
+- **E1.4 Save/load (IndexedDB)** `[x]` — FLO-296 ✅ merged c2b761c (PR #20)
+  - [x] writeSave/readSave/deleteSave/hasSave over IndexedDB (no backend, AUTOSAVE_SLOT).
+  - [x] Autosave triggered on every pause transition; Continue button shown when slot exists.
+  - [x] continueGame dispatches setSaveLoaded → phase → playing; 12 new tests → 132 total.
+- **E1.5 Deploy the slice** `[x]` — FLO-297 ✅ merged e8ccf9a (PR #21)
+  - [x] GameCanvas routes to ForestScene when `phase !== 'menu'`; pause survives ESC.
+  - [x] Phase 1 vertical slice live on korovany.aimost.pl.
 
-### Phase 2 — Combat, health & injuries `[ ]`
+### Phase 2 — Combat, health & injuries `[~]`
 
-- **E2.1 Health & damage model** `[ ]` — HP, damage events, death state, respawn/load.
-- **E2.2 Melee combat** `[ ]` — attack animation window, hitbox sweep, damage to targets.
+Epic: **[FLO-307](/FLO/issues/FLO-307)** — opened 2026-06-20, delegated to Daedalus (CTO) to decompose into oneshot tickets. Sequence: E2.1 must land before E2.2/2.5 can start.
+
+- **E2.1 Health & damage model** `[ ]` — FLO-308 (Wayland, todo) — HP, applyDamage, death state.
+- **E2.2 Melee combat** `[ ]` — FLO-309 (Wayland, blocked by FLO-308) — attack window, hitbox sweep, damage.
 - **E2.3 Enemy NPC (first archetype)** `[ ]` — patrol → detect → chase → attack → die; one soldier model.
 - **E2.4 3D corpses** `[ ]` — on death, leave a ragdoll/static corpse mesh that persists & can be looted.
 - **E2.5 Injury & dismemberment model** `[ ]` — data model for limb/eye/leg states.
@@ -239,6 +243,12 @@ speculative batches (FLO-270).
   carried forward into new prelude epic **E1.0**. Phase 1 opened as the active
   epic and delegated to the CTO to decompose into oneshot tickets — closes the
   post-Phase-0 coordination gap that stalled the tree (Prospero).
+- **r10** (2026-06-20) — Phase 2 epic **FLO-307** opened (combat/health/injuries), delegated to Daedalus (CTO). Phase 2 marked `[~]` in plan tree. (Prospero)
+- **r9** (2026-06-20) — **Phase 1 DONE** 🎉 E1.5 merged e8ccf9a (PR #21): ForestScene wired
+  into playing state, pause survives ESC, slice live at korovany.aimost.pl. All E1.x done.
+- **r8** (2026-06-20) — E1.4 save/load merged c2b761c (PR #20): IndexedDB writeSave/readSave/
+  hasSave, AUTOSAVE_SLOT on pause, Continue button, continueGame→playing, 132 tests.
+  FLO-296 done; FLO-297 all blockers clear → ready to implement.
 - **r7** (2026-06-20) — E1.3 forest stub merged 054fc43 (PR #18): 60×60 ground,
   12 trees + 3 huts via streaming, full controller spine, `?dev=forest` QA flag, 120 tests.
   FLO-295 done; FLO-297 now blocked only by FLO-296 (save/load).
