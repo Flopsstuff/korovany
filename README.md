@@ -51,6 +51,23 @@ public/         static files served as-is      .github/workflows/  CI/CD
 
 See [`docs/guide/architecture.md`](docs/guide/architecture.md) for where new code belongs.
 
+## 3D assets
+
+Binary game assets (GLB models, textures, audio) are stored in **Git LFS** — run
+`git lfs install` once before cloning or committing.
+
+- **Generate** models with the `meshy-3d` skill: `python tools/meshy-3d/meshy.py …`
+  (text/image → GLB via the Meshy API; needs `MESHY_API_KEY`). See
+  [`tools/meshy-3d/SKILL.md`](tools/meshy-3d/SKILL.md).
+- **Host** approved, web-ready GLBs in [`public/models/`](public/models/); Cloudflare
+  Pages serves them from its CDN at `/models/<name>.glb`.
+- **Load** them at runtime with `loadModel(scene, '/models/x.glb')`
+  ([`src/scenes/modelLoader.ts`](src/scenes/modelLoader.ts)), which normalizes
+  scale (longest side ≈ 2 units) and grounds the model on import.
+
+Rationale and the import contract: [`docs/decisions/0001-asset-hosting.md`](docs/decisions/0001-asset-hosting.md)
+and [`0002-glb-import-contract.md`](docs/decisions/0002-glb-import-contract.md).
+
 ## Deployment
 
 Two independent targets, both on push to `main` (details:

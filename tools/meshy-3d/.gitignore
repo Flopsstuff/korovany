@@ -1,0 +1,8 @@
+# Generated 3D assets — do not commit binaries; host per CTO guidance
+out/
+*.glb
+*.fbx
+*.obj
+*.usdz
+*.stl
+*.thumb.png

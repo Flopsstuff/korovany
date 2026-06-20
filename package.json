@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@babylonjs/core": "^7.54.0",
+    "@babylonjs/loaders": "^7.54.3",
     "@reduxjs/toolkit": "^2.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

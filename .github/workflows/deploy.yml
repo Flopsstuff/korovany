@@ -24,6 +24,10 @@ jobs:
       HAS_CF_CREDS: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Binary 3D assets live in Git LFS (see docs/decisions/0001-asset-hosting.md).
+          # Without this the build ships LFS pointer files instead of real models.
+          lfs: true
 
       - uses: actions/setup-node@v4
         with:
