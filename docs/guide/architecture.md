@@ -14,7 +14,7 @@ korovany/
 ├── src/
 │   ├── app/               # app shell & top-level composition (App.tsx, full-page stage)
 │   ├── components/        # reusable React UI components
-│   ├── engine/            # Babylon Engine/Scene lifecycle (createGameEngine, resize, dispose)
+│   ├── engine/            # Babylon lifecycle plus DOM input (createGameEngine, InputSystem)
 │   ├── scenes/            # Babylon.js scenes + GameCanvas.tsx (thin React wrapper)
 │   ├── game/              # engine-agnostic game logic (systems, entities, rules)
 │   ├── store/             # Redux Toolkit store + slices, typed hooks
@@ -32,7 +32,7 @@ korovany/
 | You are adding…                | Put it in…                          |
 | ------------------------------ | ----------------------------------- |
 | A Babylon scene/world          | `src/scenes/`                       |
-| Engine/render-loop lifecycle   | `src/engine/`                       |
+| Engine/render-loop/input       | `src/engine/`                       |
 | Reusable UI (buttons, HUD)     | `src/components/`                    |
 | Game logic (no React/Babylon)  | `src/game/`                         |
 | Shared state                   | `src/store/` (a new slice)          |
@@ -46,9 +46,11 @@ app shell (`src/app/App.tsx`): a `100vw × 100vh` stage holding the 3D canvas
 with a HUD overlay. UI reads state via the typed `useAppSelector` hook and
 dispatches via `useAppDispatch` (both from `src/store`).
 
-The Babylon lifecycle lives in `src/engine/`: `createGameEngine(canvas)` owns
-the `Engine`/`Scene`, the render loop, the high-DPI resize handler, and
-`dispose()`. The React side stays thin — `src/scenes/GameCanvas.tsx` only mounts
-the engine against a ref'd canvas and disposes it on unmount. Engine code can
-read/dispatch to the same store, so game systems and UI stay in sync through
-Redux.
+The engine layer lives in `src/engine/`: `createGameEngine(canvas)` owns the
+Babylon `Engine`/`Scene`, the render loop, the high-DPI resize handler, and
+`dispose()`. `InputSystem` owns DOM keyboard/mouse state and pointer lock for
+that same canvas, exposing frame-queryable held state, key edges, mouse buttons,
+and mouse-look delta. The React side stays thin — `src/scenes/GameCanvas.tsx`
+only mounts the engine against a ref'd canvas and disposes it on unmount. Engine
+code can read/dispatch to the same store, so game systems and UI stay in sync
+through Redux.

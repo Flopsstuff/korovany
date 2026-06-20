@@ -7,6 +7,7 @@ import {
   Vector3,
 } from '@babylonjs/core'
 import { loadModel } from '../scenes/modelLoader'
+export { InputSystem, type InputSystemOptions, type MouseDelta } from './input'
 
 /**
  * Korovany rendering engine — the single owner of the Babylon `Engine`/`Scene`
