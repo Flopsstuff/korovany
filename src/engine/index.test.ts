@@ -37,7 +37,7 @@ describe('createGameEngine', () => {
   // Scene and that dispose() tears everything down cleanly.
   function boot() {
     const canvas = document.createElement('canvas')
-    return createGameEngine(canvas, { modelUrl: null, createEngine: () => new NullEngine() })
+    return createGameEngine(canvas, { streamAssetId: null, createEngine: () => new NullEngine() })
   }
 
   it('creates a live Scene on the injected engine', () => {

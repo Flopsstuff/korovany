@@ -5,24 +5,28 @@ import { Provider } from 'react-redux'
 import { describe, expect, it, vi } from 'vitest'
 import { appReducer, type AppPhase } from '../store/appSlice'
 import { gameReducer } from '../store/gameSlice'
+import { streamingReducer } from '../store/streamingSlice'
+import type { AssetLoadPhase } from '../game/streaming/types'
 import { App } from './App'
 
-// Babylon.js needs a real WebGL context, which jsdom does not provide.
-// Stub the canvas so the App can render in tests without a GPU. The engine
-// bootstrap itself is covered by src/engine/index.test.ts.
 vi.mock('../scenes/GameCanvas', () => ({
   GameCanvas: () => <div data-testid="game-canvas" />,
 }))
 
-function renderApp(initialPhase: AppPhase = 'menu') {
+function renderApp(
+  initialPhase: AppPhase = 'menu',
+  streamingPhases: Record<string, AssetLoadPhase> = {},
+) {
   const store = configureStore({
     reducer: {
       app: appReducer,
       game: gameReducer,
+      streaming: streamingReducer,
     },
     preloadedState: {
       app: { phase: initialPhase },
       game: { score: 0 },
+      streaming: { phases: streamingPhases },
     },
   })
 
@@ -79,5 +83,10 @@ describe('<App />', () => {
 
     expect(screen.queryByRole('heading', { name: 'Paused' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument()
+  })
+
+  it('shows a loading hint while assets are streaming', () => {
+    renderApp('menu', { 'hero.player-default': 'loading' })
+    expect(screen.getByText('Loading…')).toBeInTheDocument()
   })
 })

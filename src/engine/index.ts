@@ -6,7 +6,12 @@ import {
   Scene,
   Vector3,
 } from '@babylonjs/core'
-import { loadModel } from '../scenes/modelLoader'
+import {
+  createAssetStreaming,
+  HERO_PLAYER_ASSET_ID,
+  spawnStreamedInstance,
+  type AssetLoadingStateListener,
+} from '../game/streaming'
 
 /**
  * Korovany rendering engine — the single owner of the Babylon `Engine`/`Scene`
@@ -51,18 +56,18 @@ export interface GameEngine {
 
 export interface CreateGameEngineOptions {
   /**
-   * GLB to load as a render smoke (proves the asset pipeline still works).
-   * Defaults to the treasure chest; pass `null` to skip (e.g. in unit tests).
+   * Asset id to stream as a render smoke (placeholder box → GLB).
+   * Defaults to the player hero; pass `null` to skip (e.g. in unit tests).
    */
-  modelUrl?: string | null
+  streamAssetId?: string | null
+  /** Called when a streamed asset changes load phase (wired to Redux in GameCanvas). */
+  onAssetLoadingState?: AssetLoadingStateListener
   /**
    * Engine factory — injectable so tests can pass a headless `NullEngine`.
    * Defaults to a WebGL `Engine` with `adaptToDeviceRatio` enabled.
    */
   createEngine?: (canvas: HTMLCanvasElement) => AbstractEngine
 }
-
-const DEFAULT_MODEL_URL = '/models/chest.glb'
 
 function defaultEngineFactory(canvas: HTMLCanvasElement): Engine {
   // 4th arg `adaptToDeviceRatio` sizes the initial backing buffer to the device
@@ -80,7 +85,11 @@ export function createGameEngine(
   canvas: HTMLCanvasElement,
   options: CreateGameEngineOptions = {},
 ): GameEngine {
-  const { modelUrl = DEFAULT_MODEL_URL, createEngine = defaultEngineFactory } = options
+  const {
+    streamAssetId = HERO_PLAYER_ASSET_ID,
+    onAssetLoadingState,
+    createEngine = defaultEngineFactory,
+  } = options
 
   const engine = createEngine(canvas)
   const scene = new Scene(engine)
@@ -90,10 +99,13 @@ export function createGameEngine(
 
   new HemisphericLight('light', new Vector3(0, 1, 0), scene)
 
-  // Smoke-load the web-ready GLB through the shared loader so a regression in
-  // the asset pipeline shows up as a blank scene. Fire-and-forget: the render
-  // loop draws it as soon as it resolves.
-  if (modelUrl) void loadModel(scene, modelUrl)
+  const streamed: Array<{ release: () => void }> = []
+  if (streamAssetId) {
+    const { loader } = createAssetStreaming(scene, { onLoadingState: onAssetLoadingState })
+    void spawnStreamedInstance(loader, scene, streamAssetId).then((instance) => {
+      streamed.push(instance)
+    })
+  }
 
   engine.runRenderLoop(() => scene.render())
 
@@ -111,6 +123,7 @@ export function createGameEngine(
       if (disposed) return
       disposed = true
       window.removeEventListener('resize', onResize)
+      for (const instance of streamed) instance.release()
       engine.stopRenderLoop()
       scene.dispose()
       engine.dispose()

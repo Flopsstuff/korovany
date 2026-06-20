@@ -24,6 +24,7 @@ export default defineConfig({
           { text: 'Architecture', link: '/guide/architecture' },
           { text: 'Game loop', link: '/guide/game-loop' },
           { text: 'Input system', link: '/guide/input-system' },
+          { text: 'Asset streaming', link: '/guide/asset-streaming' },
         ],
       },
       {

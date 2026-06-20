@@ -7,6 +7,7 @@ import {
   useAppDispatch,
   useAppSelector,
 } from '../store'
+import { selectIsStreamingLoading } from '../store'
 
 /**
  * App shell: a full-viewport stage holding the 3D canvas with React overlays
@@ -19,6 +20,7 @@ import {
 export function App() {
   const dispatch = useAppDispatch()
   const phase = useAppSelector((state) => state.app.phase)
+  const isLoadingAssets = useAppSelector(selectIsStreamingLoading)
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -36,6 +38,7 @@ export function App() {
       <GameCanvas />
       <div className="hud">
         <h1>Korovany</h1>
+        {isLoadingAssets ? <p className="hud-loading">Loading…</p> : null}
       </div>
       {phase === 'menu' ? (
         <main className="menu-overlay" aria-labelledby="main-menu-title">
