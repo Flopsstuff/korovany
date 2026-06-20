@@ -27,7 +27,8 @@ Babylon.js · Redux Toolkit · Vite 6. App → Cloudflare Pages
 - **Babylon in tests:** jsdom has no WebGL, so stub the canvas in component
   tests (`vi.mock('../scenes/GameCanvas', …)`) — see `src/app/App.test.tsx`. To
   test engine code directly, inject Babylon's headless `NullEngine` (see
-  `src/engine/index.test.ts`).
+  `src/engine/index.test.ts`). Full guide:
+  [`docs/guide/testing.md`](docs/guide/testing.md) (single source of truth).
 - **Git auth:** the local PAT can't push/PR or read Actions secrets. Push over
   **SSH** (`git@github.com:Flopsstuff/korovany.git`). To trigger a deploy, push to
   `main` (an empty commit works); `workflow_dispatch` is not available to the PAT.
