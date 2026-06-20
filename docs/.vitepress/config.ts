@@ -12,6 +12,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
+      { text: 'Plan', link: '/plan/game-plan' },
       { text: 'Live app', link: 'https://korovany.aimost.pl/' },
     ],
     sidebar: [
@@ -22,6 +23,10 @@ export default defineConfig({
           { text: 'Project rules', link: '/guide/project-rules' },
           { text: 'Architecture', link: '/guide/architecture' },
         ],
+      },
+      {
+        text: 'Plan',
+        items: [{ text: 'Game development plan', link: '/plan/game-plan' }],
       },
       {
         text: 'Operations',
