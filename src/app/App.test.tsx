@@ -7,7 +7,16 @@ import type { AssetLoadPhase } from '../game/streaming/types'
 import { appReducer, type AppPhase } from '../store/appSlice'
 import { gameReducer } from '../store/gameSlice'
 import { streamingReducer } from '../store/streamingSlice'
+import { saveReducer } from '../store/saveSlice'
 import { App } from './App'
+
+// Stub IndexedDB save calls so App tests don't touch the real store.
+vi.mock('../game/save', () => ({
+  hasSave: vi.fn().mockResolvedValue(false),
+  readSave: vi.fn().mockResolvedValue(null),
+  writeSave: vi.fn().mockResolvedValue(undefined),
+  AUTOSAVE_SLOT: 'autosave',
+}))
 
 // Babylon.js needs a real WebGL context, which jsdom does not provide.
 // Stub the canvas so the App can render in tests without a GPU. The engine
@@ -25,11 +34,13 @@ function renderApp(
       app: appReducer,
       game: gameReducer,
       streaming: streamingReducer,
+      save: saveReducer,
     },
     preloadedState: {
       app: { phase: initialPhase },
       game: { score: 0 },
       streaming: { phases: streamingPhases },
+      save: { hasSave: false, loadedSave: null },
     },
   })
 

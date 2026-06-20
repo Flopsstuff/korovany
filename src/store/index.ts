@@ -3,12 +3,14 @@ import { useDispatch, useSelector } from 'react-redux'
 import { appReducer } from './appSlice'
 import { gameReducer } from './gameSlice'
 import { streamingReducer } from './streamingSlice'
+import { saveReducer } from './saveSlice'
 
 export const store = configureStore({
   reducer: {
     app: appReducer,
     game: gameReducer,
     streaming: streamingReducer,
+    save: saveReducer,
   },
 })
 
@@ -24,3 +26,5 @@ export { addScore, resetScore } from './gameSlice'
 export type { GameState } from './gameSlice'
 export { setAssetPhase, selectIsStreamingLoading, selectStreamingPhases } from './streamingSlice'
 export type { StreamingState } from './streamingSlice'
+export { setSaveExists, setSaveLoaded } from './saveSlice'
+export type { SaveState } from './saveSlice'

@@ -27,6 +27,7 @@ export default defineConfig({
           { text: 'Asset streaming', link: '/guide/asset-streaming' },
           { text: 'Character controller', link: '/guide/character-controller' },
           { text: 'Forest zone', link: '/guide/forest-zone' },
+          { text: 'Save system', link: '/guide/save-system' },
         ],
       },
       {
