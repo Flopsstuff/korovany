@@ -1,13 +1,17 @@
 import { useEffect, useRef } from 'react'
 import { GameCanvas } from '../scenes/GameCanvas'
 import {
+  continueGame,
   returnToMenu,
   selectIsStreamingLoading,
+  setSaveExists,
+  setSaveLoaded,
   startNewGame,
   togglePause,
   useAppDispatch,
   useAppSelector,
 } from '../store'
+import { AUTOSAVE_SLOT, hasSave, readSave, writeSave } from '../game/save'
 
 /**
  * App shell: a full-viewport stage holding the 3D canvas with React overlays
@@ -21,8 +25,26 @@ export function App() {
   const dispatch = useAppDispatch()
   const phase = useAppSelector((state) => state.app.phase)
   const isLoadingAssets = useAppSelector(selectIsStreamingLoading)
+  const hasSaveSlot = useAppSelector((state) => state.save.hasSave)
+  const score = useAppSelector((state) => state.game.score)
   const menuPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const pausePrimaryActionRef = useRef<HTMLButtonElement>(null)
+
+  // Check for autosave on first mount so the Continue button can appear.
+  useEffect(() => {
+    void hasSave(AUTOSAVE_SLOT).then((exists) => dispatch(setSaveExists(exists)))
+  }, [dispatch])
+
+  // Autosave whenever the game is paused.
+  useEffect(() => {
+    if (phase !== 'paused') return
+    void writeSave(AUTOSAVE_SLOT, {
+      zoneId: 'forest',
+      playerPos: { x: 0, y: 0, z: 0 },
+      score,
+      savedAt: Date.now(),
+    }).then(() => dispatch(setSaveExists(true)))
+  }, [phase, score, dispatch])
 
   useEffect(() => {
     if (phase === 'menu') menuPrimaryActionRef.current?.focus()
@@ -39,6 +61,13 @@ export function App() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [dispatch])
+
+  function handleContinue() {
+    void readSave(AUTOSAVE_SLOT).then((save) => {
+      if (save) dispatch(setSaveLoaded(save))
+      dispatch(continueGame())
+    })
+  }
 
   return (
     <div className="app-shell">
@@ -63,6 +92,11 @@ export function App() {
               >
                 New Game
               </button>
+              {hasSaveSlot ? (
+                <button type="button" onClick={handleContinue}>
+                  Continue
+                </button>
+              ) : null}
             </div>
           </div>
         </main>

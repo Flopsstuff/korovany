@@ -15,8 +15,8 @@ const appSlice = createSlice({
     startNewGame(state) {
       state.phase = 'playing'
     },
-    continueGame() {
-      return initialState
+    continueGame(state) {
+      state.phase = 'playing'
     },
     togglePause(state) {
       if (state.phase === 'playing') {
