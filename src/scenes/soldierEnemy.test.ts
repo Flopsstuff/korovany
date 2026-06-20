@@ -71,4 +71,48 @@ describe('SoldierEnemy (scene integration)', () => {
     for (let i = 0; i < 10; i++) soldier.update(1 / 60, undefined)
     expect(damageDealt.length).toBeGreaterThan(0)
   })
+
+  it('follows a trusted commander order instead of default patrol', () => {
+    const soldier = new SoldierEnemy(scene, {
+      spawn: new Vector3(0, 0.9, 0),
+      glbUrl: null,
+      getPlayerPos: () => new Vector3(100, 0.9, 0),
+      onAttackPlayer: (dmg) => damageDealt.push(dmg),
+      getOrderContext: () => ({
+        order: { type: 'follow', commanderId: 'captain', recipientId: 'guard' },
+        leaderPos: new Vector3(10, 0.9, 0),
+      }),
+    })
+
+    soldier.update(1, undefined)
+
+    expect(soldier.position.x).toBeGreaterThan(0)
+    expect(damageDealt).toEqual([])
+  })
+
+  it('routes ordered target attacks away from player damage', () => {
+    const targetDamage: number[] = []
+    const soldier = new SoldierEnemy(scene, {
+      spawn: new Vector3(0, 0.9, 0),
+      glbUrl: null,
+      getPlayerPos: () => new Vector3(100, 0.9, 0),
+      onAttackPlayer: (dmg) => damageDealt.push(dmg),
+      getOrderContext: () => ({
+        order: {
+          type: 'attack-target',
+          commanderId: 'captain',
+          recipientId: 'guard',
+          targetId: 'raider',
+        },
+        targetPos: new Vector3(1, 0.9, 0),
+        targetAlive: true,
+      }),
+      onAttackOrderTarget: (dmg) => targetDamage.push(dmg),
+    })
+
+    soldier.update(1 / 60, undefined)
+
+    expect(damageDealt).toEqual([])
+    expect(targetDamage).toEqual([P.attackDamage])
+  })
 })

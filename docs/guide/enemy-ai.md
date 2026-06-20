@@ -9,6 +9,8 @@ patrol ──[player inside detectionRadius]──▶ chase
 chase  ──[player inside attackRadius]────▶ attack
 chase  ──[player escapes 1.3× detection]──▶ patrol
 attack ──[player outside 1.5× attackRadius]▶ chase
+order  ──[follow/hold/move-to/attack-target]▶ ordered behaviour
+order cleared ─────────────────────────────▶ patrol
 any    ──[HP == 0]───────────────────────▶ dead  (terminal)
 ```
 
@@ -17,6 +19,10 @@ any    ──[HP == 0]───────────────────�
 | **patrol** | Wander at 1.5 m/s; change direction every 3 s |
 | **chase** | Move toward player at 3 m/s |
 | **attack** | Deal 15 HP every 1.5 s to the player |
+| **follow** | Follow a commander until inside the follow distance |
+| **hold** | Hold position until a new order arrives or the order is cleared |
+| **move-to** | Move to an ordered destination, then hold |
+| **attack-target** | Attack the ordered hostile target; if it disappears or dies, hold |
 | **dead** | Stop all behaviour; the scene converts it to a persistent corpse — see [corpses.md](corpses.md) (E2.4) |
 
 ## Default parameters
@@ -30,6 +36,8 @@ any    ──[HP == 0]───────────────────�
 | Attack cooldown | 1.5 s |
 | Patrol speed | 1.5 m/s |
 | Chase speed | 3.0 m/s |
+| Follow distance | 2.5 m |
+| Move-to arrival radius | 0.35 m |
 
 ## Pure FSM API
 
@@ -45,6 +53,28 @@ fsm = state
 // When player melee hits:
 fsm = applyDamageToSoldier(fsm, 25)
 ```
+
+## Commander orders (E4.3)
+
+Pure command intake lives in `src/game/ai/orders.ts`. A commander issues one of
+four order types to same-faction subordinates:
+
+| Order | Intake validation | Soldier behaviour |
+|---|---|---|
+| `follow` | Recipient must be alive, same faction, and assigned to the commander | Move toward the commander until inside `followDistance` |
+| `hold` | Same recipient checks | Stop moving and wait |
+| `move-to` | Same recipient checks; destination must be finite | Move to the destination, then transition to `hold` |
+| `attack-target` | Same recipient checks; target must exist, be alive, and be hostile by `resolveStance` | Move into attack radius, deal ordered-target damage, then hold if the target is gone |
+
+The boundary is deliberate: `issueSquadOrder()` rejects invalid recipients,
+destinations, and non-hostile targets up front. `SoldierEnemy` and
+`stepSoldierFSM()` then consume a compact `SoldierOrderContext` and trust it,
+instead of re-running faction checks every frame. When an order is cleared, an
+ordered soldier resumes default patrol/aggro behaviour.
+
+`?dev=orders` opens a standalone commander playground. It scripts the same
+intake path through `follow`, `move-to`, and `attack-target` orders against a
+hostile target, without changing default forest gameplay.
 
 ## Damageable contract
 
@@ -78,4 +108,6 @@ half-height so it rests on the ground). To spawn more, push additional
 
 ## Tests
 
-`src/game/ai/soldierFSM.test.ts` — 15 unit tests (all phase transitions, attack cooldown, death terminal state, damage without killing, no-op after death).
+`src/game/ai/orders.test.ts` covers command intake validation. `src/game/ai/soldierFSM.test.ts`
+covers default FSM transitions plus ordered follow/hold/move/attack behaviours.
+`src/scenes/ordersPlayground.test.ts` smoke-tests the dev scene wiring.

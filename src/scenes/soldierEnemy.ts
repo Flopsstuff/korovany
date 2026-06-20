@@ -21,6 +21,7 @@ import {
   stepSoldierFSM,
   type SoldierFSMParams,
   type SoldierFSMState,
+  type SoldierOrderContext,
 } from '../game/ai'
 import type { System } from '../game/loop'
 
@@ -34,6 +35,10 @@ export interface SoldierEnemyOptions {
   getPlayerPos: () => Vector3
   /** Callback when soldier attacks the player — caller dispatches damagePlayer. */
   onAttackPlayer: (damage: number) => void
+  /** Optional trusted order context, already validated by the command system. */
+  getOrderContext?: () => SoldierOrderContext
+  /** Callback when an explicit attack-target order lands a hit. */
+  onAttackOrderTarget?: (damage: number) => void
   /**
    * Soldier GLB to mount on the capsule (FLO-311); `null` keeps the bare
    * capsule placeholder. Defaults to the shipped Empire soldier model.
@@ -47,6 +52,8 @@ export class SoldierEnemy implements System, Damageable {
   private readonly params: SoldierFSMParams
   private readonly getPlayerPos: () => Vector3
   private readonly onAttackPlayer: (dmg: number) => void
+  private readonly getOrderContext?: () => SoldierOrderContext
+  private readonly onAttackOrderTarget?: (dmg: number) => void
 
   get position(): Vec3 {
     return { x: this.mesh.position.x, y: this.mesh.position.y, z: this.mesh.position.z }
@@ -56,6 +63,8 @@ export class SoldierEnemy implements System, Damageable {
     this.params = options.params ?? DEFAULT_SOLDIER_PARAMS
     this.getPlayerPos = options.getPlayerPos
     this.onAttackPlayer = options.onAttackPlayer
+    this.getOrderContext = options.getOrderContext
+    this.onAttackOrderTarget = options.onAttackOrderTarget
     this.fsm = createSoldierFSM(this.params)
 
     this.mesh = MeshBuilder.CreateCapsule(
@@ -109,20 +118,41 @@ export class SoldierEnemy implements System, Damageable {
     const playerPos = this.getPlayerPos()
     const soldierVec3: Vec3 = this.position
 
-    const result = stepSoldierFSM(this.fsm, soldierVec3, playerPos as unknown as Vec3, dt, this.params)
+    const result = stepSoldierFSM(
+      this.fsm,
+      soldierVec3,
+      playerPos as unknown as Vec3,
+      dt,
+      this.params,
+      undefined,
+      this.getOrderContext?.() ?? { order: null },
+    )
     this.fsm = result.state
 
     this.mesh.position.x += result.moveDX
     this.mesh.position.z += result.moveDZ
 
     if (result.attacked) {
-      this.onAttackPlayer(this.params.attackDamage)
+      if (result.attackedTarget === 'order-target') {
+        this.onAttackOrderTarget?.(this.params.attackDamage)
+      } else {
+        this.onAttackPlayer(this.params.attackDamage)
+      }
     }
 
-    // Face the player when chasing or attacking.
-    if (this.fsm.phase === 'chase' || this.fsm.phase === 'attack') {
-      const dx = playerPos.x - this.mesh.position.x
-      const dz = playerPos.z - this.mesh.position.z
+    // Face the active target while fighting or following an explicit command.
+    const orderContext = this.getOrderContext?.()
+    const faceTarget =
+      this.fsm.phase === 'attack-target' && orderContext?.targetPos
+        ? orderContext.targetPos
+        : this.fsm.phase === 'follow' && orderContext?.leaderPos
+          ? orderContext.leaderPos
+          : this.fsm.phase === 'chase' || this.fsm.phase === 'attack'
+            ? playerPos
+            : null
+    if (faceTarget) {
+      const dx = faceTarget.x - this.mesh.position.x
+      const dz = faceTarget.z - this.mesh.position.z
       if (Math.abs(dx) + Math.abs(dz) > 0.01) {
         this.mesh.rotation.y = Math.atan2(dx, dz)
       }

@@ -6,6 +6,7 @@ import { setAssetPhase } from '../store/streamingSlice'
 import { createCaravanPlayground } from './caravanPlayground'
 import { createControllerPlayground } from './controllerPlayground'
 import { createForestScene } from './forestScene'
+import { createOrdersPlayground } from './ordersPlayground'
 import { createZoneScene } from './zoneScenes'
 
 /**
@@ -16,6 +17,7 @@ import { createZoneScene } from './zoneScenes'
  * - `?dev=controller` — controller playground (E1.1 QA)
  * - `?dev=forest`     — forest zone standalone (E1.3 QA)
  * - `?dev=caravan`    — caravan ambush playground (E3.3 QA)
+ * - `?dev=orders`     — commander/order playground (E4.3 QA)
  * - `phase === menu`  — engine smoke scene (hero preview, streaming HUD)
  * - `phase === playing | paused` — the active zone's scene, keyed by
  *   `playerSlice.zoneId` (E3.1). Fast-travel changes `zoneId`, which remounts
@@ -49,6 +51,8 @@ export function GameCanvas() {
         ? createControllerPlayground(canvas)
         : dev === 'caravan'
           ? createCaravanPlayground(canvas)
+          : dev === 'orders'
+            ? createOrdersPlayground(canvas)
           : dev === 'forest'
             ? createForestScene(canvas)
             : inGame

@@ -73,6 +73,97 @@ describe('chase phase', () => {
   })
 })
 
+describe('orders', () => {
+  it('holds position while a hold order is active', () => {
+    const s = createSoldierFSM()
+    const { state, moveDX, moveDZ } = stepSoldierFSM(s, ORIGIN, FAR_PLAYER, 1, P, [1, 0], {
+      order: { type: 'hold', commanderId: 'captain', recipientId: 'guard' },
+    })
+
+    expect(state.phase).toBe('hold')
+    expect(moveDX).toBe(0)
+    expect(moveDZ).toBe(0)
+  })
+
+  it('follows the commander until inside follow distance', () => {
+    const s = createSoldierFSM()
+    const { state, moveDX } = stepSoldierFSM(s, ORIGIN, FAR_PLAYER, 1, P, [1, 0], {
+      order: { type: 'follow', commanderId: 'captain', recipientId: 'guard' },
+      leaderPos: { x: 10, y: 0, z: 0 },
+    })
+
+    expect(state.phase).toBe('follow')
+    expect(moveDX).toBeGreaterThan(0)
+  })
+
+  it('moves to an ordered destination and then holds', () => {
+    const s = createSoldierFSM()
+    const moving = stepSoldierFSM(s, ORIGIN, FAR_PLAYER, 0.1, P, [1, 0], {
+      order: {
+        type: 'move-to',
+        commanderId: 'captain',
+        recipientId: 'guard',
+        destination: { x: 6, y: 0, z: 0 },
+      },
+    })
+
+    const arrived = stepSoldierFSM(moving.state, { x: 6, y: 0, z: 0 }, FAR_PLAYER, 0.1, P, [1, 0], {
+      order: {
+        type: 'move-to',
+        commanderId: 'captain',
+        recipientId: 'guard',
+        destination: { x: 6, y: 0, z: 0 },
+      },
+    })
+
+    expect(moving.state.phase).toBe('move-to')
+    expect(moving.moveDX).toBeGreaterThan(0)
+    expect(arrived.state.phase).toBe('hold')
+  })
+
+  it('attacks an ordered target instead of the default player target', () => {
+    const s = createSoldierFSM()
+    const { state, attacked, attackedTarget } = stepSoldierFSM(s, ORIGIN, FAR_PLAYER, 0.1, P, [1, 0], {
+      order: {
+        type: 'attack-target',
+        commanderId: 'captain',
+        recipientId: 'guard',
+        targetId: 'raider',
+      },
+      targetPos: MELEE_PLAYER,
+      targetAlive: true,
+    })
+
+    expect(state.phase).toBe('attack-target')
+    expect(attacked).toBe(true)
+    expect(attackedTarget).toBe('order-target')
+  })
+
+  it('returns to hold when an ordered target is gone', () => {
+    const s = createSoldierFSM()
+    const { state, attacked } = stepSoldierFSM(s, ORIGIN, FAR_PLAYER, 0.1, P, [1, 0], {
+      order: {
+        type: 'attack-target',
+        commanderId: 'captain',
+        recipientId: 'guard',
+        targetId: 'raider',
+      },
+      targetAlive: false,
+    })
+
+    expect(state.phase).toBe('hold')
+    expect(attacked).toBe(false)
+  })
+
+  it('falls back to patrol after an order is cleared', () => {
+    const s: SoldierFSMState = { ...createSoldierFSM(), phase: 'hold' }
+    const { state, moveDX } = step(s, ORIGIN, FAR_PLAYER, 1)
+
+    expect(state.phase).toBe('patrol')
+    expect(moveDX).toBeGreaterThan(0)
+  })
+})
+
 describe('attack phase', () => {
   it('attacks when cooldown is 0', () => {
     const s: SoldierFSMState = { ...createSoldierFSM(), phase: 'attack', attackCooldown: 0 }

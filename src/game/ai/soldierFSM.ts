@@ -1,7 +1,16 @@
 import { applyDamage, createHealth, isAlive, type HealthState } from '../health'
 import type { Vec3 } from '../combat'
+import type { SoldierOrder } from './orders'
 
-export type SoldierPhase = 'patrol' | 'chase' | 'attack' | 'dead'
+export type SoldierPhase =
+  | 'patrol'
+  | 'chase'
+  | 'attack'
+  | 'follow'
+  | 'hold'
+  | 'move-to'
+  | 'attack-target'
+  | 'dead'
 
 export interface SoldierFSMState {
   phase: SoldierPhase
@@ -31,6 +40,10 @@ export interface SoldierFSMParams {
   chaseSpeed: number
   /** Seconds between patrol direction changes. */
   patrolChangeDirInterval: number
+  /** Metres — follower stops once this close to its commander. */
+  followDistance: number
+  /** Metres — move-to order completes inside this radius. */
+  moveToArrivalRadius: number
 }
 
 export const DEFAULT_SOLDIER_PARAMS: SoldierFSMParams = {
@@ -42,6 +55,8 @@ export const DEFAULT_SOLDIER_PARAMS: SoldierFSMParams = {
   patrolSpeed: 1.5,
   chaseSpeed: 3.0,
   patrolChangeDirInterval: 3.0,
+  followDistance: 2.5,
+  moveToArrivalRadius: 0.35,
 }
 
 export function createSoldierFSM(params: SoldierFSMParams = DEFAULT_SOLDIER_PARAMS): SoldierFSMState {
@@ -68,6 +83,15 @@ export interface SoldierStepResult {
   moveDZ: number
   /** True if the soldier attacked this tick — caller deals attackDamage to player. */
   attacked: boolean
+  /** Distinguishes default player aggro from an explicit attack-target order. */
+  attackedTarget: 'player' | 'order-target' | null
+}
+
+export interface SoldierOrderContext {
+  readonly order: SoldierOrder | null
+  readonly leaderPos?: Vec3
+  readonly targetPos?: Vec3
+  readonly targetAlive?: boolean
 }
 
 /**
@@ -83,9 +107,11 @@ export function stepSoldierFSM(
   params: SoldierFSMParams = DEFAULT_SOLDIER_PARAMS,
   /** Deterministic patrol dir override (x, z). Optional: random in prod, injected in tests. */
   nextPatrolDir?: [number, number],
+  /** Optional trusted order context; order legality is validated before intake. */
+  orderContext?: SoldierOrderContext,
 ): SoldierStepResult {
   if (state.phase === 'dead') {
-    return { state, moveDX: 0, moveDZ: 0, attacked: false }
+    return { state, moveDX: 0, moveDZ: 0, attacked: false, attackedTarget: null }
   }
 
   const d = dist2d(soldierPos.x, soldierPos.z, playerPos.x, playerPos.z)
@@ -93,8 +119,59 @@ export function stepSoldierFSM(
   let moveDX = 0
   let moveDZ = 0
   let attacked = false
+  let attackedTarget: SoldierStepResult['attackedTarget'] = null
 
   attackCooldown = Math.max(0, attackCooldown - dt)
+
+  if (orderContext?.order) {
+    const order = orderContext.order
+    if (order.type === 'hold') {
+      phase = 'hold'
+    } else if (order.type === 'follow') {
+      phase = 'follow'
+      if (orderContext.leaderPos) {
+        const movement = moveToward(soldierPos, orderContext.leaderPos, params.chaseSpeed, dt, params.followDistance)
+        moveDX = movement.x
+        moveDZ = movement.z
+      }
+    } else if (order.type === 'move-to') {
+      const movement = moveToward(soldierPos, order.destination, params.chaseSpeed, dt, params.moveToArrivalRadius)
+      phase = movement.arrived ? 'hold' : 'move-to'
+      moveDX = movement.x
+      moveDZ = movement.z
+    } else {
+      if (orderContext.targetAlive === false || !orderContext.targetPos) {
+        phase = 'hold'
+      } else {
+        const targetDistance = dist2d(soldierPos.x, soldierPos.z, orderContext.targetPos.x, orderContext.targetPos.z)
+        if (targetDistance <= params.attackRadius) {
+          phase = 'attack-target'
+          if (attackCooldown <= 0) {
+            attacked = true
+            attackedTarget = 'order-target'
+            attackCooldown = params.attackCooldown
+          }
+        } else {
+          phase = 'attack-target'
+          const movement = moveToward(soldierPos, orderContext.targetPos, params.chaseSpeed, dt, params.attackRadius)
+          moveDX = movement.x
+          moveDZ = movement.z
+        }
+      }
+    }
+
+    return {
+      state: { phase, health, attackCooldown, patrolTimer, patrolDirX, patrolDirZ },
+      moveDX,
+      moveDZ,
+      attacked,
+      attackedTarget,
+    }
+  }
+
+  if (phase === 'follow' || phase === 'hold' || phase === 'move-to' || phase === 'attack-target') {
+    phase = 'patrol'
+  }
 
   // ── Phase transitions ──────────────────────────────────────────────────
   if (phase === 'patrol') {
@@ -136,6 +213,7 @@ export function stepSoldierFSM(
   } else if (phase === 'attack') {
     if (attackCooldown <= 0) {
       attacked = true
+      attackedTarget = 'player'
       attackCooldown = params.attackCooldown
     }
   }
@@ -145,6 +223,26 @@ export function stepSoldierFSM(
     moveDX,
     moveDZ,
     attacked,
+    attackedTarget,
+  }
+}
+
+function moveToward(
+  from: Vec3,
+  to: Vec3,
+  speed: number,
+  dt: number,
+  stopDistance: number,
+): { x: number; z: number; arrived: boolean } {
+  const dx = to.x - from.x
+  const dz = to.z - from.z
+  const len = Math.sqrt(dx * dx + dz * dz)
+  if (len <= stopDistance || len === 0) return { x: 0, z: 0, arrived: true }
+  const travel = Math.min(speed * dt, len - stopDistance)
+  return {
+    x: (dx / len) * travel,
+    z: (dz / len) * travel,
+    arrived: false,
   }
 }
 
