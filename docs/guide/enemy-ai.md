@@ -17,7 +17,7 @@ any    ──[HP == 0]───────────────────�
 | **patrol** | Wander at 1.5 m/s; change direction every 3 s |
 | **chase** | Move toward player at 3 m/s |
 | **attack** | Deal 15 HP every 1.5 s to the player |
-| **dead** | Stop all behaviour; mesh stays in place (E2.4 corpse hook) |
+| **dead** | Stop all behaviour; the scene converts it to a persistent corpse — see [corpses.md](corpses.md) (E2.4) |
 
 ## Default parameters
 

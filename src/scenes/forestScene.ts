@@ -20,10 +20,35 @@ import {
   spawnStreamedInstance,
   type StreamedInstance,
 } from '../game/streaming'
-import { createMeleeAttack, getMeleeHits, stepMeleeAttack } from '../game/combat'
+import { createMeleeAttack, getMeleeHits, stepMeleeAttack, type Vec3 } from '../game/combat'
 import { registerPlayer, takeSpawn } from '../game/save/playerRuntime'
 import type { PlayerTransform } from '../game/save'
+import { type CorpseStore } from '../game/corpses'
 import { SoldierEnemy } from './soldierEnemy'
+import { CorpseManager } from './corpseManager'
+
+/** Zone id used for the forest scene's corpse persistence. */
+export const FOREST_ZONE_ID = 'forest'
+
+/**
+ * Convert any newly-dead soldiers into persistent corpses and hide the live
+ * mesh. Idempotent per soldier via `converted`. Exported so the live→corpse
+ * transition is unit-testable without a render loop.
+ */
+export function reapDeadSoldiers(
+  soldiers: readonly SoldierEnemy[],
+  converted: Set<SoldierEnemy>,
+  corpses: Pick<CorpseManager, 'registerDeath'>,
+): void {
+  for (const s of soldiers) {
+    if (!s.isDead() || converted.has(s)) continue
+    converted.add(s)
+    const p = s.mesh.position
+    const pos: Vec3 = { x: p.x, y: p.y, z: p.z }
+    corpses.registerDeath(pos, s.mesh.rotation.y)
+    s.mesh.setEnabled(false) // hide the live soldier; the corpse mesh takes over
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Asset ids — canonical string keys used throughout the streaming system.
@@ -90,6 +115,10 @@ export interface ForestSceneOptions {
    * back to the clearing centre for a New Game.
    */
   initialSpawn?: PlayerTransform | null
+  /** Corpse store for E2.4 persistence. Defaults to the session singleton. */
+  corpseStore?: CorpseStore
+  /** Soldier GLB to mount on corpses; `null` keeps bare capsules (tests). */
+  corpseGlbUrl?: string | null
 }
 
 export interface ForestScene {
@@ -123,6 +152,8 @@ export function createForestScene(
     heroUrl = DEFAULT_HERO_URL,
     onPlayerDamaged,
     initialSpawn = takeSpawn(),
+    corpseStore,
+    corpseGlbUrl,
   } = options
 
   const engine = createEngine(canvas)
@@ -221,6 +252,17 @@ export function createForestScene(
     }),
   ]
 
+  // ------------------------------------------------------------------
+  // Corpses — E2.4. Re-spawns any corpses recorded earlier this session and
+  // converts each fresh kill into a persistent, inert downed body.
+  // ------------------------------------------------------------------
+  const corpses = new CorpseManager(scene, {
+    zoneId: FOREST_ZONE_ID,
+    store: corpseStore,
+    glbUrl: corpseGlbUrl,
+  })
+  const convertedToCorpse = new Set<SoldierEnemy>()
+
   // Melee attack state for the player (edge-triggered on intent.attack).
   let meleeState = createMeleeAttack()
   let prevAttack = false
@@ -247,6 +289,9 @@ export function createForestScene(
       hits.forEach((h) => h.takeDamage(25))
     }
 
+    // Turn any soldier that died this frame into a persistent corpse.
+    reapDeadSoldiers(soldiers, convertedToCorpse, corpses)
+
     loop.advance(dt)
     rig.update(frameIntent.lookDX, frameIntent.lookDY)
     scene.render()
@@ -272,6 +317,7 @@ export function createForestScene(
         for (const inst of instances) inst.release()
       })
       for (const s of soldiers) s.dispose()
+      corpses.dispose() // meshes only — store records persist for re-enter
       scene.dispose()
       engine.dispose()
     },

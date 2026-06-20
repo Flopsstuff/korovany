@@ -57,12 +57,24 @@ Meshy pipeline under visual-language v1.2 (≤ 3000 tris). Register them via
 interface ForestSceneOptions {
   createEngine?: (canvas: HTMLCanvasElement) => AbstractEngine  // for tests
   heroUrl?: string | null                                       // hero GLB path
+  onPlayerDamaged?: (amount: number) => void                    // enemy hit → dispatch
+  corpseStore?: CorpseStore                                     // E2.4 persistence
+  corpseGlbUrl?: string | null                                  // corpse GLB path
 }
 ```
 
-Pass `heroUrl: null` and inject a `NullEngine` in tests to skip network fetches.
+Pass `heroUrl: null` / `corpseGlbUrl: null` and inject a `NullEngine` in tests to
+skip network fetches.
+
+## Enemies & corpses
+
+The forest spawns one Empire soldier (E2.3, see [enemy-ai.md](enemy-ai.md)). When
+a soldier dies the scene converts it into a persistent, inert corpse via
+`reapDeadSoldiers` + `CorpseManager`. Corpses are capped and survive a zone
+re-enter within a session — full details in [corpses.md](corpses.md).
 
 ## Tests
 
 - `forestScene.test.ts` — `seedForestAssets` (registry entries + sizes), scene
-  boot (live camera, capsule, ground pickable), dispose idempotency.
+  boot (live camera, capsule, ground pickable), dispose idempotency, corpse
+  re-spawn on boot, and the `reapDeadSoldiers` live→corpse transition.

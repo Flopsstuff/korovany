@@ -1,9 +1,11 @@
-import { NullEngine, Scene } from '@babylonjs/core'
+import { NullEngine, Scene, Vector3 } from '@babylonjs/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   FOREST_TREE_ASSET_ID,
+  FOREST_ZONE_ID,
   WOODEN_HUT_ASSET_ID,
   createForestScene,
+  reapDeadSoldiers,
   seedForestAssets,
 } from './forestScene'
 import { AssetRegistry } from '../game/streaming'
@@ -13,6 +15,10 @@ import {
   stageSpawn,
   takeSpawn,
 } from '../game/save/playerRuntime'
+import { CorpseManager } from './corpseManager'
+import { CorpseStore } from '../game/corpses'
+import { SoldierEnemy } from './soldierEnemy'
+import { DEFAULT_SOLDIER_PARAMS } from '../game/ai'
 
 // jsdom has no WebGL, so inject a headless NullEngine and skip hero/asset GLB
 // fetches. Asserts the scene wires the ground, controller, and streaming loader.
@@ -66,6 +72,20 @@ describe('createForestScene', () => {
     game.dispose()
   })
 
+  it('re-spawns persisted corpses for the forest zone on boot', () => {
+    const canvas = document.createElement('canvas')
+    const store = new CorpseStore(8)
+    store.record(FOREST_ZONE_ID, { x: 4, y: 0.9, z: 4 }, 0)
+    const game = createForestScene(canvas, {
+      heroUrl: null,
+      corpseStore: store,
+      corpseGlbUrl: null,
+      createEngine: () => new NullEngine(),
+    })
+    expect(game.scene.getMeshByName('corpse:corpse-0')).not.toBeNull()
+    game.dispose()
+  })
+
   it('tears down cleanly and is idempotent', () => {
     const remove = vi.spyOn(window, 'removeEventListener')
     const game = boot()
@@ -112,5 +132,58 @@ describe('createForestScene — save bridge (E1.4/E1.5 integration)', () => {
     const game = boot()
     expect(readPlayerTransform()).toEqual(spawn)
     game.dispose()
+  })
+})
+
+describe('reapDeadSoldiers (live → corpse transition)', () => {
+  function makeSoldier(scene: Scene) {
+    return new SoldierEnemy(scene, {
+      spawn: new Vector3(6, 0.9, 6),
+      glbUrl: null,
+      getPlayerPos: () => new Vector3(0, 0.9, 0),
+      onAttackPlayer: () => {},
+    })
+  }
+
+  it('converts a dead soldier into a corpse exactly once and hides it', () => {
+    const scene = new Scene(new NullEngine())
+    const store = new CorpseStore(8)
+    const corpses = new CorpseManager(scene, {
+      zoneId: FOREST_ZONE_ID,
+      store,
+      glbUrl: null,
+    })
+    const soldier = makeSoldier(scene)
+    const converted = new Set<SoldierEnemy>()
+
+    // Alive → no corpse.
+    reapDeadSoldiers([soldier], converted, corpses)
+    expect(corpses.count).toBe(0)
+
+    soldier.takeDamage(DEFAULT_SOLDIER_PARAMS.maxHp)
+    reapDeadSoldiers([soldier], converted, corpses)
+    expect(corpses.count).toBe(1)
+    expect(soldier.mesh.isEnabled()).toBe(false) // live mesh hidden
+    expect(store.forZone(FOREST_ZONE_ID)).toHaveLength(1)
+
+    // Idempotent: a second pass does not spawn a duplicate corpse.
+    reapDeadSoldiers([soldier], converted, corpses)
+    expect(corpses.count).toBe(1)
+  })
+
+  it('records the corpse at the soldier position', () => {
+    const scene = new Scene(new NullEngine())
+    const store = new CorpseStore(8)
+    const corpses = new CorpseManager(scene, {
+      zoneId: FOREST_ZONE_ID,
+      store,
+      glbUrl: null,
+    })
+    const soldier = makeSoldier(scene)
+    soldier.takeDamage(DEFAULT_SOLDIER_PARAMS.maxHp)
+    reapDeadSoldiers([soldier], new Set(), corpses)
+    const [corpse] = store.forZone(FOREST_ZONE_ID)
+    expect(corpse.position.x).toBeCloseTo(6)
+    expect(corpse.position.z).toBeCloseTo(6)
   })
 })

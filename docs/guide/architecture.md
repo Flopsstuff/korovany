@@ -36,6 +36,7 @@ korovany/
 | Reusable UI (buttons, HUD)     | `src/components/`                    |
 | Game logic (no React/Babylon)  | `src/game/`                         |
 | Asset streaming (GLB on demand)| `src/game/streaming/`               |
+| Persistent enemy corpses       | `src/game/corpses/` + `src/scenes/corpseManager.ts` — see [Corpses](./corpses) |
 | Save/load (IndexedDB)          | `src/game/save/`                    |
 | Shared state                   | `src/store/` (a new slice) — see [State management](./state-management) |
 | A 3D model / texture / sound   | `assets/` (tracked by Git LFS)      |
