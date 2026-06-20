@@ -21,6 +21,11 @@ deploys `./dist` to Cloudflare Pages (project `korovany`) using
 [`cloudflare/wrangler-action`](https://github.com/cloudflare/wrangler-action).
 Pull requests run the build as a CI signal but do **not** deploy.
 
+Until the Cloudflare secrets below are set, the deploy step **skips gracefully**
+(the build still runs, so `main` stays green) and prints a notice. Once the
+secrets are added, deploy activates automatically on the next push to `main` — or
+trigger it manually from the **Actions** tab (the workflow has `workflow_dispatch`).
+
 ### Required GitHub Actions secrets
 
 The deploy step needs two repository secrets
