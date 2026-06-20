@@ -105,7 +105,13 @@ def _download(url, dest):
     return os.path.getsize(dest)
 
 
-def _finish(task, out, download, fmt):
+def _finish(task, out, download, fmt, url_keys=None):
+    """Print a result summary and optionally download the model.
+
+    url_keys: ordered list of top-level task fields to try as the direct model
+    URL (used by rigging/animation, whose result is a flat *_glb_url field
+    rather than the model_urls dict that text-to-3d / retexture return).
+    """
     if not task:
         return 1
     if task.get("status") != "SUCCEEDED":
@@ -121,11 +127,24 @@ def _finish(task, out, download, fmt):
         "thumbnail_url": task.get("thumbnail_url"),
         "video_url": task.get("video_url"),
         "texture_urls": task.get("texture_urls"),
+        # rigging / animation result fields (present only for those modes):
+        "rigged_character_glb_url": task.get("rigged_character_glb_url"),
+        "rigged_character_fbx_url": task.get("rigged_character_fbx_url"),
+        "basic_animations": task.get("basic_animations"),
+        "animation_glb_url": task.get("animation_glb_url"),
+        "animation_fbx_url": task.get("animation_fbx_url"),
     }
+    summary = {k: v for k, v in summary.items() if v is not None}
     print(json.dumps(summary, indent=2))
     if download and out:
         os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
-        url = (task.get("model_urls") or {}).get(fmt)
+        url = None
+        for k in (url_keys or []):
+            url = task.get(k)
+            if url:
+                break
+        if not url:
+            url = (task.get("model_urls") or {}).get(fmt)
         if not url:
             print(f"no {fmt} url in result", file=sys.stderr)
             return 1
@@ -187,8 +206,93 @@ def cmd_image(a):
     return _finish(task, a.out, a.download, a.format)
 
 
+def cmd_retexture(a):
+    """UV-unwrap + texture an existing (possibly untextured) mesh, geometry-preserving.
+
+    This is the right tool for v1.2 low-poly: it paints albedo onto the exact
+    input mesh without remeshing, so the faceted silhouette is untouched (unlike
+    text-to-3d `refine`, whose PBR pass drifts the surface into a realistic band).
+    `--remove-lighting` (on by default) bakes a flat unlit albedo for flat shading.
+    """
+    payload = {}
+    if a.input_task_id:
+        payload["input_task_id"] = a.input_task_id
+    elif a.model_url:
+        payload["model_url"] = a.model_url
+    else:
+        sys.exit("retexture needs --input-task-id or --model-url")
+    if a.text_style_prompt:
+        payload["text_style_prompt"] = a.text_style_prompt
+    elif a.image_style_url:
+        payload["image_style_url"] = a.image_style_url
+    else:
+        sys.exit("retexture needs --text-style-prompt or --image-style-url")
+    payload["enable_pbr"] = a.enable_pbr
+    payload["remove_lighting"] = not a.keep_lighting
+    if a.original_uv:
+        payload["enable_original_uv"] = True  # reuse input UVs instead of unwrapping fresh
+    if a.hd_texture:
+        payload["hd_texture"] = True
+    if a.ai_model:
+        payload["ai_model"] = a.ai_model
+    tid = _create("/v1/retexture", payload)
+    if not tid:
+        return 1
+    print(f"retexture task: {tid}", file=sys.stderr)
+    task = _poll(f"/v1/retexture/{tid}", a.interval, a.timeout)
+    return _finish(task, a.out, a.download, a.format)
+
+
+def cmd_rig(a):
+    """Auto-rig a TEXTURED humanoid (must face +Z, <=300k faces). 5 credits.
+
+    Returns a rigged GLB/FBX plus basic walk/run clips. Texture the mesh first
+    (retexture/refine) — rigging rejects untextured input.
+    """
+    payload = {"height_meters": a.height_meters}
+    if a.input_task_id:
+        payload["input_task_id"] = a.input_task_id
+    elif a.model_url:
+        payload["model_url"] = a.model_url
+    else:
+        sys.exit("rig needs --input-task-id or --model-url")
+    if a.texture_image_url:
+        payload["texture_image_url"] = a.texture_image_url
+    tid = _create("/v1/rigging", payload)
+    if not tid:
+        return 1
+    print(f"rigging task: {tid}", file=sys.stderr)
+    task = _poll(f"/v1/rigging/{tid}", a.interval, a.timeout)
+    return _finish(task, a.out, a.download, a.format,
+                   url_keys=["rigged_character_glb_url", "rigged_character_fbx_url"])
+
+
+def cmd_animate(a):
+    """Apply an animation (action_id) to a rigged character. ~3 credits.
+
+    rig_task_id is the id of a SUCCEEDED rigging task. action_id selects the clip
+    from Meshy's animation library (see docs Animation Library Reference).
+    """
+    payload = {"rig_task_id": a.rig_task_id, "action_id": a.action_id}
+    if a.fps:
+        payload["post_process"] = {"operation_type": "change_fps", "fps": a.fps}
+    tid = _create("/v1/animations", payload)
+    if not tid:
+        return 1
+    print(f"animation task: {tid}", file=sys.stderr)
+    task = _poll(f"/v1/animations/{tid}", a.interval, a.timeout)
+    return _finish(task, a.out, a.download, a.format,
+                   url_keys=["animation_glb_url", "animation_fbx_url"])
+
+
 def cmd_status(a):
-    base = {"text-to-3d": "/v2/text-to-3d", "image-to-3d": "/v1/image-to-3d"}[a.kind]
+    base = {
+        "text-to-3d": "/v2/text-to-3d",
+        "image-to-3d": "/v1/image-to-3d",
+        "retexture": "/v1/retexture",
+        "rigging": "/v1/rigging",
+        "animations": "/v1/animations",
+    }[a.kind]
     st, d = _req("GET", f"{base}/{a.task_id}")
     if st != 200:
         print(f"HTTP {st}: {json.dumps(d)}", file=sys.stderr)
@@ -233,14 +337,50 @@ def main():
     im.add_argument("--no-remesh", action="store_true")
     common(im)
 
+    rt = sub.add_parser("retexture",
+                        help="UV-unwrap + texture an existing mesh (geometry-preserving)")
+    rt_src = rt.add_mutually_exclusive_group(required=True)
+    rt_src.add_argument("--input-task-id", help="id of a prior Meshy task to texture")
+    rt_src.add_argument("--model-url", help="GLB URL or data URI to texture")
+    rt_style = rt.add_mutually_exclusive_group(required=True)
+    rt_style.add_argument("--text-style-prompt", help="describe the look (e.g. 'flat low-poly muted palette')")
+    rt_style.add_argument("--image-style-url", help="reference image for the texture style")
+    rt.add_argument("--enable-pbr", action="store_true", help="also emit metallic/roughness/normal maps")
+    rt.add_argument("--keep-lighting", action="store_true",
+                    help="keep baked lighting (default removes it for flat shading)")
+    rt.add_argument("--original-uv", action="store_true", help="reuse input UVs instead of unwrapping fresh")
+    rt.add_argument("--hd-texture", action="store_true", help="4K texture (heavier payload; off for web)")
+    rt.add_argument("--ai-model", default="", help="meshy-5 / meshy-6 / latest")
+    common(rt)
+
+    rg = sub.add_parser("rig", help="auto-rig a TEXTURED humanoid (faces +Z)")
+    rg_src = rg.add_mutually_exclusive_group(required=True)
+    rg_src.add_argument("--input-task-id", help="id of a prior SUCCEEDED textured-model task")
+    rg_src.add_argument("--model-url", help="textured GLB URL or data URI")
+    rg.add_argument("--height-meters", type=float, default=1.8, help="character height in meters")
+    rg.add_argument("--texture-image-url", default="", help="optional external texture")
+    common(rg)
+
+    an = sub.add_parser("animate", help="apply an animation clip to a rigged character")
+    an.add_argument("rig_task_id", help="id of a SUCCEEDED rigging task")
+    an.add_argument("--action-id", type=int, required=True, help="animation library clip id")
+    an.add_argument("--fps", type=int, default=0, choices=[0, 24, 25, 30, 60],
+                    help="output fps (0 = Meshy default 30; change_fps post-process)")
+    common(an)
+
     s = sub.add_parser("status")
     s.add_argument("task_id")
-    s.add_argument("--kind", default="text-to-3d", choices=["text-to-3d", "image-to-3d"])
+    s.add_argument("--kind", default="text-to-3d",
+                   choices=["text-to-3d", "image-to-3d", "retexture", "rigging", "animations"])
 
     a = p.parse_args()
     if a.cmd == "balance":
         return balance()
-    return {"text": cmd_text, "refine": cmd_refine, "image": cmd_image, "status": cmd_status}[a.cmd](a)
+    return {
+        "text": cmd_text, "refine": cmd_refine, "image": cmd_image,
+        "retexture": cmd_retexture, "rig": cmd_rig, "animate": cmd_animate,
+        "status": cmd_status,
+    }[a.cmd](a)
 
 
 if __name__ == "__main__":

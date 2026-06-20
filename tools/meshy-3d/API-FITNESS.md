@@ -103,3 +103,28 @@ verified rendering in the live app.
   web payload. 1024² PBR is ample for a small prop.
 - Rendered in `MainScene` (Babylon `loadModel`) at a real viewport — lit,
   textured, correct. Screenshot attached to [FLO-263](/FLO/issues/FLO-263).
+
+## Retexture / rig / animate wrapped + verified (FLO-330)
+
+The wrapper now covers the full **texture → rig → animate** chain so every
+character we ship can be textured (and, when it needs to move, rigged/animated)
+in one toolset — `meshy.py {retexture,rig,animate}`. Endpoint shapes confirmed
+against the live docs (`v1/retexture`, `v1/rigging`, `v1/animations`).
+
+**Live retexture proof** — textured the previously-untextured empire soldier
+(`019ee601-…`, 2794 tris, shipped grey on main) **without remeshing**:
+
+| Stage | Tool | Output |
+|-------|------|--------|
+| retexture | `meshy.py retexture --input-task-id 019ee601-… --text-style-prompt "…empire infantry…"` | textured GLB, geometry preserved (3105 tris), embedded ~2K maps, 3.0 MiB |
+| resize | `resize_glb_textures.py --max 1024` | **323 KiB** web GLB, 2 meshes, loads clean in Babylon NullEngine |
+
+Thumbnail visually confirms a correctly-textured soldier (green coat, leather
+webbing, brown boots, rifle). This is the standard path for any mesh that
+shipped untextured — **no regeneration, geometry untouched.**
+
+- `retexture` preferred over text-to-3D `refine` for v1.2 low-poly: refine's PBR
+  pass drifts faceted geometry into a semi-realistic band; retexture paints the
+  exact input mesh. `--keep-lighting` off (default) bakes flat/unlit albedo.
+- **Rigging requires textured input** and a +Z-facing humanoid ≤300k faces — so
+  texturing is always step one for a character that will animate.

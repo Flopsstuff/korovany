@@ -21,6 +21,24 @@ python tools/meshy-3d/meshy.py balance
 # -> {"balance": <credits>}
 ```
 
+## Texturing is mandatory (read first)
+
+**Every model we ship must be textured — never deliver a grey/untextured mesh.**
+A `preview` (and an `image`-to-3D) result is geometry only; that is an
+intermediate, not a deliverable. Before an asset is "done" it must carry a
+baked texture, exactly like the hero/chest. Two ways to get there:
+
+1. **`refine`** — for text-to-3D, refine the preview into a PBR-textured model
+   (same lineage, generates new UVs + maps). Heaviest, most realistic surface.
+2. **`retexture`** — **UV-unwrap + paint an existing mesh, geometry-preserving.**
+   This is the preferred path for v1.2 low-poly: it does not remesh, so the
+   faceted silhouette is untouched (refine's PBR pass drifts low-poly geometry
+   into a semi-realistic band — see `API-FITNESS.md`). Use it to texture any
+   mesh that shipped untextured (e.g. the empire soldier) without regenerating.
+
+Meshy also supports **auto-rig** and **animation** for humanoids — see those
+sections below. Rigging *requires a textured input*, so texture first, rig second.
+
 ## Core workflow (text → 3D)
 
 Meshy text-to-3D is **two stages**: a cheap `preview` (geometry only) then an
@@ -59,6 +77,50 @@ python tools/meshy-3d/meshy.py image https://example.com/ref.png --out ./assets/
 python tools/meshy-3d/meshy.py status <TASK_ID> --kind text-to-3d
 ```
 
+## Texturing an existing mesh (UV-unwrap + paint, geometry-preserving)
+
+`retexture` is the workhorse for "make this untextured mesh textured" without
+touching geometry. Source it from a prior Meshy task id **or** any GLB URL/data
+URI; describe the look with a text prompt or a reference image.
+
+```bash
+# Texture an existing model in place. --keep-lighting is OFF by default, so the
+# albedo is baked flat/unlit — ideal for the v1.2 flat-shaded look.
+python tools/meshy-3d/meshy.py retexture \
+    --input-task-id 019ee601-93f0-7988-86f8-e35ce1067881 \
+    --text-style-prompt "Napoleonic empire infantry, green wool coat, leather webbing, flat low-poly muted palette" \
+    --out ./assets/soldier_retex --download
+
+# Then bring the embedded maps down to a web-safe size (mesh bytes untouched).
+python tools/meshy-3d/resize_glb_textures.py \
+    ./assets/soldier_retex.glb ./assets/soldier_web.glb --max 1024 --quality 85
+```
+
+`--enable-pbr` also emits metallic/roughness/normal maps; `--original-uv` reuses
+the input's UVs instead of unwrapping fresh; `--image-style-url` swaps the text
+prompt for a reference image. Cost ≈ 10 credits.
+
+## Rigging + animation (humanoids)
+
+Meshy can auto-rig a **textured** humanoid and apply library animation clips.
+Order is strict: **texture → rig → animate**.
+
+```bash
+# 1. Auto-rig a TEXTURED humanoid. Mesh must face +Z and be <=300k faces. ~5 cr.
+python tools/meshy-3d/meshy.py rig --input-task-id <TEXTURED_TASK_ID> \
+    --height-meters 1.8 --out ./assets/soldier_rigged --download
+#    Result GLB also carries Meshy's basic walk/run clips.
+
+# 2. Apply an animation library clip to the rig. ~3 cr.
+python tools/meshy-3d/meshy.py animate <RIG_TASK_ID> --action-id <ID> \
+    --fps 30 --out ./assets/soldier_anim --download
+```
+
+`rig`/`animate` results are flat `*_glb_url` fields (not the `model_urls` dict);
+the wrapper downloads them automatically. Find `action_id` values in Meshy's
+Animation Library Reference. Rigging **rejects untextured input** — this is why
+texturing is step one for any character that will move.
+
 ## Options
 
 | Flag | Default | Notes |
@@ -71,8 +133,14 @@ python tools/meshy-3d/meshy.py status <TASK_ID> --kind text-to-3d
 | `--no-remesh` | off | disable Meshy auto-remesh (keep dense topology) |
 | `--target-polycount` | `30000` | text mode; remesh target tris (100–300000). Set low for web/game props |
 | `--topology` | `triangle` | text mode; `triangle` (decimated) or `quad` |
-| `--enable-pbr` | off | refine mode; generate PBR maps (albedo/normal/roughness/metallic) |
-| `--hd-texture` | off | refine mode; 4K base-color (heavier payload — leave off for web) |
+| `--enable-pbr` | off | refine/retexture mode; generate PBR maps (albedo/normal/roughness/metallic) |
+| `--hd-texture` | off | refine/retexture mode; 4K base-color (heavier payload — leave off for web) |
+| `--input-task-id` / `--model-url` | — | retexture/rig source: a prior task id or a GLB URL/data URI |
+| `--text-style-prompt` / `--image-style-url` | — | retexture: describe the texture look (text or reference image) |
+| `--keep-lighting` | off | retexture: keep baked lighting (default bakes flat/unlit albedo) |
+| `--original-uv` | off | retexture: reuse input UVs instead of unwrapping fresh |
+| `--height-meters` | 1.8 | rig: character height in meters |
+| `--action-id` / `--fps` | — / 0 | animate: library clip id and output fps (0/24/25/30/60) |
 | `--interval` / `--timeout` | 5s / 900s | poll cadence and ceiling |
 
 `target_polycount`/`topology` only apply when remesh is on (the default). PBR/HD
@@ -93,6 +161,8 @@ the embedded maps down to a web-safe size — Meshy embeds full-res (~2K) JPEGs.
 
 - text-to-3D **preview**: ~20 credits, ~1–2 min.
 - text-to-3D **refine**: additional credits (textures).
+- **retexture**: ~10 credits, ~1–2 min (verified live on the empire soldier).
+- **rig**: ~5 credits. **animate**: ~3 credits per clip.
 - See `API-FITNESS.md` in this folder for the full measured fitness report,
   latency, modes, and licensing terms.
 

@@ -6,3 +6,4 @@ out/
 *.usdz
 *.stl
 *.thumb.png
+__pycache__/
