@@ -8,6 +8,7 @@ import {
   StandardMaterial,
   Vector3,
 } from '@babylonjs/core'
+import { createWorldBounds } from './worldBounds'
 import { resizeEngineToDisplay } from '../engine'
 import { ThirdPersonCamera } from '../game/camera'
 import { CharacterController } from '../game/controller'
@@ -85,12 +86,10 @@ export function createHumanLandsScene(
 
   new HemisphericLight('light', new Vector3(0, 1, 0), scene)
 
-  // Dusty trade-road ground (tan), visually distinct from the forest's green.
-  const ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene)
-  const groundMat = new StandardMaterial('groundMat', scene)
-  groundMat.diffuseColor = new Color3(0.62, 0.55, 0.38)
-  ground.material = groundMat
-  ground.isPickable = true
+  // Dusty trade-road ground (tan), visually distinct from the forest's green,
+  // walled by a perimeter bounding box (FLO-368). `clampToWorld` keeps the
+  // capsule inside the walls each frame (the controller has no wall collision).
+  const { clamp: clampToWorld } = createWorldBounds(scene, new Color3(0.62, 0.55, 0.38))
 
   const landmarkMeshes = LANDMARKS.map(([x, z, h, r, g, b], i) => {
     const box = MeshBuilder.CreateBox(`landmark-${i}`, { size: 2, height: h }, scene)
@@ -151,6 +150,7 @@ export function createHumanLandsScene(
     }
     frameIntent = input.sample()
     loop.advance(dt)
+    clampToWorld(controller.mesh.position) // contain the player within the world bounds
     rig.update(frameIntent.lookDX, frameIntent.lookDY)
     scene.render()
   }

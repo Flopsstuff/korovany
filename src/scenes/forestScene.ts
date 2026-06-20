@@ -3,11 +3,11 @@ import {
   Color3,
   Engine,
   HemisphericLight,
-  MeshBuilder,
   Scene,
   StandardMaterial,
   Vector3,
 } from '@babylonjs/core'
+import { createWorldBounds } from './worldBounds'
 import { resizeEngineToDisplay } from '../engine'
 import { ThirdPersonCamera } from '../game/camera'
 import { CharacterController } from '../game/controller'
@@ -166,13 +166,11 @@ export function createForestScene(
   new HemisphericLight('light', new Vector3(0, 1, 0), scene)
 
   // ------------------------------------------------------------------
-  // Ground — a grassy clearing with ray-cast collision.
+  // Ground + world bounds — a large grassy clearing walled by a perimeter
+  // bounding box (FLO-368). `clampToWorld` keeps the capsule inside the walls
+  // each frame, since the controller has no horizontal collision of its own.
   // ------------------------------------------------------------------
-  const ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene)
-  const groundMat = new StandardMaterial('groundMat', scene)
-  groundMat.diffuseColor = new Color3(0.2, 0.38, 0.15)
-  ground.material = groundMat
-  ground.isPickable = true
+  const { clamp: clampToWorld } = createWorldBounds(scene, new Color3(0.2, 0.38, 0.15))
 
   // ------------------------------------------------------------------
   // Streaming — the zone's environment is streamed via the
@@ -312,6 +310,7 @@ export function createForestScene(
     reapDeadSoldiers(soldiers, convertedToCorpse, corpses)
 
     loop.advance(dt)
+    clampToWorld(controller.mesh.position) // contain the player within the world bounds
     rig.update(frameIntent.lookDX, frameIntent.lookDY)
     scene.render()
   }

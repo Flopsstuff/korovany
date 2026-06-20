@@ -15,6 +15,13 @@ and asset needs.
   combat spacing, and asset streaming.
 - Low-poly silhouettes should be readable at distance. Important navigation
   landmarks need distinct shapes, not only different colors.
+- **World size & bounds.** Each zone's playable ground is `WORLD_SIZE` units per
+  axis (`src/scenes/worldBounds.ts`, currently 600 — 10× the original 60×60
+  clearing, board feedback FLO-357/FLO-368) and is enclosed by a perimeter
+  bounding box of four walls. The character controller has no horizontal
+  collision, so `createWorldBounds(...).clamp(position)` pins the player inside
+  the walls each frame; new zones should size their ground from `WORLD_SIZE` and
+  reuse this helper rather than re-hardcoding extents.
 
 ## Detailed world files
 
