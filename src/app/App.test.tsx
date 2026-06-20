@@ -8,6 +8,7 @@ import { appReducer, type AppPhase } from '../store/appSlice'
 import { gameReducer } from '../store/gameSlice'
 import { streamingReducer } from '../store/streamingSlice'
 import { saveReducer } from '../store/saveSlice'
+import { healthReducer } from '../store/healthSlice'
 import { App } from './App'
 
 // Stub IndexedDB save calls so App tests don't touch the real store.
@@ -28,6 +29,7 @@ vi.mock('../scenes/GameCanvas', () => ({
 function renderApp(
   initialPhase: AppPhase = 'menu',
   streamingPhases: Record<string, AssetLoadPhase> = {},
+  playerHp: number = 100,
 ) {
   const store = configureStore({
     reducer: {
@@ -35,12 +37,14 @@ function renderApp(
       game: gameReducer,
       streaming: streamingReducer,
       save: saveReducer,
+      health: healthReducer,
     },
     preloadedState: {
       app: { phase: initialPhase },
       game: { score: 0 },
       streaming: { phases: streamingPhases },
       save: { hasSave: false, loadedSave: null },
+      health: { player: { current: playerHp, max: 100 } },
     },
   })
 
@@ -113,5 +117,10 @@ describe('<App />', () => {
   it('shows a loading hint while assets are streaming', () => {
     renderApp('menu', { 'hero.player-default': 'loading' })
     expect(screen.getByText('Loading…')).toBeInTheDocument()
+  })
+
+  it('returns to menu when player HP reaches 0 during playing', () => {
+    renderApp('playing', {}, 0)
+    expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument()
   })
 })

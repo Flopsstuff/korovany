@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { GameCanvas } from '../scenes/GameCanvas'
 import {
   continueGame,
+  resetPlayerHealth,
   returnToMenu,
   selectIsStreamingLoading,
   setSaveExists,
@@ -27,8 +28,17 @@ export function App() {
   const isLoadingAssets = useAppSelector(selectIsStreamingLoading)
   const hasSaveSlot = useAppSelector((state) => state.save.hasSave)
   const score = useAppSelector((state) => state.game.score)
+  const playerHp = useAppSelector((state) => state.health.player.current)
   const menuPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const pausePrimaryActionRef = useRef<HTMLButtonElement>(null)
+
+  // Return to menu on player death; reset HP so a subsequent New Game starts fresh.
+  useEffect(() => {
+    if (phase !== 'playing' && phase !== 'paused') return
+    if (playerHp > 0) return
+    dispatch(resetPlayerHealth())
+    dispatch(returnToMenu())
+  }, [playerHp, phase, dispatch])
 
   // Check for autosave on first mount so the Continue button can appear.
   useEffect(() => {

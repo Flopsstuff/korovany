@@ -28,6 +28,7 @@ export default defineConfig({
           { text: 'Character controller', link: '/guide/character-controller' },
           { text: 'Forest zone', link: '/guide/forest-zone' },
           { text: 'Save system', link: '/guide/save-system' },
+          { text: 'Health system', link: '/guide/health-system' },
         ],
       },
       {
