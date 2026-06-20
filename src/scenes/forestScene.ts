@@ -16,9 +16,11 @@ import { FixedStepLoop } from '../game/loop'
 import {
   AssetRegistry,
   AssetStreamLoader,
+  FOREST_TREE_ASSET_ID,
+  WOODEN_HUT_ASSET_ID,
+  ZoneStreamingManager,
   defaultLoadGlb,
-  spawnStreamedInstance,
-  type StreamedInstance,
+  getZoneManifest,
 } from '../game/streaming'
 import {
   createMeleeAttack,
@@ -59,13 +61,12 @@ export function reapDeadSoldiers(
 }
 
 // ---------------------------------------------------------------------------
-// Asset ids — canonical string keys used throughout the streaming system.
+// Asset ids — canonical keys owned by the zone manifest (single source of
+// truth). Re-exported here so existing call sites keep their `forestScene`
+// import path.
 // ---------------------------------------------------------------------------
 
-/** Conifer tree placed throughout the clearing (FLO-299). */
-export const FOREST_TREE_ASSET_ID = 'env.forest-tree'
-/** Wooden hut placed at the edge of the clearing (FLO-299). */
-export const WOODEN_HUT_ASSET_ID = 'env.wooden-hut'
+export { FOREST_TREE_ASSET_ID, WOODEN_HUT_ASSET_ID }
 
 /** Seed the forest environment assets into a registry. */
 export function seedForestAssets(registry: AssetRegistry): void {
@@ -78,33 +79,6 @@ export function seedForestAssets(registry: AssetRegistry): void {
     metadata: { label: 'Wooden hut', targetSize: 3 },
   })
 }
-
-// ---------------------------------------------------------------------------
-// Prop placement tables — static scatter pattern for the forest clearing.
-// ---------------------------------------------------------------------------
-
-/** Tree positions: (x, z) pairs in scene units. Keeps a 4-unit clearing. */
-const TREE_POSITIONS: [number, number][] = [
-  [8, 2],
-  [-7, 3],
-  [5, -9],
-  [-9, -5],
-  [12, -6],
-  [-11, 7],
-  [3, 11],
-  [-4, -12],
-  [9, 9],
-  [-13, -2],
-  [14, 3],
-  [-6, 13],
-]
-
-/** Hut positions: a small settlement at one edge of the clearing. */
-const HUT_POSITIONS: [number, number][] = [
-  [-10, 10],
-  [-14, 6],
-  [-7, 15],
-]
 
 // ---------------------------------------------------------------------------
 // ForestScene
@@ -201,31 +175,20 @@ export function createForestScene(
   ground.isPickable = true
 
   // ------------------------------------------------------------------
-  // Streaming — set up registry with forest props.
+  // Streaming — the zone's environment is streamed via the
+  // ZoneStreamingManager (E3.2 / FLO-345). Entering the forest manifest loads
+  // its placed props (placeholder boxes swap to GLBs as they resolve); leaving
+  // the zone disposes them. The travel trigger is the GameCanvas scene remount
+  // keyed on `playerSlice.zoneId` — each zone change tears this scene (and its
+  // manager) down and boots the destination's, so resident meshes stay bounded.
   // ------------------------------------------------------------------
   const registry = new AssetRegistry()
   seedForestAssets(registry)
   const loader = new AssetStreamLoader(scene, registry, defaultLoadGlb)
 
-  const spawnedInstances: Promise<StreamedInstance>[] = []
-
-  // Scatter trees.
-  for (const [x, z] of TREE_POSITIONS) {
-    const promise = spawnStreamedInstance(loader, scene, FOREST_TREE_ASSET_ID).then((inst) => {
-      inst.root.position = new Vector3(x, 0, z)
-      return inst
-    })
-    spawnedInstances.push(promise)
-  }
-
-  // Place huts.
-  for (const [x, z] of HUT_POSITIONS) {
-    const promise = spawnStreamedInstance(loader, scene, WOODEN_HUT_ASSET_ID).then((inst) => {
-      inst.root.position = new Vector3(x, 0, z)
-      return inst
-    })
-    spawnedInstances.push(promise)
-  }
+  const zoneManager = new ZoneStreamingManager(scene, loader)
+  console.info(`[zone] enter ${FOREST_ZONE_ID}`)
+  void zoneManager.enterZone(getZoneManifest(FOREST_ZONE_ID))
 
   // ------------------------------------------------------------------
   // Character controller + follow camera.
@@ -373,9 +336,10 @@ export function createForestScene(
       window.removeEventListener('resize', onResize)
       input.dispose()
       engine.stopRenderLoop()
-      void Promise.all(spawnedInstances).then((instances) => {
-        for (const inst of instances) inst.release()
-      })
+      console.info(
+        `[zone] dispose ${FOREST_ZONE_ID} (${zoneManager.residentInstanceCount} streamed instances)`,
+      )
+      zoneManager.dispose()
       for (const s of soldiers) s.dispose()
       caravan.dispose()
       corpses.dispose() // meshes only — store records persist for re-enter

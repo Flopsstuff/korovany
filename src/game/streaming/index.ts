@@ -11,6 +11,12 @@ export {
   type ZoneStreamingOptions,
   type SpawnInstanceFn,
 } from './zoneStreaming'
+export {
+  ZONE_MANIFESTS,
+  getZoneManifest,
+  FOREST_TREE_ASSET_ID,
+  WOODEN_HUT_ASSET_ID,
+} from './zoneManifests'
 export type { AssetLoadPhase, AssetMetadata, AssetRecord } from './types'
 
 import type { Scene } from '@babylonjs/core'

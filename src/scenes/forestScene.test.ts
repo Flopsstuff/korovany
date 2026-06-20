@@ -8,7 +8,7 @@ import {
   reapDeadSoldiers,
   seedForestAssets,
 } from './forestScene'
-import { AssetRegistry } from '../game/streaming'
+import { AssetRegistry, getZoneManifest } from '../game/streaming'
 import {
   applyPlayerTransform,
   readPlayerTransform,
@@ -46,6 +46,17 @@ describe('seedForestAssets', () => {
     expect(registry.resolve(FOREST_TREE_ASSET_ID).metadata.targetSize).toBeGreaterThan(
       registry.resolve(WOODEN_HUT_ASSET_ID).metadata.targetSize ?? 0,
     )
+  })
+
+  // The forest manifest (E3.2 wiring) and the registry seeding live in separate
+  // modules; this guards them from drifting — every streamed asset id the
+  // ZoneStreamingManager will try to load must be registered before entry.
+  it('seeds every asset the forest manifest places', () => {
+    const registry = new AssetRegistry()
+    seedForestAssets(registry)
+    for (const placement of getZoneManifest(FOREST_ZONE_ID).placements) {
+      expect(() => registry.resolve(placement.assetId)).not.toThrow()
+    }
   })
 })
 
