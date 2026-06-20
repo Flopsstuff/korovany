@@ -54,9 +54,12 @@ The overlay handles its **empty**, **loading** ("Travelling…"), and **error**
 states. It is built against the E3.1-UX requirements; visual polish tracks
 Iris's wireframes.
 
-## Streaming entry point (E3.2 hook)
+## Streaming entry point (E3.2, wired in FLO-345)
 
 `createZoneScene(zoneId, canvas, options)` is the single place a zone's scene is
-booted. E3.1 loads eagerly; E3.2 grows this into load/unload on border crossing.
-Each zone's `streaming.manifestId` names the asset manifest a future ticket will
-stream in.
+booted. Each zone scene drives a `ZoneStreamingManager` and enters its
+`ZoneManifest` (`getZoneManifest(zoneId)`) on boot, so the zone's content streams
+in on arrival and disposes when the scene is torn down on the next border
+crossing. See [Asset streaming → Wired into travel](./asset-streaming) for the
+manager lifecycle and the per-zone manifests in
+`src/game/streaming/zoneManifests.ts`.

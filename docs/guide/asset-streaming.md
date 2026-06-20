@@ -101,6 +101,31 @@ await zones.enterZone({ id: 'village', placements: [/* … */] })
   in order, so an in-flight load can never leak past its own eviction.
 - **`dispose()`** releases every resident zone (scene teardown / return to menu).
 
+### Wired into travel (E3.2 / FLO-345)
+
+The per-zone content lives in **`src/game/streaming/zoneManifests.ts`** as pure,
+engine-agnostic data — `getZoneManifest(zoneId)` returns the `ZoneManifest` for a
+zone id (matching `playerSlice.zoneId` and the E3.1 registry), falling back to an
+empty manifest for zones whose environment is still procedural or not yet built.
+
+The travel trigger is the **`GameCanvas` scene remount keyed on
+`playerSlice.zoneId`** (see [world map](./world-map)): a zone change disposes the
+current zone scene and boots the destination's. Each zone scene owns its manager
+and enters its manifest on boot:
+
+```ts
+const zoneManager = new ZoneStreamingManager(scene, loader)
+console.info(`[zone] enter ${FOREST_ZONE_ID}`)
+void zoneManager.enterZone(getZoneManifest(FOREST_ZONE_ID))
+// …on teardown (border crossing / return to menu):
+zoneManager.dispose()
+```
+
+Because the destination scene is a fresh engine + scene, the previous zone's
+content is released both by its manager's `dispose()` and by the engine teardown
+— meshes stay bounded across an A→B→A round-trip. The `[zone] enter` /
+`[zone] dispose` console lines make the load/unload observable in a browser smoke.
+
 ## HUD wiring
 
 `GameCanvas` passes `onAssetLoadingState` into `createGameEngine`, which
