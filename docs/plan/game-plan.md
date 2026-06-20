@@ -114,23 +114,28 @@ Goal: a deployed build where you start a new game, spawn as an elf in a small
 forest, walk/run/jump with a third-person camera over solid ground, and your
 position+health survive a reload (browser save). Proves the whole stack.
 
-- **E1.0 App state machine & menu shell** `[ ]` *(carried from E0.1)*
+Epic: **[FLO-291](/FLO/issues/FLO-291)** — decomposed into canonical oneshot
+tickets 2026-06-20 (one MR each). **Check these before cutting any new Phase-1
+child** (Phase 0 was built 3× by concurrent runs). Blocker DAG:
+E1.2→E1.3, E1.1→E1.4, and {E1.0,E1.1,E1.3,E1.4}→E1.5.
+
+- **E1.0 App state machine & menu shell** `[ ]` — FLO-292 (Aldric) *(carried from E0.1)*
   - [ ] `menu → playing → paused` state machine; ESC toggles pause.
   - [ ] Main menu shell (New Game / Continue / Settings) as a React overlay over the canvas.
-- **E1.1 Third-person character controller** `[ ]`
+- **E1.1 Third-person character controller** `[ ]` — FLO-293 (Wayland)
   - [ ] Capsule controller: WASD move, sprint, gravity, ground collision.
   - [ ] Jump with coyote-time; cannot double-jump.
   - [ ] Third-person follow camera with collision-aware boom.
-- **E1.2 Asset streaming manager** `[ ]`
+- **E1.2 Asset streaming manager** `[ ]` — FLO-294 (Soren)
   - [ ] Asset registry (id → URL + metadata); `streaming/` loads GLB on demand, caches, disposes.
   - [ ] Loading state surfaced to HUD; graceful fallback placeholder while loading.
-- **E1.3 First zone (forest stub)** `[ ]`
+- **E1.3 First zone (forest stub)** `[ ]` — FLO-295 (Lyra, blocked by FLO-294)
   - [ ] Ground/terrain mesh for a small forest clearing with collision.
   - [ ] Scatter a handful of streamed tree + hut GLBs (static, no LOD yet).
-- **E1.4 Save/load (IndexedDB)** `[ ]`
+- **E1.4 Save/load (IndexedDB)** `[ ]` — FLO-296 (Wayland, blocked by FLO-293)
   - [ ] Serialize player transform + health + zone id to IndexedDB; restore on Continue.
   - [ ] Save-slot UI (≥1 slot); autosave on pause.
-- **E1.5 Deploy the slice** `[ ]`
+- **E1.5 Deploy the slice** `[ ]` — FLO-297 (Wayland, blocked by FLO-292/293/295/296)
   - [ ] Wire GameScene into the app; ship to korovany.aimost.pl; smoke in a real browser.
 
 ### Phase 2 — Combat, health & injuries `[ ]`
