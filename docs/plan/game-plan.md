@@ -211,9 +211,13 @@ each, wired into the live forest/world loop. Ownership split Aldric/Wayland per
 FLO-348; visual feel & onboarding UI are **Iris-gated**; animation assets →
 Pygmalion via Iris.
 
-- **MPG.1 Objective & win/lose loop** `[ ]` — **[FLO-363](/FLO/issues/FLO-363)** (Wayland)
+- **MPG.1 Objective & win/lose loop** `[x]` — **[FLO-363](/FLO/issues/FLO-363)** (Wayland)
   HUD-surfaced "Raid 3 caravans" goal, score wired to kills+loot, explicit win and
   lose screens with restart. Turns directionless sandbox into a game with a point.
+  Delivered: pure `evaluateOutcome` win/lose machine drives `app.phase`
+  (`won`/`lost`); `gameSlice` tracks caravans-raided + kills→score; HUD shows the
+  objective counter + score; the forest ships a 3-caravan convoy so the goal is
+  completable; win/lose overlays both Restart into a fresh run. (PR — see issue.)
 - **MPG.2 Onboarding & objective intro** `[ ]` — **[FLO-364](/FLO/issues/FLO-364)** (Iris)
   Dismissible controls card (WASD/sprint/jump/F-attack/M-map) + current objective
   on New Game. Blocked by MPG.1.
@@ -231,7 +235,7 @@ Pygmalion via Iris.
   → `.injury-vignette` overlay; `selectLocomotionSpeedMultiplier` →
   `CharacterController.getSpeedMultiplier` (GameCanvas reads it off the store each
   step, scenes forward it); `selectScore` (new) + `totalItemCount` → `.hud-score`
-  panel. Kill increments land with MPG.1 (FLO-363, `addScore`).
+  panel. Kill + loot scoring lands with MPG.1 (FLO-363, `recordKill` / `raidCaravan`).
 - **MPG.7 Basic character animation** `[ ]` — *(to open; Pygmalion via Iris)*
   Idle / walk / attack / death clips for hero + soldier via meshy rig/animate pipeline.
 

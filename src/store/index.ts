@@ -30,7 +30,14 @@ export type AppDispatch = typeof store.dispatch
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>()
 export const useAppSelector = useSelector.withTypes<RootState>()
 
-export { continueGame, returnToMenu, startNewGame, togglePause } from './appSlice'
+export {
+  continueGame,
+  loseGame,
+  returnToMenu,
+  startNewGame,
+  togglePause,
+  winGame,
+} from './appSlice'
 export type { AppPhase, AppState } from './appSlice'
 export {
   adjustFactionReputation,
@@ -44,7 +51,14 @@ export {
   setPlayerFaction,
 } from './factionSlice'
 export type { FactionReputationChange, FactionReputationSet, FactionState } from './factionSlice'
-export { addScore, resetScore, selectScore } from './gameSlice'
+export {
+  KILL_SCORE,
+  OBJECTIVE_CARAVAN_TARGET,
+  raidCaravan,
+  recordKill,
+  resetRun,
+  selectScore,
+} from './gameSlice'
 export type { GameState } from './gameSlice'
 export {
   damagePlayer,

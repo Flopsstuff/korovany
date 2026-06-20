@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 import {
   appReducer,
   continueGame,
+  loseGame,
   returnToMenu,
   startNewGame,
   togglePause,
+  winGame,
   type AppState,
 } from './appSlice'
 
@@ -32,5 +34,22 @@ describe('appSlice', () => {
 
   it('can return to the menu', () => {
     expect(appReducer({ phase: 'paused' }, returnToMenu()).phase).toBe('menu')
+  })
+
+  it('wins only from active play', () => {
+    expect(appReducer({ phase: 'playing' }, winGame()).phase).toBe('won')
+    expect(appReducer({ phase: 'paused' }, winGame()).phase).toBe('paused')
+    expect(appReducer({ phase: 'menu' }, winGame()).phase).toBe('menu')
+  })
+
+  it('loses only from active play', () => {
+    expect(appReducer({ phase: 'playing' }, loseGame()).phase).toBe('lost')
+    expect(appReducer({ phase: 'paused' }, loseGame()).phase).toBe('paused')
+    expect(appReducer({ phase: 'menu' }, loseGame()).phase).toBe('menu')
+  })
+
+  it('restarts from a win or loss back into play', () => {
+    expect(appReducer({ phase: 'won' }, startNewGame()).phase).toBe('playing')
+    expect(appReducer({ phase: 'lost' }, startNewGame()).phase).toBe('playing')
   })
 })

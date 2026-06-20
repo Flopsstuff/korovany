@@ -3,7 +3,9 @@ import { createGameEngine } from '../engine'
 import {
   damagePlayer,
   pickUpLoot,
+  raidCaravan,
   recordCombatKill,
+  recordKill,
   selectLocomotionSpeedMultiplier,
   store,
   useAppDispatch,
@@ -40,7 +42,9 @@ export function GameCanvas() {
   const dispatch = useAppDispatch()
   const phase = useAppSelector((state) => state.app.phase)
   const zoneId = useAppSelector((state) => state.player.zoneId)
-  const inGame = phase !== 'menu'
+  // Only the live run owns a zone scene. won/lost unmount it (the win/lose
+  // overlay takes over above the menu smoke scene), so Restart boots a fresh one.
+  const inGame = phase === 'playing' || phase === 'paused'
 
   // Mirror the live phase into a ref so the forest render loop can read "is
   // paused" every frame without re-running the mount effect — pause must not
@@ -67,11 +71,17 @@ export function GameCanvas() {
             ? createZoneScene(zoneId, canvas, {
                 onPlayerDamaged: (amount) => dispatch(damagePlayer(amount)),
                 // Close the loot loop (E3.5): adapt the caravan's aggregated drop
-                // into one pickUpLoot per stack so the HUD inventory updates.
+                // into one pickUpLoot per stack so the HUD inventory updates, then
+                // advance the raid objective + score the haul (MPG.1).
                 onCaravanLooted: (drop) => {
-                  for (const pickup of caravanLootToPickups(drop)) dispatch(pickUpLoot(pickup))
+                  const pickups = caravanLootToPickups(drop)
+                  for (const pickup of pickups) dispatch(pickUpLoot(pickup))
+                  const lootPoints = pickups.reduce((sum, p) => sum + p.count, 0)
+                  dispatch(raidCaravan(lootPoints))
                 },
                 onEnemyDefeated: (target) => dispatch(recordCombatKill(target)),
+                // Score each enemy soldier defeated (MPG.1).
+                onEnemyKilled: () => dispatch(recordKill()),
                 isPaused: () => phaseRef.current === 'paused',
                 // Leg-loss locomotion (MPG.6): the controller pulls this each
                 // step so a severed leg (crawl) actually slows the capsule. Read

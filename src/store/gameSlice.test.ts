@@ -1,19 +1,49 @@
 import { describe, expect, it } from 'vitest'
-import { addScore, gameReducer, resetScore, type GameState } from './gameSlice'
+import {
+  gameReducer,
+  KILL_SCORE,
+  OBJECTIVE_CARAVAN_TARGET,
+  raidCaravan,
+  recordKill,
+  resetRun,
+  type GameState,
+} from './gameSlice'
+
+const freshRun = (): GameState =>
+  gameReducer(undefined, { type: '@@INIT' })
 
 describe('gameSlice', () => {
-  it('starts with a zero score', () => {
-    const state = gameReducer(undefined, { type: '@@INIT' })
+  it('starts a run with zero progress and the caravan objective', () => {
+    const state = freshRun()
+    expect(state.kills).toBe(0)
+    expect(state.caravansRaided).toBe(0)
     expect(state.score).toBe(0)
+    expect(state.objectiveTarget).toBe(OBJECTIVE_CARAVAN_TARGET)
   })
 
-  it('adds to the score', () => {
-    const start: GameState = { score: 0 }
-    expect(gameReducer(start, addScore(5)).score).toBe(5)
-    expect(gameReducer({ score: 5 }, addScore(3)).score).toBe(8)
+  it('records a kill and awards kill points', () => {
+    const state = gameReducer(freshRun(), recordKill())
+    expect(state.kills).toBe(1)
+    expect(state.score).toBe(KILL_SCORE)
   })
 
-  it('resets the score', () => {
-    expect(gameReducer({ score: 42 }, resetScore()).score).toBe(0)
+  it('advances the raid objective and scores the haul', () => {
+    let state = gameReducer(freshRun(), raidCaravan(7))
+    expect(state.caravansRaided).toBe(1)
+    expect(state.score).toBe(7)
+    state = gameReducer(state, raidCaravan(3))
+    expect(state.caravansRaided).toBe(2)
+    expect(state.score).toBe(10)
+  })
+
+  it('accumulates kills and raids into one score', () => {
+    let state = gameReducer(freshRun(), recordKill())
+    state = gameReducer(state, raidCaravan(5))
+    expect(state.score).toBe(KILL_SCORE + 5)
+  })
+
+  it('resets all run state for a fresh game', () => {
+    const dirty: GameState = { kills: 4, caravansRaided: 2, objectiveTarget: 3, score: 99 }
+    expect(gameReducer(dirty, resetRun())).toEqual(freshRun())
   })
 })

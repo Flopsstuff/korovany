@@ -50,6 +50,7 @@ export function reapDeadSoldiers(
   soldiers: readonly SoldierEnemy[],
   converted: Set<SoldierEnemy>,
   corpses: Pick<CorpseManager, 'registerDeath'>,
+  onKilled?: () => void,
 ): void {
   for (const s of soldiers) {
     if (!s.isDead() || converted.has(s)) continue
@@ -58,6 +59,7 @@ export function reapDeadSoldiers(
     const pos: Vec3 = { x: p.x, y: p.y, z: p.z }
     corpses.registerDeath(pos, s.mesh.rotation.y)
     s.mesh.setEnabled(false) // hide the live soldier; the corpse mesh takes over
+    onKilled?.() // edge-triggered once per soldier: feeds the run score (MPG.1)
   }
 }
 
@@ -110,6 +112,11 @@ export interface ForestSceneOptions {
   onCaravanLooted?: (drop: LootDrop) => void
   /** Fired once per defeated target so progression can award XP without owning combat. */
   onEnemyDefeated?: (target: CombatKillTarget) => void
+  /**
+   * Fired once per enemy soldier the moment it dies. The caller scores the kill
+   * (MPG.1); this scene stays decoupled from the store.
+   */
+  onEnemyKilled?: () => void
   /**
    * Pause gate (FLO-326). While this returns `true` the per-frame simulation —
    * soldier AI, player movement, and melee damage — is frozen; the scene still
@@ -183,6 +190,7 @@ export function createForestScene(
     corpseGlbUrl,
     onCaravanLooted,
     onEnemyDefeated,
+    onEnemyKilled,
     isPaused,
     getSpeedMultiplier,
   } = options
@@ -275,7 +283,11 @@ export function createForestScene(
 
   // ------------------------------------------------------------------
   // Caravans — E3.3 loot piñatas wired into the live zone (E3.5), expanded for
-  // MPG.5 so repeated raids are possible without leaving the zone.
+  // MPG.5 so repeated raids are possible without leaving the zone. Each wanders
+  // a loop until ambushed, flees when struck, and on defeat emits its rolled
+  // loot via `onCaravanLooted` — the reward event the caller dispatches into the
+  // inventory (E3.4) so the HUD reflects the haul. The MPG.1 win objective is to
+  // raid all of them (distinct spawns → distinct, reproducible loot seeds).
   // ------------------------------------------------------------------
   const caravans = FOREST_CARAVAN_SPAWNS.map(
     (spawn) =>
@@ -286,6 +298,7 @@ export function createForestScene(
         onDefeated: () => onEnemyDefeated?.('caravan'),
       }),
   )
+  // Back-compat handle: the standalone E3.5 smoke + tests drive the first caravan.
   const caravan = caravans[0]
 
   // ------------------------------------------------------------------
@@ -339,8 +352,9 @@ export function createForestScene(
       hits.forEach((h) => h.takeDamage(25))
     }
 
-    // Turn any soldier that died this frame into a persistent corpse.
-    reapDeadSoldiers(soldiers, convertedToCorpse, corpses)
+    // Turn any soldier that died this frame into a persistent corpse, scoring
+    // the kill (MPG.1) as it converts.
+    reapDeadSoldiers(soldiers, convertedToCorpse, corpses, onEnemyKilled)
 
     loop.advance(dt)
     clampToWorld(controller.mesh.position) // contain the player within the world bounds

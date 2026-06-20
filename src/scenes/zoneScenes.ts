@@ -15,6 +15,8 @@ export interface ZoneSceneOptions {
   onCaravanLooted?: (drop: LootDrop) => void
   /** Fired once per defeated combat target so progression can award XP. */
   onEnemyDefeated?: (target: CombatKillTarget) => void
+  /** Fired when the player defeats an enemy soldier (MPG.1 score); ignored by zones with no combat. */
+  onEnemyKilled?: () => void
   isPaused?: () => boolean
   /**
    * Per-step locomotion speed multiplier (1 = normal). Surfaces the leg-loss

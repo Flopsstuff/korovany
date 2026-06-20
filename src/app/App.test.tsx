@@ -11,7 +11,7 @@ import { registerPlayer } from '../game/save/playerRuntime'
 import type { AssetLoadPhase } from '../game/streaming/types'
 import { appReducer, type AppPhase } from '../store/appSlice'
 import { DEFAULT_FACTION_STATE, factionReducer } from '../store/factionSlice'
-import { gameReducer } from '../store/gameSlice'
+import { gameReducer, OBJECTIVE_CARAVAN_TARGET, type GameState } from '../store/gameSlice'
 import { healthReducer } from '../store/healthSlice'
 import { injuryReducer } from '../store/injurySlice'
 import { inventoryReducer } from '../store/inventorySlice'
@@ -37,7 +37,12 @@ function renderApp(
   health: HealthState = { current: 100, max: 100 },
   inventory: InventoryState = createInventory(),
   injury: InjuryState = createInjuryState(),
-  score = 0,
+  game: GameState = {
+    kills: 0,
+    caravansRaided: 0,
+    objectiveTarget: OBJECTIVE_CARAVAN_TARGET,
+    score: 0,
+  },
   progression: ProgressionState = createProgression(),
 ) {
   const store = configureStore({
@@ -55,7 +60,7 @@ function renderApp(
     preloadedState: {
       app: { phase: initialPhase },
       faction: DEFAULT_FACTION_STATE,
-      game: { score },
+      game,
       health: { player: health },
       inventory,
       player,
@@ -168,9 +173,56 @@ describe('<App />', () => {
     expect(screen.getByText('Loading…')).toBeInTheDocument()
   })
 
-  it('returns to menu when player HP reaches 0 during playing', () => {
+  it('shows the lose screen with a Restart button when HP reaches 0 while playing', () => {
     renderApp('playing', {}, DEFAULT_PLAYER_STATE, { current: 0, max: 100 })
-    expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'You fell in the forest' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Restart' })).toBeInTheDocument()
+    // It is a defeat, not a return to the main menu.
+    expect(screen.queryByRole('button', { name: 'New Game' })).not.toBeInTheDocument()
+  })
+
+  it('shows the win screen with the final score once the raid objective is met', () => {
+    renderApp('playing', {}, DEFAULT_PLAYER_STATE, { current: 80, max: 100 }, createInventory(), createInjuryState(), {
+      kills: 2,
+      caravansRaided: OBJECTIVE_CARAVAN_TARGET,
+      objectiveTarget: OBJECTIVE_CARAVAN_TARGET,
+      score: 41,
+    })
+    expect(screen.getByRole('heading', { name: 'Korovany raided' })).toBeInTheDocument()
+    expect(screen.getByText(/Final score:/)).toHaveTextContent('Final score: 41.')
+    expect(screen.getByRole('button', { name: 'Restart' })).toBeInTheDocument()
+  })
+
+  it('shows the live raid objective counter and score while playing', () => {
+    renderApp('playing', {}, DEFAULT_PLAYER_STATE, { current: 100, max: 100 }, createInventory(), createInjuryState(), {
+      kills: 1,
+      caravansRaided: 1,
+      objectiveTarget: OBJECTIVE_CARAVAN_TARGET,
+      score: 17,
+    })
+    expect(screen.getByLabelText(/Objective: raid 3 caravans/)).toHaveTextContent('1/3')
+    expect(screen.getByRole('group', { name: 'Score' })).toHaveTextContent('17')
+  })
+
+  // E2E-style integration (no browser harness in this repo — RTL drives the real
+  // store): clicking Restart from the win screen wipes the run and drops the
+  // player back into a fresh game (objective counter back to 0/target).
+  it('restarts a fresh game from the win screen', async () => {
+    const user = userEvent.setup()
+    renderApp('playing', {}, DEFAULT_PLAYER_STATE, { current: 80, max: 100 }, createInventory(), createInjuryState(), {
+      kills: 4,
+      caravansRaided: OBJECTIVE_CARAVAN_TARGET,
+      objectiveTarget: OBJECTIVE_CARAVAN_TARGET,
+      score: 88,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Restart' }))
+
+    // Back in play: the win screen is gone and the run reset to a fresh tally.
+    expect(screen.queryByRole('heading', { name: 'Korovany raided' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/Objective: raid 3 caravans/)).toHaveTextContent('0/3')
+    // Score panel reads 0 after the reset (kills + loot both wiped).
+    expect(screen.getByRole('group', { name: 'Score' })).toHaveTextContent('0')
   })
 
   it('shows the health HUD bar while playing with the current HP value', () => {
@@ -256,7 +308,7 @@ describe('<App /> surfaced injury & score systems (MPG.6)', () => {
     expect(container.querySelector('.injury-vignette')).not.toBeInTheDocument()
   })
 
-  it('shows the kill + loot score panel while playing', () => {
+  it('shows the score + loot panel while playing', () => {
     renderApp(
       'playing',
       {},
@@ -264,10 +316,10 @@ describe('<App /> surfaced injury & score systems (MPG.6)', () => {
       full,
       { counts: { gold: 14, blade: 1 }, equippedItemId: 'blade' },
       createInjuryState(),
-      7,
+      { kills: 0, caravansRaided: 0, objectiveTarget: OBJECTIVE_CARAVAN_TARGET, score: 7 },
     )
     const panel = screen.getByRole('group', { name: 'Score' })
-    expect(panel).toHaveTextContent('Kills')
+    expect(panel).toHaveTextContent('Score')
     expect(panel).toHaveTextContent('7')
     expect(panel).toHaveTextContent('Loot')
     // 14 gold + 1 blade = 15 carried items.
@@ -275,7 +327,12 @@ describe('<App /> surfaced injury & score systems (MPG.6)', () => {
   })
 
   it('hides the score panel in the main menu', () => {
-    renderApp('menu', {}, DEFAULT_PLAYER_STATE, full, noInventory, createInjuryState(), 3)
+    renderApp('menu', {}, DEFAULT_PLAYER_STATE, full, noInventory, createInjuryState(), {
+      kills: 0,
+      caravansRaided: 0,
+      objectiveTarget: OBJECTIVE_CARAVAN_TARGET,
+      score: 3,
+    })
     expect(screen.queryByRole('group', { name: 'Score' })).not.toBeInTheDocument()
   })
 })
@@ -299,7 +356,12 @@ describe('<App /> save/load (fake-indexeddb)', () => {
       renderApp('playing', {}, { zoneId: 'forest' }, { current: 60, max: 120 }, {
         counts: { gold: 14 },
         equippedItemId: null,
-      }, createInjuryState(), 0, {
+      }, createInjuryState(), {
+        kills: 0,
+        caravansRaided: 0,
+        objectiveTarget: OBJECTIVE_CARAVAN_TARGET,
+        score: 0,
+      }, {
         ...createProgression(),
         xp: 100,
         level: 2,

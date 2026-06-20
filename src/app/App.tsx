@@ -14,11 +14,13 @@ import {
 } from '../game/save/playerRuntime'
 import {
   continueGame,
+  loseGame,
   resetInjuries,
   resetInventory,
   resetPlayer,
   resetPlayerHealth,
   resetProgression,
+  resetRun,
   restoreInventory,
   restorePlayer,
   restorePlayerHealth,
@@ -36,7 +38,9 @@ import {
   togglePause,
   useAppDispatch,
   useAppSelector,
+  winGame,
 } from '../store'
+import { evaluateOutcome } from '../game/objective/objectiveMachine'
 
 /** Static zone list for the world map (registry order). */
 const ZONES = listZones()
@@ -63,6 +67,8 @@ export function App() {
   const inventory = useAppSelector((state) => state.inventory)
   const playerFactionId = useAppSelector(selectPlayerFactionId)
   const progression = useAppSelector((state) => state.progression)
+  const caravansRaided = useAppSelector((state) => state.game.caravansRaided)
+  const objectiveTarget = useAppSelector((state) => state.game.objectiveTarget)
   const isLoadingAssets = useAppSelector(selectIsStreamingLoading)
   const isBleeding = useAppSelector(selectIsBleeding)
   const hasHalfScreenBlackout = useAppSelector(selectHasHalfScreenBlackout)
@@ -70,6 +76,7 @@ export function App() {
   const lootCount = totalItemCount(inventory)
   const menuPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const pausePrimaryActionRef = useRef<HTMLButtonElement>(null)
+  const endgamePrimaryActionRef = useRef<HTMLButtonElement>(null)
 
   const [hasSaveSlot, setHasSaveSlot] = useState(false)
   // Main menu sub-view: the landing actions, or the New-Game faction picker.
@@ -79,17 +86,22 @@ export function App() {
   const [worldMapOpen, setWorldMapOpen] = useState(false)
   const [traveling, setTraveling] = useState(false)
 
-  // Return to menu on player death; reset HP and injuries so a subsequent New
-  // Game starts fresh. Death is a consequence of the live sim, so it is only
-  // processed while `playing` — never while `paused`, where combat is frozen and
-  // the player cannot take damage (FLO-326).
+  // Win/lose loop (MPG.1). Each frame the live progress — caravans raided + the
+  // player's death — flows through the pure `evaluateOutcome` machine, which
+  // drives the app phase to the win or lose screen. Death takes priority over
+  // victory. Only processed while `playing`: paused freezes combat, so the
+  // player can neither die nor finish the objective there (FLO-326). HP and run
+  // state are NOT reset here — the screen shows the final tally; Restart resets.
   useEffect(() => {
     if (phase !== 'playing') return
-    if (health.current > 0) return
-    dispatch(resetPlayerHealth())
-    dispatch(resetInjuries())
-    dispatch(returnToMenu())
-  }, [health.current, phase, dispatch])
+    const outcome = evaluateOutcome({
+      caravansRaided,
+      target: objectiveTarget,
+      playerDead: health.current <= 0,
+    })
+    if (outcome === 'won') dispatch(winGame())
+    else if (outcome === 'lost') dispatch(loseGame())
+  }, [phase, caravansRaided, objectiveTarget, health.current, dispatch])
 
   // Bleed-out: while a wound is untreated and the game is live, drain HP each
   // second. tickInjuries funnels the damage into the health system, so an
@@ -122,6 +134,7 @@ export function App() {
   useEffect(() => {
     if (phase === 'menu') menuPrimaryActionRef.current?.focus()
     else if (phase === 'paused') pausePrimaryActionRef.current?.focus()
+    else if (phase === 'won' || phase === 'lost') endgamePrimaryActionRef.current?.focus()
   }, [phase])
 
   // Autosave on the transition into `paused`. The transform comes from the live
@@ -200,6 +213,18 @@ export function App() {
     }
   }, [phase])
 
+  // Wipe every per-run slice — player, health, injuries, inventory, progression,
+  // and the objective/score run state — back to a fresh start. Shared by the
+  // New-Game faction flow and the win/lose Restart so both begin clean.
+  const resetRunState = useCallback(() => {
+    dispatch(resetPlayer())
+    dispatch(resetPlayerHealth())
+    dispatch(resetInjuries())
+    dispatch(resetInventory())
+    dispatch(resetProgression())
+    dispatch(resetRun())
+  }, [dispatch])
+
   // New Game opens the faction picker; the campaign only starts once a faction
   // is chosen so the choice is recorded in `factionSlice` and the save.
   const onNewGame = useCallback(() => {
@@ -208,15 +233,19 @@ export function App() {
 
   const onBeginWithFaction = useCallback(
     (factionId: PlayableFactionId) => {
-      dispatch(resetPlayer())
-      dispatch(resetPlayerHealth())
-      dispatch(resetInventory())
-      dispatch(resetProgression())
+      resetRunState()
       dispatch(setPlayerFaction(factionId))
       dispatch(startNewGame())
     },
-    [dispatch],
+    [resetRunState, dispatch],
   )
+
+  // Restart from the win/lose screen: fresh run, same faction (no need to
+  // re-pick), straight back into play (MPG.1).
+  const onRestart = useCallback(() => {
+    resetRunState()
+    dispatch(startNewGame())
+  }, [resetRunState, dispatch])
 
   const onContinue = useCallback(async () => {
     const data = await loadLatest()
@@ -229,6 +258,8 @@ export function App() {
     dispatch(restoreInventory(data.inventory))
     dispatch(setPlayerFaction(data.playerFactionId))
     dispatch(restoreProgression(data.progression))
+    // The objective/score aren't persisted yet — resume with a fresh tally.
+    dispatch(resetRun())
     dispatch(continueGame())
   }, [dispatch])
 
@@ -239,7 +270,7 @@ export function App() {
         <div className="injury-vignette" aria-hidden="true" />
       ) : null}
       {isLoadingAssets ? <p className="hud-loading">Loading…</p> : null}
-      {phase !== 'menu' ? (
+      {phase === 'playing' || phase === 'paused' ? (
         <div className="hud">
           <h1>Korovany</h1>
           <div
@@ -258,6 +289,18 @@ export function App() {
               {health.current}/{health.max}
             </span>
           </div>
+          <p
+            className="hud-objective"
+            aria-label={`Objective: raid ${objectiveTarget} caravans — ${Math.min(
+              caravansRaided,
+              objectiveTarget,
+            )} done`}
+          >
+            <span className="hud-objective-label">Raid caravans</span>
+            <span className="hud-objective-count">
+              {Math.min(caravansRaided, objectiveTarget)}/{objectiveTarget}
+            </span>
+          </p>
           {isBleeding ? (
             <div className="hud-bleeding" role="status">
               <span className="hud-bleeding-dot" aria-hidden="true" />
@@ -266,7 +309,7 @@ export function App() {
           ) : null}
           <div className="hud-score" role="group" aria-label="Score">
             <span className="hud-score-stat">
-              <span className="hud-score-label">Kills</span>
+              <span className="hud-score-label">Score</span>
               <span className="hud-score-value">{score}</span>
             </span>
             <span className="hud-score-stat">
@@ -353,6 +396,40 @@ export function App() {
               </button>
               <button type="button" onClick={() => dispatch(returnToMenu())}>
                 Quit to Main Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {phase === 'won' || phase === 'lost' ? (
+        <div
+          className={`menu-overlay endgame-overlay endgame-overlay--${phase}`}
+          role="dialog"
+          aria-labelledby="endgame-title"
+          aria-modal="true"
+        >
+          <div className="menu-panel endgame-panel">
+            <p className="menu-kicker">{phase === 'won' ? 'Victory' : 'Defeated'}</p>
+            <h1 id="endgame-title">
+              {phase === 'won' ? 'Korovany raided' : 'You fell in the forest'}
+            </h1>
+            <p className="menu-hint endgame-summary">
+              {phase === 'won'
+                ? `You raided ${objectiveTarget} caravans.`
+                : 'The raid is over.'}{' '}
+              Final score: <strong>{score}</strong>.
+            </p>
+            <div className="menu-actions" aria-label="End-of-run actions">
+              <button
+                ref={endgamePrimaryActionRef}
+                type="button"
+                className="primary-action"
+                onClick={onRestart}
+              >
+                Restart
+              </button>
+              <button type="button" onClick={() => dispatch(returnToMenu())}>
+                Main Menu
               </button>
             </div>
           </div>

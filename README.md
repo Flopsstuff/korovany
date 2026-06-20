@@ -69,6 +69,16 @@ so the canvas stays crisp on retina), the render loop, and `dispose()`.
 [`src/scenes/GameCanvas.tsx`](src/scenes/GameCanvas.tsx) is a thin React wrapper
 that mounts the engine against a ref'd canvas and disposes it on unmount.
 
+## Objective & win/lose loop
+
+New Game drops the player into the forest with a HUD **objective** — *Raid 3
+caravans* — and a running **Score** (kills + loot). Raiding all three caravans
+shows an explicit **win** screen; dying shows a **lose** screen. Both offer
+**Restart** (a fresh run) and **Main Menu**. The win/lose decision is a pure,
+unit-tested state machine (`src/game/objective/objectiveMachine.ts`) that drives
+the `app` phase into `won`/`lost`; per-run progress and score live in
+`gameSlice`. Full details: [`docs/guide/objective-loop.md`](docs/guide/objective-loop.md).
+
 ## World map & fast-travel
 
 The world has **four zones** (Human lands, Empire, Forest, Mountains). During

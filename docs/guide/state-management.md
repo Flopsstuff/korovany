@@ -92,11 +92,18 @@ The top-level screen/phase the player is on.
 
 ### `gameSlice` — in-run gameplay stats
 
-Score and other per-run counters.
+The per-run win objective and running score (MPG.1). The "is this run
+won/lost?" decision is pure and lives in
+[`objectiveMachine`](./objective-loop.md); this slice only holds live progress.
 
-- **State:** `{ score: number }` (`GameState`).
-- **Actions:** `addScore(n: number)`, `resetScore()`.
-- **Read via:** `useAppSelector((s) => s.game.score)`.
+- **State:** `{ kills, caravansRaided, objectiveTarget, score }` (`GameState`).
+- **Actions:** `recordKill()` (a soldier fell — bumps `kills` + `KILL_SCORE`
+  points), `raidCaravan(lootPoints)` (advances the objective + adds the haul to
+  `score`), `resetRun()` (fresh game / Restart).
+- **Constants:** `OBJECTIVE_CARAVAN_TARGET` (caravans to raid to win),
+  `KILL_SCORE` (points per soldier).
+- **Read via:** `useAppSelector((s) => s.game.score)` / `selectScore`, or the
+  raw counters off `s.game`.
 
 ### `factionSlice` — player faction and reputation
 
