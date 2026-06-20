@@ -17,6 +17,7 @@ export type InputAction =
   | 'moveRight'
   | 'jump'
   | 'sprint'
+  | 'attack'
 
 /**
  * The resolved intent for a single frame. `move*` are normalised to -1..1,
@@ -30,6 +31,7 @@ export interface Intent {
   readonly moveY: number
   readonly jump: boolean
   readonly sprint: boolean
+  readonly attack: boolean
   /** Accumulated yaw delta (horizontal mouse movement). */
   readonly lookDX: number
   /** Accumulated pitch delta (vertical mouse movement). */
@@ -112,6 +114,7 @@ export function toIntent(state: InputState): Intent {
     moveY,
     jump: p.has('jump'),
     sprint: p.has('sprint'),
+    attack: p.has('attack'),
     lookDX: state.lookDX,
     lookDY: state.lookDY,
   }

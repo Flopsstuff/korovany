@@ -30,6 +30,7 @@ export default defineConfig({
           { text: 'Forest zone', link: '/guide/forest-zone' },
           { text: 'Save system', link: '/guide/save-system' },
           { text: 'Health system', link: '/guide/health-system' },
+          { text: 'Melee combat', link: '/guide/melee-combat' },
           { text: 'Testing', link: '/guide/testing' },
         ],
       },

@@ -15,6 +15,7 @@ export const defaultBindings: KeyBindings = {
   moveRight: 'KeyD',
   jump: 'Space',
   sprint: 'ShiftLeft',
+  attack: 'KeyF',
 }
 
 /**

@@ -18,6 +18,7 @@ const NEUTRAL: Intent = {
   moveY: 0,
   jump: false,
   sprint: false,
+  attack: false,
   lookDX: 0,
   lookDY: 0,
 }
