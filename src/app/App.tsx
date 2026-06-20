@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { GameCanvas } from '../scenes/GameCanvas'
 import {
   continueGame,
+  selectIsStreamingLoading,
   startNewGame,
   togglePause,
   useAppDispatch,
@@ -19,6 +20,7 @@ import {
 export function App() {
   const dispatch = useAppDispatch()
   const phase = useAppSelector((state) => state.app.phase)
+  const isLoadingAssets = useAppSelector(selectIsStreamingLoading)
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -36,6 +38,7 @@ export function App() {
       <GameCanvas />
       <div className="hud">
         <h1>Korovany</h1>
+        {isLoadingAssets ? <p className="hud-loading">Loading…</p> : null}
       </div>
       {phase === 'menu' ? (
         <main className="menu-overlay" aria-labelledby="main-menu-title">
