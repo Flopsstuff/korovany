@@ -140,6 +140,22 @@ export function App() {
       {phase !== 'menu' ? (
         <div className="hud">
           <h1>Korovany</h1>
+          <div
+            className="hud-health"
+            role="group"
+            aria-label={`Player health: ${health.current} of ${health.max} hit points`}
+          >
+            <span className="hud-health-label">HP</span>
+            <span className="hud-health-bar" aria-hidden="true">
+              <span
+                className="hud-health-fill"
+                style={{ width: `${Math.max(0, (health.current / health.max) * 100)}%` }}
+              />
+            </span>
+            <span className="hud-health-value">
+              {health.current}/{health.max}
+            </span>
+          </div>
         </div>
       ) : null}
       {phase === 'menu' ? (

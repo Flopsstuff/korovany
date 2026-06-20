@@ -30,6 +30,14 @@ Import from `'../store'`:
 import { damagePlayer, healPlayer, resetPlayerHealth, restorePlayerHealth } from '../store'
 ```
 
+## HUD
+
+While the game is not in the menu, `App.tsx` renders a health bar in the HUD
+(`.hud-health`): a label, a fill bar whose width tracks `current / max`, and a
+numeric `current/max` readout. The bar is an ARIA `group` labelled
+`Player health: <current> of <max> hit points` for screen readers; the visual
+bar itself is `aria-hidden`.
+
 ## Death → menu transition
 
 `App.tsx` watches `state.health.player.current`. When it reaches 0 while the phase is `playing` or `paused`, the app dispatches `resetPlayerHealth()` (so a subsequent New Game starts with full HP) then `returnToMenu()`.

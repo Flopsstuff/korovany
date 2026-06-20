@@ -129,6 +129,18 @@ describe('<App />', () => {
     renderApp('playing', {}, DEFAULT_PLAYER_STATE, { current: 0, max: 100 })
     expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument()
   })
+
+  it('shows the health HUD bar while playing with the current HP value', () => {
+    renderApp('playing', {}, DEFAULT_PLAYER_STATE, { current: 65, max: 100 })
+    const hud = screen.getByRole('group', { name: 'Player health: 65 of 100 hit points' })
+    expect(hud).toBeInTheDocument()
+    expect(screen.getByText('65/100')).toBeInTheDocument()
+  })
+
+  it('hides the health HUD in the main menu', () => {
+    renderApp('menu')
+    expect(screen.queryByText('100/100')).not.toBeInTheDocument()
+  })
 })
 
 describe('<App /> save/load (fake-indexeddb)', () => {

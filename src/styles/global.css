@@ -47,6 +47,40 @@ body {
   font-size: 1.25rem;
 }
 
+.hud-health {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.hud-health-label {
+  letter-spacing: 0.04em;
+}
+
+.hud-health-bar {
+  display: inline-block;
+  width: 10rem;
+  height: 0.625rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.hud-health-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #e0463a, #f2a23a);
+  transition: width 120ms linear;
+}
+
+.hud-health-value {
+  font-variant-numeric: tabular-nums;
+}
+
 .menu-overlay,
 .pause-overlay {
   position: absolute;
