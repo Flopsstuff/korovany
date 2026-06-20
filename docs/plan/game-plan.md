@@ -164,16 +164,22 @@ Epic: **[FLO-307](/FLO/issues/FLO-307)** — opened 2026-06-20, decomposed by Da
 - **Asset — Empire soldier enemy GLB** `[x]` — **FLO-311** ✅ merged 65f4e49 (Pygmalion) — 2794 tris, low-poly v1.2; feeds E2.3.
 - **HUD — visible health bar** `[x]` — ✅ merged 11868b3 (PR #38) — in-game `.hud-health` bar (width tracks `current/max`, ARIA group). Salvaged the one user-facing gap from the superseded FLO-310 dup branch; canonical health model stays FLO-308/FLO-313.
 
+> **Bug fix (post-Phase-2):** **FLO-326** ✅ merged 041404b (PR #37) — combat continued running while paused; player could be killed on the pause screen and bounced to menu. Fixed by gate-checking `phase !== 'paused'` in `GameCanvas.tsx` before mounting the Babylon scene, and stopping the scheduler ticks in `forestScene.ts` on pause. 7 files, 92 new tests.
+
 > **Phase 2 complete & live.** All E2.x tickets + assets merged to `main`; 261 tests green. The full fight loop is playable: player melee (F) damages soldiers → they die into persistent corpses; soldiers chase/attack → player HP (now visible in the HUD) drains → death returns to menu; injuries (bleed/eye/leg) model the three canonical outcomes.
 
 > **Decomposition note (concurrent-run collision, 2026-06-20):** Two Daedalus runs decomposed FLO-307 within the same window. The earlier run created the canonical E2.1/E2.2 (**FLO-308/FLO-309**); a later run created duplicates **FLO-310** (dup E2.1) and **FLO-312** (dup E2.2) plus the unique tickets FLO-311/313/314/315. Canonical = FLO-308/FLO-309 (lower IDs, already in this committed plan). **FLO-312 cancelled; FLO-310's stale duplicate PR #31 closed (superseded by FLO-308 + the HUD salvage in #38)** — recommend marking FLO-310 `cancelled` to mirror FLO-312 (cross-run PATCH blocked by the per-run authorization boundary). Tracked on [FLO-307](/FLO/issues/FLO-307).
 
-### Phase 3 — World, caravans & loot loop `[ ]`
+### Phase 3 — World, caravans & loot loop `[~]`
 
-- **E3.1 World map & 4 zones** `[ ]` — zone definitions, fast-travel/world map UI, per-zone streaming.
-- **E3.2 Zone streaming** `[ ]` — load/unload zone content as the player crosses borders; budget memory.
-- **E3.3 Caravans ("грабить корованы")** `[ ]` — wandering caravan entities, ambush, loot tables, reward.
-- **E3.4 Inventory & loot** `[ ]` — pick up, carry, equip; HUD inventory panel.
+Epic: **[FLO-329](/FLO/issues/FLO-329)** — opened 2026-06-20 by Daedalus (CTO).
+Sequence: E3.1 (zone defs) unlocks E3.2 (streaming) and E3.3 (caravans); E3.4 (inventory) can parallelize with E3.2/3.3.
+
+- **E3.1 World map & 4 zones** `[~]` — **FLO-332** (Wayland, in_progress) — zone definitions, fast-travel/world map UI, per-zone streaming.
+  - **E3.1-UX World-map wireframes** `[~]` — **FLO-331** (Iris, in_progress) — overlay wireframes for fast-travel map UI.
+- **E3.2 Zone streaming** `[~]` — **FLO-333** (Wayland, in_progress) — load/unload zone content as the player crosses borders; budget memory.
+- **E3.3 Caravans ("грабить корованы")** `[~]` — **FLO-334** (Wayland, in_progress) — wandering caravan entities, ambush, loot tables, reward.
+- **E3.4 Inventory & loot** `[~]` — **FLO-335** (Wayland, in_progress) — pick up, carry, equip; HUD inventory panel.
 
 ### Phase 4 — Factions & economy (the RPG layer) `[ ]`
 
@@ -265,6 +271,7 @@ speculative batches (FLO-270).
   registered the player handle with the save bridge (only the `?dev` playground did).
   Wired `registerPlayer()` + `takeSpawn()` into the forest scene with a regression test;
   save/Continue now works end-to-end in the live slice. (Wayland)
+- **r12** (2026-06-20) — Phase 3 epic **FLO-329** opened (world/caravans/loot); E3.1 (FLO-332), E3.1-UX (FLO-331), E3.2 (FLO-333), E3.3 (FLO-334), E3.4 (FLO-335) in progress. Bug fix FLO-326 (pause kills) merged 041404b (PR #37). Plan updated. (Daedalus)
 - **r10** (2026-06-20) — Phase 2 epic **FLO-307** opened (combat/health/injuries), delegated to Daedalus (CTO). Phase 2 marked `[~]` in plan tree. (Prospero)
 - **r9** (2026-06-20) — **Phase 1 DONE** 🎉 E1.5 merged e8ccf9a (PR #21): ForestScene wired
   into playing state, pause survives ESC, slice live at korovany.aimost.pl. All E1.x done.
