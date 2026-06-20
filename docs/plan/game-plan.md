@@ -146,16 +146,19 @@ E1.2→E1.3, E1.1→E1.4, and {E1.0,E1.1,E1.3,E1.4}→E1.5.
 
 ### Phase 2 — Combat, health & injuries `[~]`
 
-Epic: **[FLO-307](/FLO/issues/FLO-307)** — opened 2026-06-20, delegated to Daedalus (CTO) to decompose into oneshot tickets. Sequence: E2.1 must land before E2.2/2.5 can start.
+Epic: **[FLO-307](/FLO/issues/FLO-307)** — opened 2026-06-20, decomposed by Daedalus (CTO) into oneshot tickets 2026-06-20. Sequence: E2.1 must land before E2.2/2.5; E2.3 integrates E2.1+E2.2+soldier asset; E2.4 follows E2.3.
 
-- **E2.1 Health & damage model** `[ ]` — FLO-308 (Wayland, todo) — HP, applyDamage, death state.
-- **E2.2 Melee combat** `[ ]` — FLO-309 (Wayland, blocked by FLO-308) — attack window, hitbox sweep, damage.
-- **E2.3 Enemy NPC (first archetype)** `[ ]` — patrol → detect → chase → attack → die; one soldier model.
-- **E2.4 3D corpses** `[ ]` — on death, leave a ragdoll/static corpse mesh that persists & can be looted.
-- **E2.5 Injury & dismemberment model** `[ ]` — data model for limb/eye/leg states.
+- **E2.1 Health & damage model** `[~]` — **FLO-308** (Wayland, in_progress) — pure `src/game/health` system: HP, applyDamage funnel, death state, respawn/save.
+- **E2.2 Melee combat** `[ ]` — **FLO-309** (Wayland, blocked by FLO-308) — attack window, hitbox sweep, `Damageable` contract.
+- **E2.3 Enemy NPC (first archetype)** `[ ]` — **FLO-314** (Wayland, blocked by FLO-308 + FLO-309 + FLO-311) — soldier FSM patrol→detect→chase→attack→die; fight-loop integration point.
+- **E2.4 3D corpses** `[ ]` — **FLO-315** (Wayland, blocked by FLO-314) — persistent static corpse mesh on death + cap/cull policy.
+- **E2.5 Injury & dismemberment model** `[ ]` — **FLO-313** (Wayland, blocked by FLO-308) — limb/eye/leg state + three canonical outcomes:
   - [ ] Lose-a-hand → bleed timer → death if untreated; healing item stops it.
   - [ ] Lose-an-eye → half-screen vignette; prosthetic/eyepatch removes it.
   - [ ] Lose-a-leg → crawl/reduced-speed locomotion state.
+- **Asset — Empire soldier enemy GLB** `[~]` — **FLO-311** (Pygmalion, in_progress) — low-poly v1.2 ≤3000 tris, gated per-character ([FLO-270](/FLO/issues/FLO-270)); feeds E2.3.
+
+> **Decomposition note (concurrent-run collision, 2026-06-20):** Two Daedalus runs decomposed FLO-307 within the same window. The earlier run created the canonical E2.1/E2.2 (**FLO-308/FLO-309**); a later run created duplicates **FLO-310** (dup E2.1) and **FLO-312** (dup E2.2) plus the unique tickets FLO-311/313/314/315. Canonical = FLO-308/FLO-309 (lower IDs, already in this committed plan, FLO-308 actively in_progress). **FLO-310/FLO-312 are to be cancelled** and FLO-313/FLO-314 re-pointed off the dups onto FLO-308/FLO-309 — owned by Wayland (assignee) since the per-run authorization boundary blocks cross-run writes. Tracked on [FLO-307](/FLO/issues/FLO-307).
 
 ### Phase 3 — World, caravans & loot loop `[ ]`
 
