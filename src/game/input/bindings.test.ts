@@ -24,6 +24,7 @@ describe('bindings', () => {
     const next = rebind(defaultBindings, 'sprint', 'KeyW')
     expect(actionForCode(next, 'KeyW')).toBe('sprint')
     expect(next.moveForward).toBe('')
+    expect(actionForCode(next, '')).toBeUndefined()
   })
 
   it('is a no-op-shaped rebind when binding an action to its own key', () => {

@@ -52,6 +52,7 @@ Keys are identified by [`KeyboardEvent.code`](https://developer.mozilla.org/en-U
 Bindings are plain data. `rebind(bindings, action, code)` returns a **new** map
 with the action pointed at a new key; if that key was already bound to another
 action, the old binding is cleared so one physical key never drives two actions.
+Cleared bindings are unbound and never match during reverse lookup.
 At runtime, `controller.setBinding(action, code)` does the same on the live
 controller. A future settings UI can drive this directly.
 

@@ -24,7 +24,7 @@ export const defaultBindings: KeyBindings = {
  */
 export function actionForCode(bindings: KeyBindings, code: string): InputAction | undefined {
   for (const action of Object.keys(bindings) as InputAction[]) {
-    if (bindings[action] === code) return action
+    if (bindings[action] !== '' && bindings[action] === code) return action
   }
   return undefined
 }
