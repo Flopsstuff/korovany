@@ -55,7 +55,10 @@ See [`docs/guide/architecture.md`](docs/guide/architecture.md) for where new cod
 
 The game renders into a **full-window 3D canvas** — the document never scrolls
 and there is no `max-width` container (`src/styles/global.css` resets
-`html/body/#root` and hides overflow). A thin HUD overlay carries debug chrome.
+`html/body/#root` and hides overflow). React overlays sit above the canvas for
+the HUD, main menu, and pause screen. The app boots into the main menu; **New
+Game** enters play, **Continue** is present as a save-flow stub, and `ESC`
+toggles `playing ⇄ paused`.
 
 The Babylon `Engine`/`Scene` lifecycle lives in **[`src/engine/`](src/engine/index.ts)**,
 not inline in a component. `createGameEngine(canvas)` owns engine + scene

@@ -43,8 +43,11 @@ korovany/
 
 `main.tsx` mounts React inside a Redux `<Provider>` and renders the full-page
 app shell (`src/app/App.tsx`): a `100vw × 100vh` stage holding the 3D canvas
-with a HUD overlay. UI reads state via the typed `useAppSelector` hook and
-dispatches via `useAppDispatch` (both from `src/store`).
+with React overlays for the HUD, main menu, and pause screen. Coarse app flow
+lives in the pure Redux `app` slice (`menu → playing → paused`), so Babylon is
+not imported by the state machine. UI reads state via the typed
+`useAppSelector` hook and dispatches via `useAppDispatch` (both from
+`src/store`).
 
 The Babylon lifecycle lives in `src/engine/`: `createGameEngine(canvas)` owns
 the `Engine`/`Scene`, the render loop, the high-DPI resize handler, and

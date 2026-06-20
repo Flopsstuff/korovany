@@ -63,16 +63,15 @@ locked, mouse movement is ignored. Losing the lock (`pointerlockchange` →
 not locked) triggers `releaseAll`, so no key stays stuck "held" after the
 player tabs away.
 
-### ESC and the future pause menu (interaction note)
+### ESC and pause
 
 The browser **reserves `ESC` to exit Pointer Lock**, and JavaScript cannot
 intercept that keydown. To avoid a conflict, the input system **never binds
-`ESC`**. The pause system (a later phase) should therefore **not** listen for an
-`Escape` keydown — it should react to the lock being lost by hooking
-`pointerlockchange` (or polling `controller.isPointerLocked()`): when the
-pointer unlocks, open the pause menu; re-locking on resume returns to play.
-This keeps "ESC pauses the game" working without two systems fighting over the
-same key.
+`ESC`** as a gameplay action. The app shell owns the coarse menu state instead:
+`Escape` toggles `playing ⇄ paused` in the Redux `app` slice, while `menu`
+ignores it. When pointer lock is wired into the playable scene, losing pointer
+lock should dispatch the same pause transition so physical ESC and browser
+unlock behavior stay aligned.
 
 ## Usage sketch
 
