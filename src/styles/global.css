@@ -132,3 +132,9 @@ body {
   margin: 0.75rem 0 0;
   color: #d9e3ea;
 }
+
+.hud-loading {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  opacity: 0.85;
+}

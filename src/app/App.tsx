@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { GameCanvas } from '../scenes/GameCanvas'
 import {
   returnToMenu,
+  selectIsStreamingLoading,
   startNewGame,
   togglePause,
   useAppDispatch,
@@ -21,6 +22,7 @@ export function App() {
   const phase = useAppSelector((state) => state.app.phase)
   const menuPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const pausePrimaryActionRef = useRef<HTMLButtonElement>(null)
+  const isLoadingAssets = useAppSelector(selectIsStreamingLoading)
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -44,11 +46,10 @@ export function App() {
   return (
     <div className="app-shell">
       <GameCanvas />
-      {phase === 'menu' ? null : (
-        <div className="hud">
-          <h1>Korovany</h1>
-        </div>
-      )}
+      <div className="hud">
+        {phase === 'menu' ? null : <h1>Korovany</h1>}
+        {isLoadingAssets ? <p className="hud-loading">Loading…</p> : null}
+      </div>
       {phase === 'menu' ? (
         <main className="menu-overlay" aria-labelledby="main-menu-title">
           <div className="menu-panel">
