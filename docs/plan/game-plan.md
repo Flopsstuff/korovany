@@ -89,29 +89,34 @@ has **no** React/Babylon imports where avoidable, so it is unit-testable in jsdo
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done.
 Each epic becomes a **child issue of FLO-273**; each task a child of its epic.
 
-### Phase 0 — Foundation cleanup (unblocks everything) `[~]`
+### Phase 0 — Foundation cleanup (unblocks everything) `[x]`
 
-Epic: **[FLO-277](/FLO/issues/FLO-277)** — opened 2026-06-20, board plan approved.
-Tasks cut and assigned (one MR each, `flo-<n>-<slug>` off `main`):
+Epic: **[FLO-277](/FLO/issues/FLO-277)** — board plan approved 2026-06-20.
 
-- **E0.1 Full-page canvas & app shell** `[~]` → **[FLO-280](/FLO/issues/FLO-280)** (Wayland, in flight)
-  - [ ] Make the Babylon canvas fill the viewport (replace fixed 320px); handle resize/DPR.
-  - [ ] Extract `Engine`/`Scene` lifecycle into reusable `src/engine/`; React wrapper only mounts/disposes.
-  - [ ] Drop the hello-world chrome; keep the chest GLB smoke rendering.
-  - *App state machine (`menu → playing → paused`) + main-menu overlay deferred to a follow-up E0.x once the shell lands.*
-- **E0.2 Game loop & system scheduler** `[~]` → **[FLO-281](/FLO/issues/FLO-281)** (Wayland, blocked by FLO-280)
-  - [ ] Fixed-step update loop decoupled from render FPS; spiral-of-death clamp; unit-tested.
-  - [ ] Ordered system scheduler API (systems get `update(dt, world)`).
-- **E0.3 Input system** `[~]` → **[FLO-282](/FLO/issues/FLO-282)** (Aldric, blocked by FLO-280)
-  - [ ] Pointer-lock + key/mouse state snapshot, `justPressed`/`justReleased`, mouse-delta; unit-tested.
-  - [ ] *Data-driven rebindable mapping deferred to a Phase 6 polish task; v1 hardcodes WASD/mouse.*
+> **Done & merged to `main` 2026-06-20.** The full-page canvas, fixed-step loop,
+> and input system are live on korovany.aimost.pl. Concurrent runs produced
+> duplicate tickets (FLO-281/282/284/285) which were reconciled/cancelled; the
+> canonical merged PRs are below.
 
-### Phase 1 — Vertical slice: "An elf in the forest" `[ ]`
+- **E0.1 Full-page canvas & app shell** `[x]` — FLO-280 (PR #4), FLO-283 (PR #7)
+  - [x] Make the Babylon canvas fill the viewport (replace fixed 320px); handle resize/DPR.
+  - [ ] App state machine: `menu → playing → paused`; ESC toggles pause. *(carried into E1.0)*
+  - [ ] Main menu shell (New Game / Continue / Settings) as a React overlay. *(carried into E1.0)*
+- **E0.2 Game loop & system scheduler** `[x]` — FLO-278 (PR #5)
+  - [x] Fixed-step update loop in `src/game/loop/` decoupled from render FPS; unit-tested.
+  - [x] System registration API (systems get `update(dt, world)`).
+- **E0.3 Input system** `[x]` — FLO-279 (PR #3)
+  - [x] Keyboard/mouse intent mapping; pointer-lock for mouselook; rebindable map (data-driven).
+
+### Phase 1 — Vertical slice: "An elf in the forest" `[~]`
 
 Goal: a deployed build where you start a new game, spawn as an elf in a small
 forest, walk/run/jump with a third-person camera over solid ground, and your
 position+health survive a reload (browser save). Proves the whole stack.
 
+- **E1.0 App state machine & menu shell** `[ ]` *(carried from E0.1)*
+  - [ ] `menu → playing → paused` state machine; ESC toggles pause.
+  - [ ] Main menu shell (New Game / Continue / Settings) as a React overlay over the canvas.
 - **E1.1 Third-person character controller** `[ ]`
   - [ ] Capsule controller: WASD move, sprint, gravity, ground collision.
   - [ ] Jump with coyote-time; cannot double-jump.
@@ -219,3 +224,9 @@ speculative batches (FLO-270).
   [FLO-281] (Wayland, blocked by E0.1), E0.3 input [FLO-282] (Aldric, blocked by
   E0.1). Phase 0 marked in progress; menu/state-machine sub-items deferred to a
   follow-up so the slice path stays the critical line.
+- **r3** (2026-06-20) — Phase 0 marked **done & merged to `main`** (canonical PRs:
+  canvas FLO-280/#4, loop FLO-278/#5, input FLO-279/#3, shell-cleanup FLO-283/#7;
+  duplicate tickets FLO-281/282/284/285 cancelled). Menu/pause state machine
+  carried forward into new prelude epic **E1.0**. Phase 1 opened as the active
+  epic and delegated to the CTO to decompose into oneshot tickets — closes the
+  post-Phase-0 coordination gap that stalled the tree (Prospero).
