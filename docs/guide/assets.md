@@ -28,6 +28,7 @@ any Community/showcase page.
 | **Empire soldier (enemy)** | `public/models/empire-soldier.glb` | **2794** | 130 KiB | static (no skeleton) | `019ee601-93f0-7988-86f8-e35ce1067881` |
 | **Roadside shrine (Salt Road)** | `public/models/roadside-shrine.glb` | **1984** | 394 KiB | static | `019ee73a-c8a6-73bd-a2ec-e21137a6dba2` (preview) / `019ee747-ae35-786a-a8c7-490e65d0cddd` (retexture) |
 | **Empire toll gate** | `public/models/toll-gate.glb` | **1947** | 4.1 MiB | static | preview `019ee748-205e-763a-a883-bdda11e91c7e` · retexture `019ee749-ae59-7680-aa94-e6a8842c7bd5` |
+| **Caravan wagon (Salt Road)** | `public/models/caravan-wagon.glb` | **2827** | 394 KiB | static | `019ee749-d4cf-79b9-b813-d98be2201197` (preview) / `019ee74d-2300-772c-8a22-612c27dd99dc` (retexture) |
 
 ### Empire toll gate — Phase 3.5 (Salt Road pack)
 
@@ -94,3 +95,40 @@ a readable, distinct silhouette. Generated for [FLO-375](/plan/game-plan).
   no errors.
 - **Handoff:** wiring this GLB into the scene (replacing the procedural box in
   `humanLandsScene.ts`) is engineering's job — handed to Daedalus/CTO.
+
+### Caravan wagon (Salt Road) — Phase 3.5 (MPG)
+
+The raid-loop centerpiece ("грабить корованы", E3.3; MPG.5 spawns caravans across
+forest + human-lands). Replaces the procedural brown box stand-in in
+`src/scenes/caravanEnemy.ts` (~line 94, `CreateBox 1.6 × 1.2 × 2.4`). Merchant
+wagon with a wooden frame, fabric canopy cover, four spoked wheels and a cargo
+bed — a readable wagon silhouette turns the abstract crate into a tactile target.
+Generated for [FLO-371](/plan/game-plan).
+
+- **Budget:** 2827 tris ≤ 3000 (v1.2), **394 KiB** web payload. Bounding box ≈
+  2.00 × 1.69 × 1.09 units (real-world scale; wagon length runs along **+X**).
+  Note for wiring: the placeholder box is `1.6 (w) × 1.2 (h) × 2.4 (d)` with the
+  long axis on **Z** — engineering should rotate ~90° about Y and scale to taste
+  so the wagon length aligns with the caravan's travel axis.
+- **Textured** (board mandate — never grey): single 1024² base-color map,
+  flat/unlit albedo (weathered tan-brown wood, off-white travel-worn canopy,
+  dark iron-banded wheels).
+- **Provenance:** Meshy text-to-3D **preview** (`019ee749-…`, `--art-style
+  realistic --target-polycount 3000`, 3042 tris, 5 cr) → `gltf-transform` weld +
+  `simplify --ratio 0.93 --error 0.01` to 2827 tris (silhouette/bbox unchanged) →
+  **retexture** (`019ee74d-…`, geometry-preserving UV-unwrap + paint of the
+  decimated mesh via data-URI, 10 cr) → `resize_glb_textures.py --max 1024
+  --quality 85` (3.6 MiB → 394 KiB, mesh bytes untouched). Retexture over PBR
+  refine keeps the faceted low-poly silhouette. Preview prompt: *"low-poly
+  stylized merchant wagon, wooden frame with fabric canopy cover, four spoked
+  wooden wheels, weathered travel-worn wood and cloth, faceted flat-shaded,
+  neutral tan-brown palette, readable side and front silhouette, fantasy medieval
+  cargo wagon"*; retexture style prompt: *"weathered tan-brown wooden wagon frame,
+  off-white travel-worn fabric canopy cover, dark iron-banded wheel rims, flat
+  muted low-poly colors, no gloss, fantasy medieval merchant cargo wagon"*.
+- **Rig:** static prop — no skeleton.
+- **Verification:** loads headless via `node tools/meshy-3d/smoke_load_glb.mjs
+  public/models/caravan-wagon.glb` → 2 meshes, 2827 tris, 1 embedded texture,
+  no errors.
+- **Handoff:** wiring this GLB into the scene (replacing the procedural box in
+  `caravanEnemy.ts`) is engineering's job — handed to Daedalus/CTO.
