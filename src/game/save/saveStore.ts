@@ -48,6 +48,8 @@ export interface SavePayload {
   readonly playerPos: PlayerPos
   /** Player score at the time of save. */
   readonly score: number
+  /** Player current hit points at the time of save. Absent in legacy saves. */
+  readonly hp?: number
   /** Wall-clock timestamp of the save (ms since epoch). */
   readonly savedAt: number
 }

@@ -8,6 +8,8 @@ import { appReducer, type AppPhase } from '../store/appSlice'
 import { gameReducer } from '../store/gameSlice'
 import { streamingReducer } from '../store/streamingSlice'
 import { saveReducer } from '../store/saveSlice'
+import { healthReducer } from '../store/healthSlice'
+import { createHealth } from '../game/health'
 import { App } from './App'
 
 // Stub IndexedDB save calls so App tests don't touch the real store.
@@ -28,6 +30,7 @@ vi.mock('../scenes/GameCanvas', () => ({
 function renderApp(
   initialPhase: AppPhase = 'menu',
   streamingPhases: Record<string, AssetLoadPhase> = {},
+  health = createHealth(),
 ) {
   const store = configureStore({
     reducer: {
@@ -35,12 +38,14 @@ function renderApp(
       game: gameReducer,
       streaming: streamingReducer,
       save: saveReducer,
+      health: healthReducer,
     },
     preloadedState: {
       app: { phase: initialPhase },
       game: { score: 0 },
       streaming: { phases: streamingPhases },
       save: { hasSave: false, loadedSave: null },
+      health,
     },
   })
 
@@ -108,6 +113,12 @@ describe('<App />', () => {
 
     expect(screen.queryByRole('heading', { name: 'Paused' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument()
+  })
+
+  it('returns to the menu when the player dies while playing', () => {
+    renderApp('playing', {}, createHealth(100, 0))
+    expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Paused' })).not.toBeInTheDocument()
   })
 
   it('shows a loading hint while assets are streaming', () => {

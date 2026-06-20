@@ -70,3 +70,18 @@ splits a pure, NullEngine-tested math core (gravity, ground clamp, jump,
 coyote-time, camera boom) from a thin Babylon binding that runs as a loop
 `System`. A self-contained dev scene is reachable at `?dev=controller`. See
 [Character controller](./character-controller.md).
+
+## Health & damage
+
+The health model in `src/game/health/` is pure and engine-agnostic (no Babylon,
+React, or Redux). It exposes an immutable `HealthState` (`currentHp`, `maxHp`,
+`alive`) plus `createHealth`, `applyDamage`, `healDamage`, and `isAlive`. Damage
+clamps current HP to 0, heals clamp to `maxHp`, and `alive` is always derived
+from `currentHp > 0` — combat (E2.2), NPCs, and the save system build on this
+single source of truth.
+
+Player HP lives in the Redux `healthSlice` (`src/store/healthSlice.ts`):
+`initHealth` seeds it from the loaded `SavePayload.hp` (or a full-health default
+on New Game), while `damagePlayer` / `healPlayer` mutate it via the pure core.
+The autosave persists `hp` alongside score/position. On death (`alive === false`
+while playing), `App` dispatches `returnToMenu`; respawn arrives in Phase 6.

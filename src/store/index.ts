@@ -4,6 +4,7 @@ import { appReducer } from './appSlice'
 import { gameReducer } from './gameSlice'
 import { streamingReducer } from './streamingSlice'
 import { saveReducer } from './saveSlice'
+import { healthReducer } from './healthSlice'
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
     game: gameReducer,
     streaming: streamingReducer,
     save: saveReducer,
+    health: healthReducer,
   },
 })
 
@@ -28,3 +30,12 @@ export { setAssetPhase, selectIsStreamingLoading, selectStreamingPhases } from '
 export type { StreamingState } from './streamingSlice'
 export { setSaveExists, setSaveLoaded } from './saveSlice'
 export type { SaveState } from './saveSlice'
+export {
+  initHealth,
+  damagePlayer,
+  healPlayer,
+  selectHealth,
+  selectPlayerHp,
+  selectIsPlayerAlive,
+} from './healthSlice'
+export type { HealthState } from './healthSlice'

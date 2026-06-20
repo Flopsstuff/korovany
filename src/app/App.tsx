@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { GameCanvas } from '../scenes/GameCanvas'
 import {
   continueGame,
+  initHealth,
   returnToMenu,
   selectIsStreamingLoading,
   setSaveExists,
@@ -27,6 +28,8 @@ export function App() {
   const isLoadingAssets = useAppSelector(selectIsStreamingLoading)
   const hasSaveSlot = useAppSelector((state) => state.save.hasSave)
   const score = useAppSelector((state) => state.game.score)
+  const playerHp = useAppSelector((state) => state.health.currentHp)
+  const playerAlive = useAppSelector((state) => state.health.alive)
   const menuPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const pausePrimaryActionRef = useRef<HTMLButtonElement>(null)
 
@@ -42,9 +45,15 @@ export function App() {
       zoneId: 'forest',
       playerPos: { x: 0, y: 0, z: 0 },
       score,
+      hp: playerHp,
       savedAt: Date.now(),
     }).then(() => dispatch(setSaveExists(true)))
-  }, [phase, score, dispatch])
+  }, [phase, score, playerHp, dispatch])
+
+  // Death returns to the menu (respawn is Phase 6).
+  useEffect(() => {
+    if (phase === 'playing' && !playerAlive) dispatch(returnToMenu())
+  }, [phase, playerAlive, dispatch])
 
   useEffect(() => {
     if (phase === 'menu') menuPrimaryActionRef.current?.focus()
@@ -62,9 +71,15 @@ export function App() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [dispatch])
 
+  function handleNewGame() {
+    dispatch(initHealth(null))
+    dispatch(startNewGame())
+  }
+
   function handleContinue() {
     void readSave(AUTOSAVE_SLOT).then((save) => {
       if (save) dispatch(setSaveLoaded(save))
+      dispatch(initHealth(save))
       dispatch(continueGame())
     })
   }
@@ -88,7 +103,7 @@ export function App() {
                 ref={menuPrimaryActionRef}
                 type="button"
                 className="primary-action"
-                onClick={() => dispatch(startNewGame())}
+                onClick={handleNewGame}
               >
                 New Game
               </button>
