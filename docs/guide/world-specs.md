@@ -16,6 +16,18 @@ and asset needs.
 - Low-poly silhouettes should be readable at distance. Important navigation
   landmarks need distinct shapes, not only different colors.
 
+## Detailed world files
+
+Each world now has a separate spec with deeper lore, encounter flow,
+implementation notes, and a 20-by-20 text map:
+
+- [The Salt Road of Velya](./worlds/velya-salt-road.md) — human lands, trade
+  corridor, and first caravan-robbery map.
+- [The Emerald Thicket of Lysaen](./worlds/lysaen-emerald-thicket.md) — Forest
+  Elf homeland, dense woodland, stealth, and LOD proving ground.
+- [Black Crown Pass](./worlds/black-crown-pass.md) — mountain lands, villain
+  fortress approach, and vertical combat map.
+
 ## 1. The Salt Road of Velya
 
 **Role:** Human lands, trade corridor, first caravan-robbery map.
@@ -70,6 +82,7 @@ different angles, and the player decides whether to guard, ambush, loot, or flee
 - Keep initial terrain mostly flat; complexity should come from route choices,
   cover, and faction placement.
 - Streaming cells can be road segments: farms, riverbed, toll gate, tower.
+- Full spec: [The Salt Road of Velya](./worlds/velya-salt-road.md).
 
 ## 2. The Emerald Thicket of Lysaen
 
@@ -127,6 +140,7 @@ clearings where melee combat can break out at close range.
   expensive full-forest pathfinding.
 - The village ring needs stable spawn points and clear camera lanes for the
   third-person controller.
+- Full spec: [The Emerald Thicket of Lysaen](./worlds/lysaen-emerald-thicket.md).
 
 ## 3. Black Crown Pass
 
@@ -182,6 +196,7 @@ above the player. It is the map for assaulting or defending a stronghold.
   third-person boom.
 - Keep fall damage out of the first implementation unless the health model has a
   dedicated rule for it; use invisible blocker rails where needed.
+- Full spec: [Black Crown Pass](./worlds/black-crown-pass.md).
 
 ## Cross-map continuity
 

@@ -29,7 +29,15 @@ export default defineConfig({
           { text: 'Generated assets', link: '/guide/assets' },
           { text: 'Character controller', link: '/guide/character-controller' },
           { text: 'Forest zone', link: '/guide/forest-zone' },
-          { text: 'World specs', link: '/guide/world-specs' },
+          {
+            text: 'World specs',
+            link: '/guide/world-specs',
+            items: [
+              { text: 'Salt Road of Velya', link: '/guide/worlds/velya-salt-road' },
+              { text: 'Emerald Thicket of Lysaen', link: '/guide/worlds/lysaen-emerald-thicket' },
+              { text: 'Black Crown Pass', link: '/guide/worlds/black-crown-pass' },
+            ],
+          },
           { text: 'Save system', link: '/guide/save-system' },
           { text: 'Health system', link: '/guide/health-system' },
           { text: 'Melee combat', link: '/guide/melee-combat' },
