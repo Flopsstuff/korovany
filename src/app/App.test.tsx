@@ -9,12 +9,14 @@ import { loadLatest, saveGame } from '../game/save'
 import { registerPlayer } from '../game/save/playerRuntime'
 import type { AssetLoadPhase } from '../game/streaming/types'
 import { appReducer, type AppPhase } from '../store/appSlice'
+import { DEFAULT_FACTION_STATE, factionReducer } from '../store/factionSlice'
 import { gameReducer } from '../store/gameSlice'
 import { healthReducer } from '../store/healthSlice'
 import { injuryReducer } from '../store/injurySlice'
 import { inventoryReducer } from '../store/inventorySlice'
 import { createInjuryState } from '../game/health/injuryModel'
 import { createInventory, type InventoryState } from '../game/economy'
+import { FACTION_IDS } from '../game/faction'
 import { DEFAULT_PLAYER_STATE, playerReducer, type PlayerState } from '../store/playerSlice'
 import { streamingReducer } from '../store/streamingSlice'
 import { App } from './App'
@@ -36,6 +38,7 @@ function renderApp(
   const store = configureStore({
     reducer: {
       app: appReducer,
+      faction: factionReducer,
       game: gameReducer,
       health: healthReducer,
       injury: injuryReducer,
@@ -45,6 +48,7 @@ function renderApp(
     },
     preloadedState: {
       app: { phase: initialPhase },
+      faction: DEFAULT_FACTION_STATE,
       game: { score: 0 },
       health: { player: health },
       inventory,
@@ -81,15 +85,42 @@ describe('<App />', () => {
     expect(screen.queryByRole('button', { name: '+1' })).not.toBeInTheDocument()
   })
 
-  it('hides the menu when starting a new game', async () => {
+  it('opens the faction picker when starting a new game', async () => {
     const user = userEvent.setup()
     renderApp()
 
     await user.click(screen.getByRole('button', { name: 'New Game' }))
 
+    // The landing menu gives way to the faction picker; the game has not started.
+    expect(screen.getByRole('heading', { name: 'Choose your faction' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'New Game' })).not.toBeInTheDocument()
+    // No faction chosen yet → the prompt shows and Begin is not offered.
+    expect(screen.getByText('Select a faction to begin.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Begin' })).not.toBeInTheDocument()
+  })
+
+  it('starts the game after choosing a faction', async () => {
+    const user = userEvent.setup()
+    renderApp()
+
+    await user.click(screen.getByRole('button', { name: 'New Game' }))
+    await user.click(screen.getByRole('button', { name: /Forest Elves/ }))
+    await user.click(screen.getByRole('button', { name: 'Begin' }))
+
+    expect(screen.queryByRole('heading', { name: 'Choose your faction' })).not.toBeInTheDocument()
     expect(screen.queryByText('Paused')).not.toBeInTheDocument()
     expect(screen.getByTestId('game-canvas')).toBeInTheDocument()
+  })
+
+  it('returns from the faction picker to the main menu via Back', async () => {
+    const user = userEvent.setup()
+    renderApp()
+
+    await user.click(screen.getByRole('button', { name: 'New Game' }))
+    await user.click(screen.getByRole('button', { name: 'Back' }))
+
+    expect(screen.queryByRole('heading', { name: 'Choose your faction' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument()
   })
 
   it('shows and hides the pause overlay with Escape while playing', async () => {
@@ -212,6 +243,32 @@ describe('<App /> save/load (fake-indexeddb)', () => {
         expect(saved?.zoneId).toBe('forest')
         // Carried inventory is captured in the autosave snapshot.
         expect(saved?.inventory).toEqual({ counts: { gold: 14 }, equippedItemId: null })
+        // The (default neutral) faction is captured too.
+        expect(saved?.playerFactionId).toBe(FACTION_IDS.Neutral)
+      })
+    } finally {
+      unregister()
+    }
+  })
+
+  it('persists the chosen faction into the autosave', async () => {
+    const unregister = registerPlayer({
+      read: () => ({ position: { x: 0, y: 1, z: 0 }, rotationY: 0 }),
+      write: vi.fn(),
+    })
+    try {
+      const user = userEvent.setup()
+      renderApp()
+
+      // New Game → pick the Villain → Begin → autosave on pause.
+      await user.click(screen.getByRole('button', { name: 'New Game' }))
+      await user.click(screen.getByRole('button', { name: /Villain/ }))
+      await user.click(screen.getByRole('button', { name: 'Begin' }))
+      await user.keyboard('{Escape}')
+
+      await waitFor(async () => {
+        const saved = await loadLatest()
+        expect(saved?.playerFactionId).toBe(FACTION_IDS.Villain)
       })
     } finally {
       unregister()
@@ -225,6 +282,7 @@ describe('<App /> save/load (fake-indexeddb)', () => {
         health: { current: 50, max: 100 },
         zoneId: 'forest',
         inventory: { counts: { grain: 3 }, equippedItemId: null },
+        playerFactionId: FACTION_IDS.Empire,
       },
       123,
     )

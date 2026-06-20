@@ -17,11 +17,14 @@
  * History:
  * - v1 — transform, health, zoneId, savedAt.
  * - v2 — added `inventory` (E3.4); v1 saves migrate forward with an empty one.
+ * - v3 — added `playerFactionId` (E4.2); pre-v3 saves migrate forward as
+ *   `neutral` (the unaffiliated default).
  */
-export const SAVE_VERSION = 2
+export const SAVE_VERSION = 3
 
 import type { HealthState } from '../health'
 import type { InventoryState } from '../economy'
+import type { FactionId } from '../faction'
 
 /** Plain serialisable 3-vector (Babylon `Vector3` is not JSON-safe). */
 export interface Vec3 {
@@ -52,6 +55,8 @@ export interface SaveData {
   readonly zoneId: string
   /** Carried inventory at save time (E3.4), sourced from `inventorySlice`. */
   readonly inventory: InventoryState
+  /** Chosen player faction (E4.2), sourced from `factionSlice`. */
+  readonly playerFactionId: FactionId
   /** Epoch milliseconds when the snapshot was taken; used to pick the latest slot. */
   readonly savedAt: number
 }
@@ -69,4 +74,6 @@ export interface PlayerSnapshot {
   readonly zoneId: string
   /** Carried inventory at snapshot time, sourced from `inventorySlice`. */
   readonly inventory: InventoryState
+  /** Chosen player faction at snapshot time, sourced from `factionSlice`. */
+  readonly playerFactionId: FactionId
 }

@@ -1,5 +1,6 @@
 import type { HealthState } from '../health'
 import { createInventory, isInventoryState } from '../economy'
+import { DEFAULT_PLAYER_FACTION_ID, isFactionId } from '../faction'
 import { SAVE_VERSION, type PlayerTransform, type SaveData, type Vec3 } from './types'
 
 /**
@@ -45,9 +46,9 @@ function isHealth(value: unknown): value is HealthState {
 /**
  * Structural guard for a loadable save record. Validates the fields present in
  * every version since v1 (the migration baseline). Fields added in later
- * versions — `inventory` (v2) — are intentionally *not* required here so older
- * saves still pass the guard and get upgraded by {@link migrate}; migrate is the
- * single place that fills them in.
+ * versions — `inventory` (v2), `playerFactionId` (v3) — are intentionally *not*
+ * required here so older saves still pass the guard and get upgraded by
+ * {@link migrate}; migrate is the single place that fills them in.
  */
 export function isSaveData(value: unknown): value is SaveData {
   if (typeof value !== 'object' || value === null) return false
@@ -69,13 +70,20 @@ export function isSaveData(value: unknown): value is SaveData {
  * - v1 → v2: `inventory` was added (E3.4). Saves written before v2 carry none,
  *   so they are given a fresh empty inventory. Schema is forever — the field is
  *   never dropped again.
+ * - v2 → v3: `playerFactionId` was added (E4.2). Saves written before v3 carry
+ *   none, so they default to the neutral (unaffiliated) faction; an unrecognised
+ *   id is also coerced to neutral rather than trusted.
  */
 export function migrate(data: SaveData): SaveData {
   if (data.version === SAVE_VERSION) return data
   const inventory = isInventoryState((data as { inventory?: unknown }).inventory)
     ? data.inventory
     : createInventory()
-  return { ...data, inventory, version: SAVE_VERSION }
+  const persistedFaction = (data as { playerFactionId?: unknown }).playerFactionId
+  const playerFactionId = isFactionId(persistedFaction)
+    ? persistedFaction
+    : DEFAULT_PLAYER_FACTION_ID
+  return { ...data, inventory, playerFactionId, version: SAVE_VERSION }
 }
 
 /**

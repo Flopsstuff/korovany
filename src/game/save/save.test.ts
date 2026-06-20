@@ -10,6 +10,7 @@ import {
   saveGame,
   type PlayerSnapshot,
 } from './index'
+import { FACTION_IDS } from '../faction'
 
 // A fresh in-memory IndexedDB per test so slots never leak across cases.
 let factory: IDBFactory
@@ -23,6 +24,7 @@ const snapshot: PlayerSnapshot = {
   health: { current: 73, max: 120 },
   zoneId: 'forest',
   inventory: { counts: { gold: 8, blade: 1 }, equippedItemId: 'blade' },
+  playerFactionId: FACTION_IDS.ForestElves,
 }
 
 describe('createSaveData', () => {
@@ -34,6 +36,7 @@ describe('createSaveData', () => {
     expect(data.health).toEqual({ current: 73, max: 120 })
     expect(data.zoneId).toBe('forest')
     expect(data.inventory).toEqual({ counts: { gold: 8, blade: 1 }, equippedItemId: 'blade' })
+    expect(data.playerFactionId).toBe(FACTION_IDS.ForestElves)
   })
 
   it('decouples the persisted inventory from the live slice reference', () => {
@@ -54,6 +57,7 @@ describe('save round-trip (fake-indexeddb)', () => {
       health: { current: 73, max: 120 },
       zoneId: 'forest',
       inventory: { counts: { gold: 8, blade: 1 }, equippedItemId: 'blade' },
+      playerFactionId: FACTION_IDS.ForestElves,
       savedAt: 1234,
     })
   })

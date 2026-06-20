@@ -1,9 +1,11 @@
 # Faction system
 
-E4.1 adds the faction foundation only: stable data, pure reputation helpers, a
-friend/foe matrix, and a Redux slice that exposes player faction state. Nothing
-is wired into live scenes, soldier AI, caravan AI, targeting, or save migration
-yet; those integrations belong to later tickets.
+E4.1 adds the faction foundation: stable data, pure reputation helpers, a
+friend/foe matrix, and a Redux slice that exposes player faction state. E4.2
+builds on it with the New-Game **faction picker**, **asymmetric per-faction
+objectives**, and **save persistence** of the chosen faction. Soldier AI,
+caravan AI, and objective-driven behaviour still belong to later tickets — the
+objective data here is declarative and not yet wired into the live sim.
 
 ## Stable ids
 
@@ -68,5 +70,53 @@ in Redux:
 - selectors for current faction id, current faction definition, a single
   reputation value, and the full reputation map
 
-The slice delegates bounds and map updates to the pure model. It is intentionally
-not part of the save schema in E4.1.
+The slice delegates bounds and map updates to the pure model. Reputation is not
+yet part of the save schema; only the chosen player faction is persisted (see
+**Save persistence** below).
+
+## Playable factions & selection (E4.2)
+
+Three of the four factions are player-selectable; `neutral` is the unaffiliated
+default the player carries until (and unless) they choose. The selectable set,
+in picker order, is `PLAYABLE_FACTION_IDS` = `[forestElves, empire, villain]`.
+
+- `isFactionId(value)` / `isPlayableFactionId(value)` — type guards used by save
+  migration to validate an untrusted faction id (an unknown id falls back to
+  `neutral` rather than corrupting state).
+- `PLAYABLE_FACTIONS` — a picker-ready list merging each faction's identity with
+  its playbook (name, home, role, tagline, objectives).
+
+The New-Game flow lives in `src/app/App.tsx`: **New Game** opens the
+`FactionPicker` overlay (`src/components/FactionPicker.tsx`) instead of starting
+immediately. The picker is a two-step select→confirm affordance with empty,
+loading, and selected states. Choosing a faction and pressing **Begin**
+dispatches `setPlayerFaction(id)` (alongside the player/health/inventory resets)
+and then `startNewGame()`. Visual polish tracks Iris's wireframes; this is the
+functional first pass.
+
+## Asymmetric objectives (E4.2)
+
+Each playable faction has a typed **playbook** in
+`src/game/faction/objectives.ts` describing its asymmetric goals. The data is
+declarative — it states intent (raid whom, defend where) and is consumed by
+later tickets (commander/order system, AI targeting, quest tracking); it does
+not drive behaviour yet. Objective `id`s are stable strings (quest tracking will
+point at them) — treat them like faction ids and do not rename after shipping.
+
+| Faction | Role | Objectives |
+| --- | --- | --- |
+| Forest Elves | Forest Elf | raid Empire, raid Villain, defend the Emerald Thicket |
+| Empire | Palace Guard | obey the commander, defend the Imperial palace |
+| Villain | Villain | command troops, attack the Imperial palace |
+
+An objective carries a `kind` (`raid \| defend \| obey \| command \| attack`), a
+player-facing `summary`, and an optional `targetFactionId` (raid/attack) or
+`targetRegion` (defend).
+
+## Save persistence (E4.2)
+
+The chosen player faction is persisted in the save schema as `playerFactionId`
+(save **v3**). On **Continue**, `setPlayerFaction(data.playerFactionId)` restores
+it. Old saves remain loadable: a pre-v3 save has no faction and migrates forward
+to `neutral`; an unrecognised persisted id is coerced to `neutral` too. See
+[save-system.md](save-system.md) for the schema-version history.

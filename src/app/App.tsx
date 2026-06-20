@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { GameCanvas } from '../scenes/GameCanvas'
 import { InventoryPanel } from './InventoryPanel'
 import { WorldMap } from '../components/WorldMap'
+import { FactionPicker } from '../components/FactionPicker'
+import { PLAYABLE_FACTIONS, type PlayableFactionId } from '../game/faction'
 import { hasSave, loadLatest, saveGame } from '../game/save'
 import { listZones, planTravel, type ZoneId } from '../game/world'
 import {
@@ -21,6 +23,8 @@ import {
   returnToMenu,
   selectIsBleeding,
   selectIsStreamingLoading,
+  selectPlayerFactionId,
+  setPlayerFaction,
   setZone,
   startNewGame,
   tickInjuries,
@@ -52,12 +56,15 @@ export function App() {
   const health = useAppSelector((state) => state.health.player)
   const zoneId = useAppSelector((state) => state.player.zoneId)
   const inventory = useAppSelector((state) => state.inventory)
+  const playerFactionId = useAppSelector(selectPlayerFactionId)
   const isLoadingAssets = useAppSelector(selectIsStreamingLoading)
   const isBleeding = useAppSelector(selectIsBleeding)
   const menuPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const pausePrimaryActionRef = useRef<HTMLButtonElement>(null)
 
   const [hasSaveSlot, setHasSaveSlot] = useState(false)
+  // Main menu sub-view: the landing actions, or the New-Game faction picker.
+  const [menuView, setMenuView] = useState<'main' | 'factions'>('main')
   // World-map / fast-travel overlay (E3.1). `traveling` keeps the overlay in its
   // "Travelling…" state until the destination scene has streamed in.
   const [worldMapOpen, setWorldMapOpen] = useState(false)
@@ -87,8 +94,8 @@ export function App() {
 
   // Latest player scalars, read at autosave time without re-arming the pause
   // effect every time health/zone change.
-  const snapshotRef = useRef({ health, zoneId, inventory })
-  snapshotRef.current = { health, zoneId, inventory }
+  const snapshotRef = useRef({ health, zoneId, inventory, playerFactionId })
+  snapshotRef.current = { health, zoneId, inventory, playerFactionId }
 
   // Probe whether a save exists so the Continue button can render enabled/empty.
   useEffect(() => {
@@ -115,8 +122,12 @@ export function App() {
     if (phase !== 'paused') return
     const transform = readPlayerTransform()
     if (!transform) return
-    const { health: hp, zoneId: zone, inventory: inv } = snapshotRef.current
-    void saveGame({ transform, health: hp, zoneId: zone, inventory: inv }, Date.now())
+    const { health: hp, zoneId: zone, inventory: inv, playerFactionId: faction } =
+      snapshotRef.current
+    void saveGame(
+      { transform, health: hp, zoneId: zone, inventory: inv, playerFactionId: faction },
+      Date.now(),
+    )
       .then(() => setHasSaveSlot(true))
       .catch(() => {})
   }, [phase])
@@ -176,15 +187,26 @@ export function App() {
     if (phase === 'menu') {
       setWorldMapOpen(false)
       setTraveling(false)
+      setMenuView('main')
     }
   }, [phase])
 
+  // New Game opens the faction picker; the campaign only starts once a faction
+  // is chosen so the choice is recorded in `factionSlice` and the save.
   const onNewGame = useCallback(() => {
-    dispatch(resetPlayer())
-    dispatch(resetPlayerHealth())
-    dispatch(resetInventory())
-    dispatch(startNewGame())
-  }, [dispatch])
+    setMenuView('factions')
+  }, [])
+
+  const onBeginWithFaction = useCallback(
+    (factionId: PlayableFactionId) => {
+      dispatch(resetPlayer())
+      dispatch(resetPlayerHealth())
+      dispatch(resetInventory())
+      dispatch(setPlayerFaction(factionId))
+      dispatch(startNewGame())
+    },
+    [dispatch],
+  )
 
   const onContinue = useCallback(async () => {
     const data = await loadLatest()
@@ -195,6 +217,7 @@ export function App() {
     dispatch(restorePlayerHealth(data.health))
     dispatch(restorePlayer({ zoneId: data.zoneId }))
     dispatch(restoreInventory(data.inventory))
+    dispatch(setPlayerFaction(data.playerFactionId))
     dispatch(continueGame())
   }, [dispatch])
 
@@ -244,7 +267,14 @@ export function App() {
           }}
         />
       ) : null}
-      {phase === 'menu' ? (
+      {phase === 'menu' && menuView === 'factions' ? (
+        <FactionPicker
+          factions={PLAYABLE_FACTIONS}
+          onConfirm={onBeginWithFaction}
+          onBack={() => setMenuView('main')}
+        />
+      ) : null}
+      {phase === 'menu' && menuView === 'main' ? (
         <main className="menu-overlay" aria-labelledby="main-menu-title">
           <div className="menu-panel">
             <p className="menu-kicker">Forest vertical slice</p>

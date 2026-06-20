@@ -2,6 +2,7 @@ export {
   FACTION_IDS,
   FACTION_ID_LIST,
   FACTIONS,
+  PLAYABLE_FACTION_IDS,
   DEFAULT_PLAYER_FACTION_ID,
   DEFAULT_REPUTATION,
   MIN_REPUTATION,
@@ -10,12 +11,25 @@ export {
   adjustReputation,
   clampReputation,
   createDefaultReputation,
+  isFactionId,
+  isPlayableFactionId,
   resolveStance,
   setReputation,
   type FactionDefinition,
   type FactionId,
   type FactionKey,
+  type PlayableFactionId,
   type Reputation,
   type ReputationMap,
   type Stance,
 } from './factions'
+
+export {
+  FACTION_PLAYBOOKS,
+  PLAYABLE_FACTIONS,
+  getPlaybook,
+  type FactionObjective,
+  type FactionPlaybook,
+  type ObjectiveKind,
+  type PlayableFactionOption,
+} from './objectives'

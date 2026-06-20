@@ -68,7 +68,37 @@ export const FACTION_ID_LIST = [
   FACTION_IDS.Villain,
 ] as const satisfies readonly FactionId[]
 
+/**
+ * The factions a player may choose at New Game. `Neutral` is the unaffiliated
+ * default the player carries before (and if they never make) a choice, so it is
+ * deliberately not selectable. Order is the picker's display order.
+ */
+export const PLAYABLE_FACTION_IDS = [
+  FACTION_IDS.ForestElves,
+  FACTION_IDS.Empire,
+  FACTION_IDS.Villain,
+] as const satisfies readonly FactionId[]
+
+export type PlayableFactionId = (typeof PLAYABLE_FACTION_IDS)[number]
+
 export const DEFAULT_PLAYER_FACTION_ID = FACTION_IDS.Neutral
+
+const FACTION_ID_SET: ReadonlySet<string> = new Set(FACTION_ID_LIST)
+const PLAYABLE_FACTION_ID_SET: ReadonlySet<string> = new Set(PLAYABLE_FACTION_IDS)
+
+/**
+ * Type guard for a known faction id. Save migration uses this to validate an
+ * untrusted persisted faction before trusting it — an unknown id falls back to
+ * the neutral default rather than corrupting state.
+ */
+export function isFactionId(value: unknown): value is FactionId {
+  return typeof value === 'string' && FACTION_ID_SET.has(value)
+}
+
+/** Type guard for a player-selectable faction id (excludes neutral). */
+export function isPlayableFactionId(value: unknown): value is PlayableFactionId {
+  return typeof value === 'string' && PLAYABLE_FACTION_ID_SET.has(value)
+}
 
 export const DEFAULT_REPUTATION: ReputationMap = {
   neutral: 0,

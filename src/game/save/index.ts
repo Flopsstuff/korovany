@@ -44,6 +44,7 @@ export function createSaveData(snapshot: PlayerSnapshot, savedAt: number): SaveD
       counts: { ...snapshot.inventory.counts },
       equippedItemId: snapshot.inventory.equippedItemId,
     },
+    playerFactionId: snapshot.playerFactionId,
     savedAt,
   }
 }

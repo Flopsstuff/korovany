@@ -12,12 +12,13 @@ A save record is a single small JSON-shaped object:
 
 | Field       | Meaning                                                        |
 | ----------- | ------------------------------------------------------------- |
-| `version`   | Schema version the record was written with (currently `2`).   |
-| `transform` | Player capsule pose: `position` (`x,y,z`) + `rotationY` (yaw). |
-| `health`    | Player health as `{ current, max }` so max HP survives reload. |
-| `zoneId`    | Identifier of the zone the player was in.                     |
-| `inventory` | Carried loot: `{ counts: {itemId: n}, equippedItemId }` (v2).  |
-| `savedAt`   | Epoch milliseconds the snapshot was taken (picks the latest). |
+| `version`         | Schema version the record was written with (currently `3`).   |
+| `transform`       | Player capsule pose: `position` (`x,y,z`) + `rotationY` (yaw). |
+| `health`          | Player health as `{ current, max }` so max HP survives reload. |
+| `zoneId`          | Identifier of the zone the player was in.                     |
+| `inventory`       | Carried loot: `{ counts: {itemId: n}, equippedItemId }` (v2).  |
+| `playerFactionId` | The chosen player faction (v3), sourced from `factionSlice`.   |
+| `savedAt`         | Epoch milliseconds the snapshot was taken (picks the latest). |
 
 Only this compact state is persisted. **Assets are never saved** — meshes,
 textures and audio always stream from their own pipeline. This mirrors the
@@ -27,8 +28,9 @@ never display names or art — those resolve from the static catalog at render t
 
 The transform comes from the live Babylon capsule; `health` comes from the
 canonical `healthSlice` (`{ current, max }`, the single health authority);
-`zoneId` comes from the Redux `player` slice; and `inventory` comes from the
-`inventory` slice (E3.4). (Zones are a placeholder today — E1.1 is movement +
+`zoneId` comes from the Redux `player` slice; `inventory` comes from the
+`inventory` slice (E3.4); and `playerFactionId` comes from the `faction` slice
+(E4.2 — chosen at New Game). (Zones are a placeholder today — E1.1 is movement +
 camera only — so the `player` slice seeds a sensible default: `zoneId: "forest"`.
 Health is real as of E2.1.)
 
@@ -98,6 +100,10 @@ Version history:
   guard (`isSaveData`) validates only the fields present since v1, leaving newer
   fields to `migrate()` — that is what keeps old saves loadable instead of
   rejected. See the v1 → v2 migration test in `src/game/save/schema.test.ts`.
+- **v3** — added `playerFactionId` (E4.2, the New-Game faction choice).
+  `migrate()` defaults any pre-v3 save to the `neutral` (unaffiliated) faction,
+  and coerces an unrecognised persisted id to `neutral` rather than trusting it.
+  See the v2 → v3 (and v1 → v3) migration tests in `schema.test.ts`.
 
 ## Testing
 
