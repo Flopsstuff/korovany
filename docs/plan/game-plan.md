@@ -150,7 +150,7 @@ Epic: **[FLO-307](/FLO/issues/FLO-307)** — opened 2026-06-20, decomposed by Da
 
 - **E2.1 Health & damage model** `[x]` — **FLO-308** ✅ merged aa65342 (PR #23) — pure `src/game/health` system: HP, applyDamage funnel, death state → returnToMenu; 147 tests.
 - **E2.2 Melee combat** `[x]` — **FLO-309** ✅ merged cf0a964 (PR #26) — windup/active/recovery state machine; 2 m sphere + 120° arc hit query; `Damageable` contract; attack on `F`; 162 tests.
-- **E2.3 Enemy NPC (first archetype)** `[~]` — **FLO-314** (in_progress) — soldier FSM patrol→detect→chase→attack→die; fight-loop integration point.
+- **E2.3 Enemy NPC (first archetype)** `[x]` — **FLO-314** ✅ merged bb6f6d0 (PR #29) — soldier FSM patrol→chase→attack→dead; full fight loop wired; 177 tests.
 - **E2.4 3D corpses** `[ ]` — **FLO-315** (blocked by FLO-314) — persistent static corpse mesh on death + cap/cull policy.
 - **E2.5 Injury & dismemberment model** `[ ]` — **FLO-313** (blocked by FLO-308) — limb/eye/leg state + three canonical outcomes:
   - [ ] Lose-a-hand → bleed timer → death if untreated; healing item stops it.
