@@ -1,4 +1,5 @@
 import type { LootDrop } from '../game/loot'
+import type { CombatKillTarget } from '../game/progression'
 import { getZone } from '../game/world'
 import { createForestScene } from './forestScene'
 import { createHumanLandsScene } from './humanLandsScene'
@@ -12,6 +13,8 @@ export interface ZoneSceneOptions {
   onPlayerDamaged?: (amount: number) => void
   /** Fired when the player defeats a caravan (E3.5); ignored by zones with no caravan. */
   onCaravanLooted?: (drop: LootDrop) => void
+  /** Fired once per defeated combat target so progression can award XP. */
+  onEnemyDefeated?: (target: CombatKillTarget) => void
   isPaused?: () => boolean
   /**
    * Per-step locomotion speed multiplier (1 = normal). Surfaces the leg-loss

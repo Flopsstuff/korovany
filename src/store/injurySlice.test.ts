@@ -7,6 +7,7 @@ import { streamingReducer } from './streamingSlice'
 import { playerReducer } from './playerSlice'
 import { healthReducer, damagePlayer } from './healthSlice'
 import { inventoryReducer } from './inventorySlice'
+import { progressionReducer } from './progressionSlice'
 import {
   advanceBleed,
   fitPlayerProsthetic,
@@ -34,6 +35,7 @@ function makeStore() {
       health: healthReducer,
       injury: injuryReducer,
       inventory: inventoryReducer,
+      progression: progressionReducer,
     },
   })
 }

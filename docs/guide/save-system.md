@@ -12,12 +12,13 @@ A save record is a single small JSON-shaped object:
 
 | Field       | Meaning                                                        |
 | ----------- | ------------------------------------------------------------- |
-| `version`         | Schema version the record was written with (currently `3`).   |
+| `version`         | Schema version the record was written with (currently `4`).   |
 | `transform`       | Player capsule pose: `position` (`x,y,z`) + `rotationY` (yaw). |
 | `health`          | Player health as `{ current, max }` so max HP survives reload. |
 | `zoneId`          | Identifier of the zone the player was in.                     |
 | `inventory`       | Carried loot: `{ counts: {itemId: n}, equippedItemId }` (v2).  |
 | `playerFactionId` | The chosen player faction (v3), sourced from `factionSlice`.   |
+| `progression`     | Character XP, level, stats, and skills (v4), sourced from `progressionSlice`. |
 | `savedAt`         | Epoch milliseconds the snapshot was taken (picks the latest). |
 
 Only this compact state is persisted. **Assets are never saved** — meshes,
@@ -29,10 +30,11 @@ never display names or art — those resolve from the static catalog at render t
 The transform comes from the live Babylon capsule; `health` comes from the
 canonical `healthSlice` (`{ current, max }`, the single health authority);
 `zoneId` comes from the Redux `player` slice; `inventory` comes from the
-`inventory` slice (E3.4); and `playerFactionId` comes from the `faction` slice
-(E4.2 — chosen at New Game). (Zones are a placeholder today — E1.1 is movement +
-camera only — so the `player` slice seeds a sensible default: `zoneId: "forest"`.
-Health is real as of E2.1.)
+`inventory` slice (E3.4); `playerFactionId` comes from the `faction` slice
+(E4.2 — chosen at New Game); and `progression` comes from the `progression` slice
+(E4.5). (Zones are a placeholder today — E1.1 is movement + camera only — so the
+`player` slice seeds a sensible default: `zoneId: "forest"`. Health is real as
+of E2.1.)
 
 ## Where it is stored
 
@@ -104,6 +106,9 @@ Version history:
   `migrate()` defaults any pre-v3 save to the `neutral` (unaffiliated) faction,
   and coerces an unrecognised persisted id to `neutral` rather than trusting it.
   See the v2 → v3 (and v1 → v3) migration tests in `schema.test.ts`.
+- **v4** — added `progression` (E4.5). `migrate()` fills a fresh baseline
+  progression state for pre-v4 saves, while current saves carry XP, level, stat
+  tracks, and skill tracks forward.
 
 ## Testing
 

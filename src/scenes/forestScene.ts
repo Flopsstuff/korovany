@@ -33,6 +33,7 @@ import { registerPlayer, takeSpawn } from '../game/save/playerRuntime'
 import type { PlayerTransform } from '../game/save'
 import { type CorpseStore } from '../game/corpses'
 import type { LootDrop } from '../game/loot'
+import type { CombatKillTarget } from '../game/progression'
 import { SoldierEnemy } from './soldierEnemy'
 import { CaravanEnemy } from './caravanEnemy'
 import { CorpseManager } from './corpseManager'
@@ -107,6 +108,8 @@ export interface ForestSceneOptions {
    * HUD inventory reflects the haul; this scene stays decoupled from the store.
    */
   onCaravanLooted?: (drop: LootDrop) => void
+  /** Fired once per defeated target so progression can award XP without owning combat. */
+  onEnemyDefeated?: (target: CombatKillTarget) => void
   /**
    * Pause gate (FLO-326). While this returns `true` the per-frame simulation —
    * soldier AI, player movement, and melee damage — is frozen; the scene still
@@ -179,6 +182,7 @@ export function createForestScene(
     corpseStore,
     corpseGlbUrl,
     onCaravanLooted,
+    onEnemyDefeated,
     isPaused,
     getSpeedMultiplier,
   } = options
@@ -265,6 +269,7 @@ export function createForestScene(
         spawn,
         getPlayerPos: () => controller.mesh.position,
         onAttackPlayer: (dmg) => onPlayerDamaged?.(dmg),
+        onDefeated: () => onEnemyDefeated?.('soldier'),
       }),
   )
 
@@ -278,6 +283,7 @@ export function createForestScene(
         spawn,
         getPlayerPos: () => controller.mesh.position,
         onLooted: onCaravanLooted,
+        onDefeated: () => onEnemyDefeated?.('caravan'),
       }),
   )
   const caravan = caravans[0]

@@ -57,7 +57,7 @@ const dispatch = useAppDispatch()
 dispatch(damagePlayer(30))
 ```
 
-`RootState` is `{ app, faction, game, health, injury, inventory, player, streaming }` — the union of every
+`RootState` is `{ app, faction, game, health, injury, inventory, player, progression, streaming }` — the union of every
 slice's state. Adding a slice to `configureStore` automatically widens
 `RootState`, so selectors and the typed hooks stay correct with no extra
 plumbing.
@@ -141,6 +141,21 @@ serialise.
   from a loaded save), `resetPlayer()` (back to defaults for a New Game).
 - **Read via:** `useAppSelector((s) => s.player.zoneId)`.
 
+### `progressionSlice` — character XP, stats, and skills
+
+The Redux bridge for the pure progression model in `src/game/progression/`.
+It stores character level/XP, core stats (`strength`, `agility`, `endurance`),
+and skills (`melee`, `trade`, `survival`). See
+[Character progression](./character-progression).
+
+- **State:** `ProgressionState`, persisted in save schema v3.
+- **Actions:** `recordCombatKill(target)`, `recordPurchase({ value })`,
+  `awardProgression(event)`, `resetProgression()`, `restoreProgression(state)`.
+- **Selectors:** `selectProgression`, `selectDamageMultiplier`,
+  `selectMaxHealthBonus`, `selectMovementSpeedMultiplier`.
+- **Integration:** the live forest scene emits combat defeat events; economy
+  purchase code should call `recordPurchase` when a buy completes.
+
 ### `streamingSlice` — asset load status
 
 Per-asset GLB load lifecycle that drives the HUD "loading…" indicator and error
@@ -156,10 +171,10 @@ hints. See [Asset streaming](./asset-streaming).
 
 - **Save/load** is **not** a slice. The [Save system](./save-system) lives in
   `src/game/save/` (IndexedDB + a pure schema). On *Continue* it dispatches
-  `restorePlayerHealth` and `restorePlayer` to rehydrate the health and player
-  slices; "does a save exist?" is local React `useState` in `App.tsx`, not store
-  state. The store holds *live* state; the save system serialises a snapshot of
-  it.
+  `restorePlayerHealth`, `restorePlayer`, `restoreInventory`, and
+  `restoreProgression` to rehydrate live slices; "does a save exist?" is local
+  React `useState` in `App.tsx`, not store state. The store holds *live* state;
+  the save system serialises a snapshot of it.
 - **The player's world transform** lives in the Babylon scene and is reached via
   the `playerRuntime` bridge, never mirrored into Redux.
 

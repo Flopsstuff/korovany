@@ -11,6 +11,7 @@ import {
   type PlayerSnapshot,
 } from './index'
 import { FACTION_IDS } from '../faction'
+import { createProgression } from '../progression'
 
 // A fresh in-memory IndexedDB per test so slots never leak across cases.
 let factory: IDBFactory
@@ -25,6 +26,17 @@ const snapshot: PlayerSnapshot = {
   zoneId: 'forest',
   inventory: { counts: { gold: 8, blade: 1 }, equippedItemId: 'blade' },
   playerFactionId: FACTION_IDS.ForestElves,
+  progression: {
+    ...createProgression(),
+    xp: 135,
+    level: 2,
+    nextLevelXp: 200,
+    stats: {
+      strength: { level: 11, xp: 60 },
+      agility: { level: 10, xp: 0 },
+      endurance: { level: 10, xp: 0 },
+    },
+  },
 }
 
 describe('createSaveData', () => {
@@ -37,11 +49,18 @@ describe('createSaveData', () => {
     expect(data.zoneId).toBe('forest')
     expect(data.inventory).toEqual({ counts: { gold: 8, blade: 1 }, equippedItemId: 'blade' })
     expect(data.playerFactionId).toBe(FACTION_IDS.ForestElves)
+    expect(data.progression).toEqual(snapshot.progression)
   })
 
   it('decouples the persisted inventory from the live slice reference', () => {
     const data = createSaveData(snapshot, 1000)
     expect(data.inventory.counts).not.toBe(snapshot.inventory.counts)
+  })
+
+  it('decouples the persisted progression tracks from the live slice reference', () => {
+    const data = createSaveData(snapshot, 1000)
+    expect(data.progression.stats).not.toBe(snapshot.progression.stats)
+    expect(data.progression.skills).not.toBe(snapshot.progression.skills)
   })
 })
 
@@ -58,6 +77,7 @@ describe('save round-trip (fake-indexeddb)', () => {
       zoneId: 'forest',
       inventory: { counts: { gold: 8, blade: 1 }, equippedItemId: 'blade' },
       playerFactionId: FACTION_IDS.ForestElves,
+      progression: snapshot.progression,
       savedAt: 1234,
     })
   })

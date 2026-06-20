@@ -19,12 +19,16 @@ describe('CaravanEnemy (scene integration)', () => {
   let scene: Scene
   let player: Vector3
   let drops: LootDrop[]
+  let defeats: number
 
   function spawn(at = new Vector3(20, 1, 0)) {
     return new CaravanEnemy(scene, {
       spawn: at,
       getPlayerPos: () => player,
       onLooted: (d) => drops.push(d),
+      onDefeated: () => {
+        defeats += 1
+      },
     })
   }
 
@@ -32,6 +36,7 @@ describe('CaravanEnemy (scene integration)', () => {
     scene = makeScene()
     player = new Vector3(100, 0.9, 0) // far away → caravan wanders undisturbed
     drops = []
+    defeats = 0
   })
 
   it('wanders: moves along its default path when the player is far', () => {
@@ -61,12 +66,14 @@ describe('CaravanEnemy (scene integration)', () => {
 
     caravan.takeDamage(P.maxHp) // overkill → dead
     expect(caravan.isDead()).toBe(true)
+    expect(defeats).toBe(1)
     expect(drops).toHaveLength(1)
     expect(caravan.loot).toBe(drops[0])
     expect(drops[0].items.length).toBeGreaterThan(0)
 
     // Further hits do not re-roll / re-emit.
     caravan.takeDamage(25)
+    expect(defeats).toBe(1)
     expect(drops).toHaveLength(1)
   })
 

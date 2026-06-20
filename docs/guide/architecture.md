@@ -38,6 +38,7 @@ korovany/
 | Seeded RNG (reproducible rolls)| `src/game/util/rng.ts` — see [Seeded RNG](./seeded-rng) |
 | Faction definitions/reputation | `src/game/faction/` + `src/store/factionSlice.ts` — see [Faction system](./faction-system) |
 | Commander orders / squad AI    | `src/game/ai/orders.ts` + `src/game/ai/soldierFSM.ts` — see [Enemy AI](./enemy-ai) |
+| Character progression (XP/stats/skills) | `src/game/progression/` + `src/store/progressionSlice.ts` — see [Character progression](./character-progression) |
 | Asset streaming (GLB on demand)| `src/game/streaming/`               |
 | Persistent enemy corpses       | `src/game/corpses/` + `src/scenes/corpseManager.ts` — see [Corpses](./corpses) |
 | Save/load (IndexedDB)          | `src/game/save/`                    |

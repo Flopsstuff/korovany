@@ -5,6 +5,7 @@ import { IDBFactory } from 'fake-indexeddb'
 import { Provider } from 'react-redux'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { HealthState } from '../game/health'
+import { createProgression, type ProgressionState } from '../game/progression'
 import { loadLatest, saveGame } from '../game/save'
 import { registerPlayer } from '../game/save/playerRuntime'
 import type { AssetLoadPhase } from '../game/streaming/types'
@@ -18,6 +19,7 @@ import { createInjuryState, severLimb, type InjuryState } from '../game/health/i
 import { createInventory, type InventoryState } from '../game/economy'
 import { FACTION_IDS } from '../game/faction'
 import { DEFAULT_PLAYER_STATE, playerReducer, type PlayerState } from '../store/playerSlice'
+import { progressionReducer } from '../store/progressionSlice'
 import { streamingReducer } from '../store/streamingSlice'
 import { App } from './App'
 
@@ -36,6 +38,7 @@ function renderApp(
   inventory: InventoryState = createInventory(),
   injury: InjuryState = createInjuryState(),
   score = 0,
+  progression: ProgressionState = createProgression(),
 ) {
   const store = configureStore({
     reducer: {
@@ -46,6 +49,7 @@ function renderApp(
       injury: injuryReducer,
       inventory: inventoryReducer,
       player: playerReducer,
+      progression: progressionReducer,
       streaming: streamingReducer,
     },
     preloadedState: {
@@ -55,6 +59,7 @@ function renderApp(
       health: { player: health },
       inventory,
       player,
+      progression,
       streaming: { phases: streamingPhases },
       injury,
     },
@@ -294,6 +299,11 @@ describe('<App /> save/load (fake-indexeddb)', () => {
       renderApp('playing', {}, { zoneId: 'forest' }, { current: 60, max: 120 }, {
         counts: { gold: 14 },
         equippedItemId: null,
+      }, createInjuryState(), 0, {
+        ...createProgression(),
+        xp: 100,
+        level: 2,
+        nextLevelXp: 200,
       })
 
       await user.keyboard('{Escape}') // playing → paused triggers autosave
@@ -309,6 +319,9 @@ describe('<App /> save/load (fake-indexeddb)', () => {
         expect(saved?.inventory).toEqual({ counts: { gold: 14 }, equippedItemId: null })
         // The (default neutral) faction is captured too.
         expect(saved?.playerFactionId).toBe(FACTION_IDS.Neutral)
+        // Character progression round-trips into the autosave snapshot.
+        expect(saved?.progression.level).toBe(2)
+        expect(saved?.progression.xp).toBe(100)
       })
     } finally {
       unregister()
@@ -347,6 +360,12 @@ describe('<App /> save/load (fake-indexeddb)', () => {
         zoneId: 'forest',
         inventory: { counts: { grain: 3 }, equippedItemId: null },
         playerFactionId: FACTION_IDS.Empire,
+        progression: {
+          ...createProgression(),
+          xp: 100,
+          level: 2,
+          nextLevelXp: 200,
+        },
       },
       123,
     )

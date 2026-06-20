@@ -39,6 +39,8 @@ export interface SoldierEnemyOptions {
   getOrderContext?: () => SoldierOrderContext
   /** Callback when an explicit attack-target order lands a hit. */
   onAttackOrderTarget?: (damage: number) => void
+  /** Callback when the soldier is defeated — caller may award XP. */
+  onDefeated?: () => void
   /**
    * Soldier GLB to mount on the capsule (FLO-311); `null` keeps the bare
    * capsule placeholder. Defaults to the shipped Empire soldier model.
@@ -54,6 +56,7 @@ export class SoldierEnemy implements System, Damageable {
   private readonly onAttackPlayer: (dmg: number) => void
   private readonly getOrderContext?: () => SoldierOrderContext
   private readonly onAttackOrderTarget?: (dmg: number) => void
+  private readonly onDefeated?: () => void
 
   get position(): Vec3 {
     return { x: this.mesh.position.x, y: this.mesh.position.y, z: this.mesh.position.z }
@@ -65,6 +68,7 @@ export class SoldierEnemy implements System, Damageable {
     this.onAttackPlayer = options.onAttackPlayer
     this.getOrderContext = options.getOrderContext
     this.onAttackOrderTarget = options.onAttackOrderTarget
+    this.onDefeated = options.onDefeated
     this.fsm = createSoldierFSM(this.params)
 
     this.mesh = MeshBuilder.CreateCapsule(
@@ -103,6 +107,7 @@ export class SoldierEnemy implements System, Damageable {
     if (this.fsm.phase === 'dead') return
     this.fsm = applyDamageToSoldier(this.fsm, amount)
     if (this.fsm.phase === 'dead') {
+      this.onDefeated?.()
       // Topple in place so the kill reads clearly; E2.4 (FLO-313) takes over
       // the death sequence — we deliberately do not despawn the mesh.
       this.mesh.rotation.z = Math.PI / 2

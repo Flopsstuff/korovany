@@ -46,6 +46,7 @@ export default defineConfig({
           { text: 'Caravans', link: '/guide/caravans' },
           { text: 'Seeded RNG', link: '/guide/seeded-rng' },
           { text: 'Faction system', link: '/guide/faction-system' },
+          { text: 'Character progression', link: '/guide/character-progression' },
           { text: 'Testing', link: '/guide/testing' },
         ],
       },

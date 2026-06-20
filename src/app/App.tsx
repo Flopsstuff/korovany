@@ -18,9 +18,11 @@ import {
   resetInventory,
   resetPlayer,
   resetPlayerHealth,
+  resetProgression,
   restoreInventory,
   restorePlayer,
   restorePlayerHealth,
+  restoreProgression,
   returnToMenu,
   selectHasHalfScreenBlackout,
   selectIsBleeding,
@@ -60,6 +62,7 @@ export function App() {
   const zoneId = useAppSelector((state) => state.player.zoneId)
   const inventory = useAppSelector((state) => state.inventory)
   const playerFactionId = useAppSelector(selectPlayerFactionId)
+  const progression = useAppSelector((state) => state.progression)
   const isLoadingAssets = useAppSelector(selectIsStreamingLoading)
   const isBleeding = useAppSelector(selectIsBleeding)
   const hasHalfScreenBlackout = useAppSelector(selectHasHalfScreenBlackout)
@@ -100,8 +103,8 @@ export function App() {
 
   // Latest player scalars, read at autosave time without re-arming the pause
   // effect every time health/zone change.
-  const snapshotRef = useRef({ health, zoneId, inventory, playerFactionId })
-  snapshotRef.current = { health, zoneId, inventory, playerFactionId }
+  const snapshotRef = useRef({ health, zoneId, inventory, playerFactionId, progression })
+  snapshotRef.current = { health, zoneId, inventory, playerFactionId, progression }
 
   // Probe whether a save exists so the Continue button can render enabled/empty.
   useEffect(() => {
@@ -128,10 +131,10 @@ export function App() {
     if (phase !== 'paused') return
     const transform = readPlayerTransform()
     if (!transform) return
-    const { health: hp, zoneId: zone, inventory: inv, playerFactionId: faction } =
+    const { health: hp, zoneId: zone, inventory: inv, playerFactionId: faction, progression: prog } =
       snapshotRef.current
     void saveGame(
-      { transform, health: hp, zoneId: zone, inventory: inv, playerFactionId: faction },
+      { transform, health: hp, zoneId: zone, inventory: inv, playerFactionId: faction, progression: prog },
       Date.now(),
     )
       .then(() => setHasSaveSlot(true))
@@ -208,6 +211,7 @@ export function App() {
       dispatch(resetPlayer())
       dispatch(resetPlayerHealth())
       dispatch(resetInventory())
+      dispatch(resetProgression())
       dispatch(setPlayerFaction(factionId))
       dispatch(startNewGame())
     },
@@ -224,6 +228,7 @@ export function App() {
     dispatch(restorePlayer({ zoneId: data.zoneId }))
     dispatch(restoreInventory(data.inventory))
     dispatch(setPlayerFaction(data.playerFactionId))
+    dispatch(restoreProgression(data.progression))
     dispatch(continueGame())
   }, [dispatch])
 

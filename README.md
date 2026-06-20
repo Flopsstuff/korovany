@@ -125,8 +125,8 @@ and [`0002-glb-import-contract.md`](docs/decisions/0002-glb-import-contract.md).
 ## Saving progress
 
 Player progress survives a browser reload. A small **versioned** snapshot — the
-player's transform (position + yaw), health (`current` + `max`), zone id, and
-carried [inventory](#inventory--loot) — is persisted to the browser's
+player's transform (position + yaw), health (`current` + `max`), zone id,
+carried [inventory](#inventory--loot), and character progression — is persisted to the browser's
 **IndexedDB** (`korovany-save` database, one autosave slot).
 
 - **Autosave on pause:** entering the paused state writes the snapshot.
@@ -138,8 +138,9 @@ carried [inventory](#inventory--loot) — is persisted to the browser's
   Nothing is uploaded; saves are local to the browser.
 
 The schema is **forever** — fields are never renamed; format changes bump
-`SAVE_VERSION` and add a migration. `SAVE_VERSION` is currently **2** (v2 added
-`inventory`; v1 saves migrate forward with an empty one). Full details, slot
+`SAVE_VERSION` and add a migration. `SAVE_VERSION` is currently **3** (v2 added
+`inventory`; v3 added `progression`; older saves migrate forward with empty /
+baseline values). Full details, slot
 model, and the test approach (`fake-indexeddb`):
 [`docs/guide/save-system.md`](docs/guide/save-system.md).
 

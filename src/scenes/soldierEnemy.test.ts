@@ -18,6 +18,7 @@ describe('SoldierEnemy (scene integration)', () => {
   let scene: Scene
   let player: Vector3
   let damageDealt: number[]
+  let defeats: number
 
   function spawn(at = new Vector3(6, 0.9, 6)) {
     return new SoldierEnemy(scene, {
@@ -25,6 +26,9 @@ describe('SoldierEnemy (scene integration)', () => {
       glbUrl: null, // skip GLB fetch — capsule proxy is the mesh under test
       getPlayerPos: () => player,
       onAttackPlayer: (dmg) => damageDealt.push(dmg),
+      onDefeated: () => {
+        defeats += 1
+      },
     })
   }
 
@@ -32,6 +36,7 @@ describe('SoldierEnemy (scene integration)', () => {
     scene = makeScene()
     player = new Vector3(0, 0.9, 0)
     damageDealt = []
+    defeats = 0
   })
 
   it('chases: moves toward the player when in detection range', () => {
@@ -57,11 +62,14 @@ describe('SoldierEnemy (scene integration)', () => {
     const soldier = spawn(new Vector3(1, 0.9, 0))
     soldier.takeDamage(P.maxHp)
     expect(soldier.isDead()).toBe(true)
+    expect(defeats).toBe(1)
 
     const frozen = soldier.position
     for (let i = 0; i < 30; i++) soldier.update(1 / 60, undefined)
     expect(soldier.position).toEqual(frozen) // no movement once dead
     expect(damageDealt).toHaveLength(0) // and no more attacks on the player
+    soldier.takeDamage(P.maxHp)
+    expect(defeats).toBe(1)
   })
 
   it('survives non-lethal damage and keeps fighting', () => {

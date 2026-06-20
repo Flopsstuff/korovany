@@ -3,6 +3,7 @@ import { createGameEngine } from '../engine'
 import {
   damagePlayer,
   pickUpLoot,
+  recordCombatKill,
   selectLocomotionSpeedMultiplier,
   store,
   useAppDispatch,
@@ -70,6 +71,7 @@ export function GameCanvas() {
                 onCaravanLooted: (drop) => {
                   for (const pickup of caravanLootToPickups(drop)) dispatch(pickUpLoot(pickup))
                 },
+                onEnemyDefeated: (target) => dispatch(recordCombatKill(target)),
                 isPaused: () => phaseRef.current === 'paused',
                 // Leg-loss locomotion (MPG.6): the controller pulls this each
                 // step so a severed leg (crawl) actually slows the capsule. Read

@@ -7,6 +7,7 @@ import { healthReducer } from './healthSlice'
 import { injuryReducer } from './injurySlice'
 import { inventoryReducer } from './inventorySlice'
 import { playerReducer } from './playerSlice'
+import { progressionReducer } from './progressionSlice'
 import { streamingReducer } from './streamingSlice'
 
 export const store = configureStore({
@@ -18,6 +19,7 @@ export const store = configureStore({
     injury: injuryReducer,
     inventory: inventoryReducer,
     player: playerReducer,
+    progression: progressionReducer,
     streaming: streamingReducer,
   },
 })
@@ -78,3 +80,15 @@ export {
   inventoryReducer,
 } from './inventorySlice'
 export type { LootDrop } from './inventorySlice'
+export {
+  awardProgression,
+  recordCombatKill,
+  recordPurchase,
+  resetProgression,
+  restoreProgression,
+  selectDamageMultiplier,
+  selectMaxHealthBonus,
+  selectMovementSpeedMultiplier,
+  selectProgression,
+} from './progressionSlice'
+export type { ProgressionState } from '../game/progression'

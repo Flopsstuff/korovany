@@ -43,6 +43,8 @@ export interface CaravanEnemyOptions {
    * caller dispatches it into the inventory (E3.4); this class stays decoupled.
    */
   onLooted?: (drop: LootDrop) => void
+  /** Fired exactly once when the caravan dies, before loot is adapted by callers. */
+  onDefeated?: () => void
   /** Loot table rolled on defeat. Defaults to {@link DEFAULT_CARAVAN_LOOT}. */
   lootTable?: LootTable
   /**
@@ -70,6 +72,7 @@ export class CaravanEnemy implements System, Damageable {
   private readonly path: Waypoint[]
   private readonly getPlayerPos: () => Vector3
   private readonly onLooted?: (drop: LootDrop) => void
+  private readonly onDefeated?: () => void
   private readonly lootTable: LootTable
   private readonly lootSeed: number
   /** The drop rolled on defeat — exposed for smoke tests / inspection. */
@@ -84,6 +87,7 @@ export class CaravanEnemy implements System, Damageable {
     this.path = options.path ?? defaultPathAround(options.spawn)
     this.getPlayerPos = options.getPlayerPos
     this.onLooted = options.onLooted
+    this.onDefeated = options.onDefeated
     this.lootTable = options.lootTable ?? DEFAULT_CARAVAN_LOOT
     this.lootSeed =
       options.lootSeed ?? seedFromString(`${options.spawn.x},${options.spawn.z}`)
@@ -105,6 +109,7 @@ export class CaravanEnemy implements System, Damageable {
     if (this.fsm.phase === 'dead') return
     this.fsm = applyDamageToCaravan(this.fsm, amount)
     if (this.fsm.phase === 'dead') {
+      this.onDefeated?.()
       // Roll the haul once and emit the reward event (E3.4 consumes it).
       this.loot = rollLoot(this.lootTable, createSeededRng(this.lootSeed))
       this.onLooted?.(this.loot)

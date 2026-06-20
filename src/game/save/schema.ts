@@ -1,6 +1,7 @@
 import type { HealthState } from '../health'
 import { createInventory, isInventoryState } from '../economy'
 import { DEFAULT_PLAYER_FACTION_ID, isFactionId } from '../faction'
+import { createProgression, isProgressionState } from '../progression'
 import { SAVE_VERSION, type PlayerTransform, type SaveData, type Vec3 } from './types'
 
 /**
@@ -46,7 +47,8 @@ function isHealth(value: unknown): value is HealthState {
 /**
  * Structural guard for a loadable save record. Validates the fields present in
  * every version since v1 (the migration baseline). Fields added in later
- * versions — `inventory` (v2), `playerFactionId` (v3) — are intentionally *not*
+ * versions — `inventory` (v2), `playerFactionId` (v3), `progression` (v4) — are
+ * intentionally *not*
  * required here so older saves still pass the guard and get upgraded by
  * {@link migrate}; migrate is the single place that fills them in.
  */
@@ -73,9 +75,10 @@ export function isSaveData(value: unknown): value is SaveData {
  * - v2 → v3: `playerFactionId` was added (E4.2). Saves written before v3 carry
  *   none, so they default to the neutral (unaffiliated) faction; an unrecognised
  *   id is also coerced to neutral rather than trusted.
+ * - v3 → v4: `progression` was added (E4.5). Older saves start at the baseline
+ *   progression model; later saves carry their XP/stats/skills forward.
  */
 export function migrate(data: SaveData): SaveData {
-  if (data.version === SAVE_VERSION) return data
   const inventory = isInventoryState((data as { inventory?: unknown }).inventory)
     ? data.inventory
     : createInventory()
@@ -83,7 +86,18 @@ export function migrate(data: SaveData): SaveData {
   const playerFactionId = isFactionId(persistedFaction)
     ? persistedFaction
     : DEFAULT_PLAYER_FACTION_ID
-  return { ...data, inventory, playerFactionId, version: SAVE_VERSION }
+  const progression = isProgressionState((data as { progression?: unknown }).progression)
+    ? data.progression
+    : createProgression()
+  if (
+    data.version === SAVE_VERSION &&
+    inventory === data.inventory &&
+    playerFactionId === data.playerFactionId &&
+    progression === data.progression
+  ) {
+    return data
+  }
+  return { ...data, inventory, playerFactionId, progression, version: SAVE_VERSION }
 }
 
 /**

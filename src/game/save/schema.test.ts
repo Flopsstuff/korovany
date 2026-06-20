@@ -3,6 +3,7 @@ import { isSaveData, migrate, parseSaveData } from './schema'
 import { SAVE_VERSION, type SaveData } from './types'
 import { createInventory } from '../economy'
 import { FACTION_IDS } from '../faction'
+import { createProgression } from '../progression'
 
 const valid: SaveData = {
   version: SAVE_VERSION,
@@ -11,12 +12,13 @@ const valid: SaveData = {
   zoneId: 'forest',
   inventory: { counts: { gold: 5 }, equippedItemId: null },
   playerFactionId: FACTION_IDS.ForestElves,
+  progression: createProgression(),
   savedAt: 42,
 }
 
-// A v1 save predates the `inventory` field (E3.4 / v2) and the `playerFactionId`
-// field (E4.2 / v3). Used to prove forward migration fills both rather than
-// dropping the save.
+// A v1 save predates the `inventory` field (E3.4 / v2), the `playerFactionId`
+// field (E4.2 / v3), and the `progression` field (E4.5 / v4). Used to prove
+// forward migration fills all three rather than dropping the save.
 const v1Save = {
   version: 1,
   transform: { position: { x: 3, y: 1, z: -4 }, rotationY: 0 },
@@ -25,7 +27,8 @@ const v1Save = {
   savedAt: 7,
 } as unknown as SaveData
 
-// A v2 save has an inventory but predates `playerFactionId` (E4.2 / v3).
+// A v2 save has an inventory but predates `playerFactionId` (v3) and
+// `progression` (v4).
 const v2Save = {
   version: 2,
   transform: { position: { x: 1, y: 1, z: 1 }, rotationY: 0 },
@@ -40,9 +43,9 @@ describe('isSaveData', () => {
     expect(isSaveData(valid)).toBe(true)
   })
 
-  // playerFactionId (v3) is not required by the guard so older saves still pass
-  // and get upgraded by migrate.
-  it('accepts a record missing the v3 faction field (pre-migration)', () => {
+  // playerFactionId (v3) and progression (v4) are not required by the guard so
+  // older saves still pass and get upgraded by migrate.
+  it('accepts a record missing the later fields (pre-migration)', () => {
     expect(isSaveData(v2Save)).toBe(true)
   })
 
@@ -76,16 +79,22 @@ describe('migrate', () => {
     expect(migrate(valid)).toBe(valid)
   })
 
+  it('repairs a malformed current-version record with baseline progression', () => {
+    const malformed = { ...valid, progression: undefined } as unknown as SaveData
+    expect(migrate(malformed).progression).toEqual(createProgression())
+  })
+
   it('stamps an unknown version up to the current one', () => {
     const old = { ...valid, version: 0 }
     expect(migrate(old).version).toBe(SAVE_VERSION)
   })
 
-  it('migrates a v1 save forward with an empty inventory and neutral faction', () => {
+  it('migrates a v1 save forward with empty inventory, neutral faction and baseline progression', () => {
     const migrated = migrate(v1Save)
     expect(migrated.version).toBe(SAVE_VERSION)
     expect(migrated.inventory).toEqual(createInventory())
     expect(migrated.playerFactionId).toBe(FACTION_IDS.Neutral)
+    expect(migrated.progression).toEqual(createProgression())
     // Pre-existing fields are carried through untouched.
     expect(migrated.transform).toEqual(v1Save.transform)
     expect(migrated.health).toEqual(v1Save.health)
@@ -97,10 +106,11 @@ describe('migrate', () => {
     expect(migrate(old).inventory).toEqual({ counts: { blade: 1 }, equippedItemId: 'blade' })
   })
 
-  it('migrates a v2 save forward to a neutral faction (v2 → v3)', () => {
+  it('migrates a v2 save forward to a neutral faction and baseline progression', () => {
     const migrated = migrate(v2Save)
     expect(migrated.version).toBe(SAVE_VERSION)
     expect(migrated.playerFactionId).toBe(FACTION_IDS.Neutral)
+    expect(migrated.progression).toEqual(createProgression())
     // The v2 inventory is preserved unchanged.
     expect(migrated.inventory).toEqual({ counts: { blade: 1 }, equippedItemId: 'blade' })
   })
@@ -114,6 +124,17 @@ describe('migrate', () => {
     const old = { ...v2Save, playerFactionId: 'goblins' } as unknown as SaveData
     expect(migrate(old).playerFactionId).toBe(FACTION_IDS.Neutral)
   })
+
+  it('keeps existing progression when stamping an old version forward', () => {
+    const progressed = {
+      ...createProgression(),
+      xp: 100,
+      level: 2,
+      nextLevelXp: 200,
+    }
+    const old = { ...valid, version: 3, progression: progressed }
+    expect(migrate(old).progression).toEqual(progressed)
+  })
 })
 
 describe('parseSaveData old-version round-trips', () => {
@@ -123,6 +144,7 @@ describe('parseSaveData old-version round-trips', () => {
     expect(parsed?.version).toBe(SAVE_VERSION)
     expect(parsed?.inventory).toEqual(createInventory())
     expect(parsed?.playerFactionId).toBe(FACTION_IDS.Neutral)
+    expect(parsed?.progression).toEqual(createProgression())
   })
 
   it('loads a pre-faction save and upgrades it to the current schema (v2)', () => {
@@ -130,5 +152,6 @@ describe('parseSaveData old-version round-trips', () => {
     expect(parsed).not.toBeNull()
     expect(parsed?.version).toBe(SAVE_VERSION)
     expect(parsed?.playerFactionId).toBe(FACTION_IDS.Neutral)
+    expect(parsed?.progression).toEqual(createProgression())
   })
 })

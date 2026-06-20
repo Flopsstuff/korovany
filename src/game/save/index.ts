@@ -45,6 +45,21 @@ export function createSaveData(snapshot: PlayerSnapshot, savedAt: number): SaveD
       equippedItemId: snapshot.inventory.equippedItemId,
     },
     playerFactionId: snapshot.playerFactionId,
+    progression: {
+      level: snapshot.progression.level,
+      xp: snapshot.progression.xp,
+      nextLevelXp: snapshot.progression.nextLevelXp,
+      stats: {
+        strength: { ...snapshot.progression.stats.strength },
+        agility: { ...snapshot.progression.stats.agility },
+        endurance: { ...snapshot.progression.stats.endurance },
+      },
+      skills: {
+        melee: { ...snapshot.progression.skills.melee },
+        trade: { ...snapshot.progression.skills.trade },
+        survival: { ...snapshot.progression.skills.survival },
+      },
+    },
     savedAt,
   }
 }
