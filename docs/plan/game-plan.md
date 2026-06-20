@@ -336,6 +336,11 @@ speculative batches (FLO-270).
   [FLO-364 Iris, blk MPG.1], MPG.3 combat juice [FLO-367 Aldric, blk MPG.1], MPG.5 populate
   world [FLO-365 Aldric], MPG.6 surface invisible systems [FLO-366 Wayland]. MPG.4 audio and
   MPG.7 animation remain to open once MPG.1 lands. FLO-355 closed done. (Daedalus)
+- **r17** (2026-06-21) — **E4.1/E4.2/E4.3 all merged ahead of schedule** (engineers continued
+  while MPG.5 was in flight). E4.1 faction system (FLO-350, PR #51) ✅; E4.2 faction picker +
+  save schema v3 (FLO-351, PR #57, 8be7638) ✅; E4.3 commander/order system (FLO-352, PR #54,
+  59cc3cc) ✅. Phase 4 `[~]` — only E4.4 economy (FLO-353) and E4.5 progression (FLO-354) remain,
+  both parked behind MPG until the game loop is playable. (Daedalus)
 - **r16** (2026-06-21) — **MPG.5** completed in **[FLO-365](/FLO/issues/FLO-365)**:
   Human Lands now enters with 2 caravans + 3 soldier patrols; Forest enters with
   3 caravans + 5 soldier patrols. Zone-scene tests assert the minimum spawn
