@@ -29,6 +29,7 @@ export default defineConfig({
           { text: 'Generated assets', link: '/guide/assets' },
           { text: 'Character controller', link: '/guide/character-controller' },
           { text: 'Forest zone', link: '/guide/forest-zone' },
+          { text: 'World specs', link: '/guide/world-specs' },
           { text: 'Save system', link: '/guide/save-system' },
           { text: 'Health system', link: '/guide/health-system' },
           { text: 'Melee combat', link: '/guide/melee-combat' },

@@ -32,3 +32,4 @@ under `docs/` and published automatically.
 - **Source:** <https://github.com/Flopsstuff/korovany>
 - Start with the [Getting started](/guide/getting-started) guide, then read the
   [Project rules](/guide/project-rules).
+- Future level direction lives in the [World specs](/guide/world-specs).
