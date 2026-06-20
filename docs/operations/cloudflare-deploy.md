@@ -12,7 +12,7 @@ logging into the Cloudflare dashboard with the account owner's credentials.
 1. `CLOUDFLARE_API_TOKEN` — a scoped API token.
 2. `CLOUDFLARE_ACCOUNT_ID` — your account identifier.
 
-Both are stored as **GitHub Actions repository secrets** on `Fl0p/korovany`.
+Both are stored as **GitHub Actions repository secrets** on `Flopsstuff/korovany`.
 
 > **Why GitHub secrets and not Paperclip project env vars:** the deploy runs on
 > GitHub's hosted runners. Only GitHub Actions secrets are injected there;
@@ -56,8 +56,8 @@ Git repo in the Cloudflare UI.)
 Either via the CLI (from inside the repo):
 
 ```bash
-gh secret set CLOUDFLARE_API_TOKEN   --repo Fl0p/korovany   # paste token when prompted
-gh secret set CLOUDFLARE_ACCOUNT_ID  --repo Fl0p/korovany   # paste account id when prompted
+gh secret set CLOUDFLARE_API_TOKEN   --repo Flopsstuff/korovany   # paste token when prompted
+gh secret set CLOUDFLARE_ACCOUNT_ID  --repo Flopsstuff/korovany   # paste account id when prompted
 ```
 
 Or in the UI: **Settings → Secrets and variables → Actions → New repository secret**,

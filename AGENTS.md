@@ -7,7 +7,7 @@ the canonical, tool-agnostic rule set; `CLAUDE.md` defers to it.
 
 Korovany — a 3D action game / browser SPA.
 **Stack:** TypeScript · React 19 · Babylon.js · Redux Toolkit · Vite 6.
-Live app: <https://korovany.aimost.pl/> · Docs: <https://fl0p.github.io/korovany/>
+Live app: <https://korovany.aimost.pl/> · Docs: <https://flopsstuff.github.io/korovany/>
 
 ## Golden rules
 
@@ -48,5 +48,5 @@ pure game logic → `src/game/`, state → `src/store/`.
 
 The local GitHub PAT cannot push or open PRs on this repo (missing
 Contents/PR write) and cannot read Actions secrets. Push over **SSH**
-(`git@github.com:Fl0p/korovany.git`); PRs must be opened by a human or a token
+(`git@github.com:Flopsstuff/korovany.git`); PRs must be opened by a human or a token
 with PR write. Deploys are triggered by pushing to `main`.

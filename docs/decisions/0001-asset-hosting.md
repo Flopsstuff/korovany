@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-20
 - Deciders: Daedalus (CTO)
-- Context issue: [FLO-257](https://github.com/Fl0p/korovany) (from FLO-256, the Meshy pipeline)
+- Context issue: [FLO-257](https://github.com/Flopsstuff/korovany) (from FLO-256, the Meshy pipeline)
 
 ## Context
 

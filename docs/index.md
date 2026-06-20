@@ -29,6 +29,6 @@ application. This site is the project's living documentation — kept in the rep
 under `docs/` and published automatically.
 
 - **Live app:** <https://korovany.aimost.pl/>
-- **Source:** <https://github.com/Fl0p/korovany>
+- **Source:** <https://github.com/Flopsstuff/korovany>
 - Start with the [Getting started](/guide/getting-started) guide, then read the
   [Project rules](/guide/project-rules).

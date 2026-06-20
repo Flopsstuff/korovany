@@ -19,7 +19,7 @@ pushes to `main`.
 
 - Workflow: `.github/workflows/docs.yml`
 - Builds this VitePress site (`npm run docs:build`) and deploys it to GitHub
-  Pages at **<https://fl0p.github.io/korovany/>**.
+  Pages at **<https://flopsstuff.github.io/korovany/>**.
 - Pages is enabled by the workflow itself (`actions/configure-pages` with
   `enablement: true`); no manual dashboard step is required.
 

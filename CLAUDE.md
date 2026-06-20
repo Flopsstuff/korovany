@@ -27,6 +27,6 @@ Babylon.js · Redux Toolkit · Vite 6. App → Cloudflare Pages
 - **Babylon in tests:** jsdom has no WebGL, so stub Babylon scenes in tests
   (`vi.mock('../scenes/MainScene', …)`) — see `src/app/App.test.tsx`.
 - **Git auth:** the local PAT can't push/PR or read Actions secrets. Push over
-  **SSH** (`git@github.com:Fl0p/korovany.git`). To trigger a deploy, push to
+  **SSH** (`git@github.com:Flopsstuff/korovany.git`). To trigger a deploy, push to
   `main` (an empty commit works); `workflow_dispatch` is not available to the PAT.
 - **Folder map:** `docs/guide/architecture.md` says where new code belongs.

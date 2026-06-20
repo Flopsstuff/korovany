@@ -8,7 +8,7 @@
 
 ```bash
 git lfs install   # one time, per machine
-git clone https://github.com/Fl0p/korovany.git
+git clone https://github.com/Flopsstuff/korovany.git
 cd korovany
 npm install
 ```

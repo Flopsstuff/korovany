@@ -1,6 +1,6 @@
 # Korovany
 
-🎮 **Live app: <https://korovany.aimost.pl/>** · 📚 **Docs: <https://fl0p.github.io/korovany/>**
+🎮 **Live app: <https://korovany.aimost.pl/>** · 📚 **Docs: <https://flopsstuff.github.io/korovany/>**
 
 3D action game / browser SPA.
 

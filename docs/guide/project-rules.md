@@ -2,7 +2,7 @@
 
 These rules apply to every contributor — human or agent. They are intentionally
 short and enforced by CI where possible. The canonical copy for automated
-contributors lives in [`AGENTS.md`](https://github.com/Fl0p/korovany/blob/main/AGENTS.md).
+contributors lives in [`AGENTS.md`](https://github.com/Flopsstuff/korovany/blob/main/AGENTS.md).
 
 ## 1. Stack & language
 

@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitepress'
 
-// Docs are published to GitHub Pages at https://fl0p.github.io/korovany/
+// Docs are published to GitHub Pages at https://flopsstuff.github.io/korovany/
 // so the base path must match the repo name.
 export default defineConfig({
   base: '/korovany/',
@@ -31,7 +31,7 @@ export default defineConfig({
         ],
       },
     ],
-    socialLinks: [{ icon: 'github', link: 'https://github.com/Fl0p/korovany' }],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/Flopsstuff/korovany' }],
     search: { provider: 'local' },
   },
 })
