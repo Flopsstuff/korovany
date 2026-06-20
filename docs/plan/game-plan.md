@@ -129,9 +129,11 @@ E1.2→E1.3, E1.1→E1.4, and {E1.0,E1.1,E1.3,E1.4}→E1.5.
 - **E1.2 Asset streaming manager** `[ ]` — FLO-294 (Soren)
   - [ ] Asset registry (id → URL + metadata); `streaming/` loads GLB on demand, caches, disposes.
   - [ ] Loading state surfaced to HUD; graceful fallback placeholder while loading.
-- **E1.3 First zone (forest stub)** `[ ]` — FLO-295 (Lyra, blocked by FLO-294)
+- **E1.3 First zone (forest stub)** `[ ]` — FLO-295 (Lyra, blocked by FLO-294; **needs assets FLO-299**)
   - [ ] Ground/terrain mesh for a small forest clearing with collision.
   - [ ] Scatter a handful of streamed tree + hut GLBs (static, no LOD yet).
+  - *Assets:* the tree + hut GLBs come from **FLO-299** (Pygmalion); they did not
+    exist in the repo when Phase 1 was decomposed. Land FLO-299 before E1.3 starts.
 - **E1.4 Save/load (IndexedDB)** `[ ]` — FLO-296 (Wayland, blocked by FLO-293)
   - [ ] Serialize player transform + health + zone id to IndexedDB; restore on Continue.
   - [ ] Save-slot UI (≥1 slot); autosave on pause.
@@ -187,8 +189,8 @@ E1.2→E1.3, E1.1→E1.4, and {E1.0,E1.1,E1.3,E1.4}→E1.5.
 Models are generated **only** on concrete tickets, via the `tools/meshy-3d`
 pipeline, in low-poly visual language v1.2. Near-term needs, in slice order:
 
-1. Elf player character (Phase 1) — *already have a generic hero GLB; evaluate reuse first.*
-2. Forest tree + wooden hut (Phase 1).
+1. Elf player character (Phase 1) — *already have a generic hero GLB; evaluate reuse first.* → decision folded into **FLO-299** (recommend reuse for the slice).
+2. Forest tree + wooden hut (Phase 1) — **FLO-299** (Pygmalion), unblocks E1.3.
 3. Empire soldier enemy (Phase 2).
 4. Corpse variant (Phase 2).
 5. Caravan + cargo (Phase 3).
@@ -235,3 +237,13 @@ speculative batches (FLO-270).
   carried forward into new prelude epic **E1.0**. Phase 1 opened as the active
   epic and delegated to the CTO to decompose into oneshot tickets — closes the
   post-Phase-0 coordination gap that stalled the tree (Prospero).
+- **r4** (2026-06-20) — progress review (FLO-298). Phase 1 oneshots are in flight:
+  E1.0 [FLO-292] (Aldric), E1.1 [FLO-293] (Wayland), E1.2 [FLO-294] (Soren) are
+  **in progress**; E1.3/E1.4/E1.5 [FLO-295/296/297] correctly **blocked** by their
+  DAG. Two gaps closed by new backlog tickets: **FLO-299** (Pygmalion) generates
+  the missing forest tree + hut GLBs and resolves the elf-mesh reuse decision —
+  a prerequisite for E1.3 that had no ticket; **FLO-300** (Wayland) adds the
+  `npm run lint` gate to CI (`deploy.yml` ran only test+build). No PRs landed for
+  Phase 1 yet. Phase 2 (combat/health) stays unticketed by design — its epic is
+  opened only after the slice deploys (E1.5), per the just-in-time decomposition
+  rule that kept Phase 0 from being built 3×.
