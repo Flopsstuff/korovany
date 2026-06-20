@@ -149,7 +149,7 @@ E1.2→E1.3, E1.1→E1.4, and {E1.0,E1.1,E1.3,E1.4}→E1.5.
 Epic: **[FLO-307](/FLO/issues/FLO-307)** — opened 2026-06-20, decomposed by Daedalus (CTO) into oneshot tickets 2026-06-20. Sequence: E2.1 must land before E2.2/2.5; E2.3 integrates E2.1+E2.2+soldier asset; E2.4 follows E2.3.
 
 - **E2.1 Health & damage model** `[x]` — **FLO-308** ✅ merged aa65342 (PR #23) — pure `src/game/health` system: HP, applyDamage funnel, death state → returnToMenu; 147 tests.
-- **E2.2 Melee combat** `[~]` — **FLO-309** (in_progress) — attack window, hitbox sweep, `Damageable` contract.
+- **E2.2 Melee combat** `[x]` — **FLO-309** ✅ merged cf0a964 (PR #26) — windup/active/recovery state machine; 2 m sphere + 120° arc hit query; `Damageable` contract; attack on `F`; 162 tests.
 - **E2.3 Enemy NPC (first archetype)** `[ ]` — **FLO-314** (blocked by FLO-309 + FLO-311) — soldier FSM patrol→detect→chase→attack→die; fight-loop integration point.
 - **E2.4 3D corpses** `[ ]` — **FLO-315** (blocked by FLO-314) — persistent static corpse mesh on death + cap/cull policy.
 - **E2.5 Injury & dismemberment model** `[ ]` — **FLO-313** (blocked by FLO-308) — limb/eye/leg state + three canonical outcomes:
