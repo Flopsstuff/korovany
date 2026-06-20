@@ -1,3 +1,4 @@
+import type { LootDrop } from '../game/loot'
 import { getZone } from '../game/world'
 import { createForestScene } from './forestScene'
 import { createHumanLandsScene } from './humanLandsScene'
@@ -9,6 +10,8 @@ import { createHumanLandsScene } from './humanLandsScene'
  */
 export interface ZoneSceneOptions {
   onPlayerDamaged?: (amount: number) => void
+  /** Fired when the player defeats a caravan (E3.5); ignored by zones with no caravan. */
+  onCaravanLooted?: (drop: LootDrop) => void
   isPaused?: () => boolean
 }
 

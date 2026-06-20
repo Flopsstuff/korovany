@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createGameEngine } from '../engine'
-import { damagePlayer, useAppDispatch, useAppSelector } from '../store'
+import { damagePlayer, pickUpLoot, useAppDispatch, useAppSelector } from '../store'
+import { caravanLootToPickups } from '../store/caravanLootAdapter'
 import { setAssetPhase } from '../store/streamingSlice'
 import { createCaravanPlayground } from './caravanPlayground'
 import { createControllerPlayground } from './controllerPlayground'
@@ -53,6 +54,11 @@ export function GameCanvas() {
             : inGame
             ? createZoneScene(zoneId, canvas, {
                 onPlayerDamaged: (amount) => dispatch(damagePlayer(amount)),
+                // Close the loot loop (E3.5): adapt the caravan's aggregated drop
+                // into one pickUpLoot per stack so the HUD inventory updates.
+                onCaravanLooted: (drop) => {
+                  for (const pickup of caravanLootToPickups(drop)) dispatch(pickUpLoot(pickup))
+                },
                 isPaused: () => phaseRef.current === 'paused',
               })
             : createGameEngine(canvas, {

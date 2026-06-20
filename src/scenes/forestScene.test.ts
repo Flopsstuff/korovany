@@ -227,6 +227,52 @@ describe('createForestScene — pause gating (FLO-326)', () => {
   })
 })
 
+// E3.5: the caravan loot loop is closed in the live forest scene. Defeating the
+// wandering caravan must emit its rolled loot via onCaravanLooted, which the app
+// adapts into pickUpLoot dispatches (see caravanLootAdapter). These guard the
+// scene-side half of that join: spawn + Damageable melee path + reward event.
+describe('createForestScene — caravan loot loop (E3.5)', () => {
+  beforeEach(() => {
+    takeSpawn()
+  })
+
+  it('spawns a wandering caravan into the live zone', () => {
+    const game = boot()
+    expect(game.caravan).toBeDefined()
+    expect(game.scene.getMeshByName('caravan')).not.toBeNull()
+    expect(game.caravan.isDead()).toBe(false)
+    game.dispose()
+  })
+
+  it('emits the rolled loot exactly once when the caravan is defeated', () => {
+    const onCaravanLooted = vi.fn()
+    const game = createForestScene(document.createElement('canvas'), {
+      heroUrl: null,
+      createEngine: () => new NullEngine(),
+      onCaravanLooted,
+    })
+
+    // Drive the caravan past its HP on the same Damageable path the melee sweep
+    // uses; the kill rolls the loot table and fires the reward event.
+    game.caravan.takeDamage(1000)
+    expect(game.caravan.isDead()).toBe(true)
+    expect(onCaravanLooted).toHaveBeenCalledTimes(1)
+
+    const drop = onCaravanLooted.mock.calls[0][0]
+    expect(drop.items.length).toBeGreaterThan(0)
+    for (const stack of drop.items) {
+      expect(typeof stack.id).toBe('string')
+      expect(stack.qty).toBeGreaterThan(0)
+    }
+
+    // A second strike on the dead wreck must not re-emit loot.
+    game.caravan.takeDamage(1000)
+    expect(onCaravanLooted).toHaveBeenCalledTimes(1)
+
+    game.dispose()
+  })
+})
+
 describe('reapDeadSoldiers (live → corpse transition)', () => {
   function makeSoldier(scene: Scene) {
     return new SoldierEnemy(scene, {

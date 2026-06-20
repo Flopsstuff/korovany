@@ -81,14 +81,45 @@ The dropped `id`s are inventory item ids (see the E3.4 item catalog). The loot
 event carries only ids + counts; display metadata is resolved from the catalog,
 keeping the reward payload small.
 
-## Reward event (consumed by E3.4 inventory)
+## Reward event (consumed by the E3.4 inventory)
 
 `CaravanEnemy` implements the `Damageable` contract from
 [E2.2 melee](melee-combat.md). When the killing blow lands it rolls its table
 **once** and fires `onLooted(drop)`. The caller decides what to do with the
 drop — the caravan stays decoupled from the inventory. The drop is also stashed
-on `caravan.loot` for inspection. There is **no inventory UI yet** — that is
-E3.4; this ticket only emits the event.
+on `caravan.loot` for inspection.
+
+## Closing the loop: caravan → inventory → HUD (E3.5)
+
+The caravan emits loot and the [inventory](state-management.md) consumes it, but
+they speak **different, frozen shapes** on purpose (a schema is forever):
+
+| Side | Shape |
+|---|---|
+| Caravan emits (`src/game/loot`) | `LootDrop = { items: LootStack[] }`, each `{ id, label, qty }` |
+| Inventory accepts (`pickUpLoot`) | `{ itemId, count }` — one per stack |
+
+A small pure adapter at the integration edge bridges them —
+**`src/store/caravanLootAdapter.ts`** `caravanLootToPickups(drop)` maps each
+`LootStack` to one `pickUpLoot` payload (`id → itemId`, `qty → count`). Neither
+subsystem's public shape changes.
+
+The live wiring runs in the forest zone:
+
+```
+ambush a caravan (forest scene)
+  → defeat it → CaravanEnemy fires onLooted(drop)
+  → createForestScene onCaravanLooted callback
+  → GameCanvas: caravanLootToPickups(drop).forEach(p => dispatch(pickUpLoot(p)))
+  → inventory slice accumulates the stacks
+  → <InventoryPanel> re-renders the new counts in the HUD "Loot" panel
+```
+
+`createForestScene` accepts an `onCaravanLooted?` option and spawns one
+wandering caravan into the live zone (alongside the soldiers); the player ambushes
+it on the same melee path. `GameCanvas` supplies the callback only for the live
+`playing` scene, so the standalone `?dev=caravan` playground keeps logging to the
+console without touching the store.
 
 ## Ambush loop (scene wiring)
 
@@ -123,6 +154,15 @@ look (click the canvas to capture the pointer).
 - `src/game/ai/caravanFSM.test.ts` — wander path following, ambush triggers, flee/calm, death + loot.
 - `src/scenes/caravanEnemy.test.ts` — Babylon wrapper: wander, flee, one-shot loot emission, determinism.
 - `src/scenes/caravanPlayground.test.ts` — full scene wiring boots and emits loot.
+- `src/store/caravanLootAdapter.test.ts` — `loot → pickUpLoot` shape mapping (single,
+  multi-stack, empty) and an end-to-end accumulation into the inventory slice (E3.5).
+- `src/scenes/forestScene.test.ts` — the live forest zone spawns a caravan and fires
+  `onCaravanLooted` exactly once on defeat (E3.5).
 
-Browser-smoked via `?dev=caravan`: the caravan wanders in real WebGL, flees on
-approach, and emits the loot event (gold/cloth/grain) when defeated.
+Browser-smoked two ways:
+
+- **`?dev=caravan`** — the caravan wanders in real WebGL, flees on approach, and
+  emits the loot event (gold/cloth/grain) when defeated.
+- **Live loot loop (E3.5)** — New Game → defeat the forest caravan → the dropped
+  stacks appear in the HUD **Loot** panel. The dev-only `window.__korovanyForestScene`
+  handle exposes the live caravan so the join can be driven headlessly.
