@@ -148,8 +148,8 @@ E1.2→E1.3, E1.1→E1.4, and {E1.0,E1.1,E1.3,E1.4}→E1.5.
 
 Epic: **[FLO-307](/FLO/issues/FLO-307)** — opened 2026-06-20, delegated to Daedalus (CTO) to decompose into oneshot tickets. Sequence: E2.1 must land before E2.2/2.5 can start.
 
-- **E2.1 Health & damage model** `[ ]` — HP, damage events, death state, respawn/load.
-- **E2.2 Melee combat** `[ ]` — attack animation window, hitbox sweep, damage to targets.
+- **E2.1 Health & damage model** `[ ]` — FLO-308 (Wayland, todo) — HP, applyDamage, death state.
+- **E2.2 Melee combat** `[ ]` — FLO-309 (Wayland, blocked by FLO-308) — attack window, hitbox sweep, damage.
 - **E2.3 Enemy NPC (first archetype)** `[ ]` — patrol → detect → chase → attack → die; one soldier model.
 - **E2.4 3D corpses** `[ ]` — on death, leave a ragdoll/static corpse mesh that persists & can be looted.
 - **E2.5 Injury & dismemberment model** `[ ]` — data model for limb/eye/leg states.
