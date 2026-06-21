@@ -246,13 +246,16 @@ Pygmalion via Iris.
   `CharacterController.getSpeedMultiplier` (GameCanvas reads it off the store each
   step, scenes forward it); `selectScore` (new) + `totalItemCount` → `.hud-score`
   panel. Kill + loot scoring lands with MPG.1 (FLO-363, `recordKill` / `raidCaravan`).
-- **MPG.7 Basic character animation** `[ ]` — **[FLO-384](/FLO/issues/FLO-384)** (Aldric)
-  **CTO scope call: procedural / engine-side, NOT skeletal.** Hero + soldier GLBs ship
-  un-rigged; rigging via Meshy is expensive + a one-way detour, so MPG-scope animation
-  is transform-based in Babylon (idle bob, move bob/lean, attack lunge, death topple) —
-  no new assets, no Meshy spend. Hooks the existing `meleeAttack`/`DeathEmphasisManager`
-  surfaces. Skeletal rig via Pygmalion (through Iris) is a deferred future asset ticket;
-  Iris may review the motion feel in-browser.
+- **MPG.7 Basic character animation** `[x]` — **[FLO-387](/FLO/issues/FLO-387)** (Wayland) /
+  **[FLO-384](/FLO/issues/FLO-384)** (base, Daedalus)
+  **CTO scope call: procedural / engine-side, NOT skeletal.** **Merged to `main`**
+  (commit `6bfde79`, PR #69). Transform-based animation in Babylon: idle bob, move
+  bob/lean, attack lunge, death topple — no rig, no Meshy spend. `proceduralAnimator`
+  hooks the existing `meleeAttack`/`DeathEmphasisManager` surfaces; wired into both
+  scenes + `soldierEnemy` + `characterController`. **Dedup note:** two PRs implemented
+  this (#68/FLO-384 base, #69/FLO-387 = base commit + nav/commanded-move-bob polish);
+  #69 was the strict superset and was merged, #68 closed as superseded. Skeletal rig
+  via Pygmalion remains a deferred future asset ticket; Iris may review feel in-browser.
 
 Acceptance for the milestone: a first-time player who clicks New Game **knows what
 to do, has a goal they can complete or fail, gets audible+visible feedback for
@@ -388,6 +391,17 @@ speculative batches (FLO-270).
   exist: MPG.1/3/5/6 done-or-merged, MPG.2/4/7 in flight. The core playable loop (goal,
   win/lose, populated world, surfaced systems, combat feel) is essentially complete;
   remaining gaps are onboarding (MPG.2), audio (MPG.4), character life (MPG.7). (Daedalus)
+- **r20** (2026-06-21) — **MPG.2 + MPG.7 merged; audio is the last MPG slice.**
+  **MPG.7** ([FLO-387](/FLO/issues/FLO-387)) merged (FF @ `6bfde79`, PR #69) — procedural
+  animation. Two PRs implemented it (#68/FLO-384, #69/FLO-387); #69 was a strict superset
+  (base commit + nav + commanded-move bob) so it merged and #68 was closed as superseded
+  per the [FLO-385](/FLO/issues/FLO-385) dedup ask. **MPG.2** ([FLO-386](/FLO/issues/FLO-386),
+  Soren impl) merged (FF @ `7d31064`, PR #70; rebased over MPG.7, 45 affected tests green) —
+  `OnboardingIntroCard` accessible modal on fresh runs; FLO-386 → `done`. **Only MPG.4 audio
+  ([FLO-383](/FLO/issues/FLO-383), Wayland) remains in flight.** Residual housekeeping
+  (board-UI): cancel stale dups FLO-382/FLO-364, close FLO-384 issue (work landed via
+  FLO-387). Once MPG.4 lands, the MPG milestone is complete and ready for an end-to-end
+  browser verification of the full New-Game→win/lose loop. (Daedalus)
 - **r1** (2026-06-20) — initial plan tree authored by Daedalus (CTO) from
   canonical brief #2. Pending board approval before Phase 0/1 subtasks are cut.
 - **r2** (2026-06-20) — board approved r1. Phase 0 epic [FLO-277] cut with its
