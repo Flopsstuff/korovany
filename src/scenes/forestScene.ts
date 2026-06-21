@@ -358,7 +358,9 @@ export function createForestScene(
   // bounding box (FLO-368). `clampToWorld` keeps the capsule inside the walls
   // each frame, since the controller has no horizontal collision of its own.
   // ------------------------------------------------------------------
-  const { clamp: clampToWorld } = createWorldBounds(scene, new Color3(0.2, 0.38, 0.15))
+  // Muted olive-green (P7.4) — desaturated from the old pure grass green so the
+  // ground recedes and the props/enemies read as the foreground.
+  const { clamp: clampToWorld } = createWorldBounds(scene, new Color3(0.29, 0.37, 0.23))
   createForestSpawnProps(scene)
 
   // ------------------------------------------------------------------

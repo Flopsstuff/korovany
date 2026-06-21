@@ -13,6 +13,12 @@ export const WORLD_SIZE = 600
 const WALL_HEIGHT = 10
 /** Wall thickness; also the clamp inset so the capsule stops at the inner face. */
 const WALL_THICKNESS = 4
+/**
+ * Ground tessellation. A single quad shades as one flat sheet; a light 6×6 grid
+ * gives the low-poly visual language (v1.2) faceted vertices for lighting to
+ * catch, at negligible tri cost (72 tris on a 600 m plane).
+ */
+const GROUND_SUBDIVISIONS = 6
 
 /** The ground + perimeter walls + a player-position clamp for one zone. */
 export interface WorldBounds {
@@ -40,9 +46,16 @@ export function createWorldBounds(
 ): WorldBounds {
   const half = size / 2
 
-  const ground = MeshBuilder.CreateGround('ground', { width: size, height: size }, scene)
+  const ground = MeshBuilder.CreateGround(
+    'ground',
+    { width: size, height: size, subdivisions: GROUND_SUBDIVISIONS },
+    scene,
+  )
   const groundMat = new StandardMaterial('groundMat', scene)
   groundMat.diffuseColor = groundColor
+  // Matte, near-zero specular so the ground reads as a flat-shaded low-poly
+  // surface (v1.2) instead of a plasticky lit plane — matches the prop materials.
+  groundMat.specularColor = new Color3(0.02, 0.02, 0.02)
   ground.material = groundMat
   ground.isPickable = true
 

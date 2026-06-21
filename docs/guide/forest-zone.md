@@ -40,8 +40,14 @@ Meshy pipeline under visual-language v1.2 (≤ 3000 tris). Register them via
 
 `createForestScene(canvas, options)` boots a Babylon `Scene` and:
 
-1. **Ground** — a 60 × 60 unit `MeshBuilder.CreateGround` with `isPickable:
-   true` so the character controller's downward ray lands correctly.
+1. **Ground** — a `WORLD_SIZE` (600 × 600 unit) `MeshBuilder.CreateGround`
+   tessellated with `subdivisions: 6` and `isPickable: true` so the character
+   controller's downward ray lands correctly. The shared `createWorldBounds`
+   (`src/scenes/worldBounds.ts`) builds it; the forest passes a muted olive-green
+   `Color3(0.29, 0.37, 0.23)` (P7.4) — desaturated from the old pure grass green
+   so the ground recedes and props/enemies read as the foreground. The ground
+   material is **matte** (near-zero `specularColor`) for the flat-shaded low-poly
+   look of visual-language v1.2, not a plasticky lit plane.
 2. **Streaming** — `AssetRegistry` + `AssetStreamLoader` (same system as E1.2).
    `seedForestAssets` registers the tree and hut URLs. Each prop calls
    `spawnStreamedInstance` which shows a placeholder box immediately and swaps
@@ -52,6 +58,24 @@ Meshy pipeline under visual-language v1.2 (≤ 3000 tris). Register them via
    beats have readable movement space.
 4. **Controller + camera** — the same `CharacterController` and `ThirdPersonCamera`
    from E1.1, spawned at `(0, 2, 0)` above the ground.
+
+## Avatar & ground feel
+
+The player is rendered by the hero GLB (`heroUrl`, default
+`/models/korovany_hero_player-default.glb`), loaded through `modelLoader`'s
+`loadModel` with `targetSize: 1.8` and `groundIt: true`. The collision capsule
+itself is invisible; the GLB root is parented to it at `(0, -0.9, 0)` so the
+avatar's feet sit on the ground plane (the "ground feel"), and all hero meshes
+are `isPickable: false` so they never intercept the controller's downward ray.
+The root is handed to `controller.animator.node` for procedural motion.
+
+**Pose constraint (P7.4 / FLO-420).** The default hero GLB is a single welded
+mesh (`node0`, 2894 tris, one material, **no skeleton/bones**). Its arms are
+baked into the geometry in a splayed A-pose, so they **cannot be reposed in
+code** — there is no rig to rotate and no separable arm sub-mesh. Procedural
+animation can only move the whole root (bob/lean), not individual limbs. Bringing
+the arms into a natural idle requires re-authoring (rig + repose, or regenerate)
+the asset; that is tracked as a 3D-art follow-up, not a scene-code change.
 
 ## Scene options
 

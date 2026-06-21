@@ -1,4 +1,4 @@
-import { Color3, NullEngine, Scene, Vector3 } from '@babylonjs/core'
+import { Color3, NullEngine, Scene, type StandardMaterial, Vector3 } from '@babylonjs/core'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { WORLD_SIZE, createWorldBounds } from './worldBounds'
 
@@ -31,6 +31,20 @@ describe('worldBounds', () => {
     expect(walls.map((w) => w.name).sort()).toEqual(['wall-e', 'wall-n', 'wall-s', 'wall-w'])
     // Walls are scenery, not ground — the controller's downward ray must skip them.
     for (const wall of walls) expect(wall.isPickable).toBe(false)
+  })
+
+  it('tessellates the ground and gives it a matte (flat-shaded low-poly) material (P7.4)', () => {
+    const { ground } = createWorldBounds(scene, new Color3(0.29, 0.37, 0.23))
+
+    // subdivisions:6 → a 6×6 grid of quads (72 tris), not a single 2-tri quad.
+    expect(ground.getTotalIndices()).toBe(6 * 6 * 2 * 3)
+
+    const mat = ground.material as StandardMaterial
+    expect(mat.diffuseColor.equalsFloats(0.29, 0.37, 0.23)).toBe(true)
+    // Near-zero specular keeps the surface matte, not plasticky.
+    expect(mat.specularColor.r).toBeLessThan(0.1)
+    expect(mat.specularColor.g).toBeLessThan(0.1)
+    expect(mat.specularColor.b).toBeLessThan(0.1)
   })
 
   it('clamps a position outside the walls back inside, leaving interior points untouched', () => {
