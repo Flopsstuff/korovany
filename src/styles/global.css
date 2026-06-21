@@ -803,6 +803,33 @@ body {
   margin-top: 0.45rem;
 }
 
+/* Minimap radar (FLO-449): bottom-centre, click-through, semi-transparent. The
+   .hud parent is anchored top-left, so pin the radar to the viewport instead. */
+.hud-minimap {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none; /* never eat clicks meant for the world */
+}
+
+.hud-minimap-canvas {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.hud-minimap-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f8fafc;
+}
+
 .prosthetics-overlay {
   position: absolute;
   inset: 0;

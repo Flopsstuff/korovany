@@ -14,6 +14,7 @@ import {
 } from '../store'
 import { emitDismember } from '../game/combat'
 import { resolveDismemberment } from '../game/health'
+import { clearMinimapSnapshot, publishMinimapSnapshot } from '../game/minimap'
 import { caravanLootToPickups } from '../store/caravanLootAdapter'
 import { setAssetPhase } from '../store/streamingSlice'
 import { createCaravanPlayground } from './caravanPlayground'
@@ -125,11 +126,19 @@ export function GameCanvas() {
                 // straight off the store singleton — a per-frame getter, not a
                 // React-reactive value.
                 getSpeedMultiplier: () => selectLocomotionSpeedMultiplier(store.getState()),
+                // Minimap radar (FLO-449): the scene fires this throttled to
+                // ~10 Hz; we stash the snapshot on the module bridge for the
+                // <Minimap> rAF draw — no Redux/React state per tick.
+                onMinimapTick: (snapshot) => publishMinimapSnapshot(snapshot),
               })
             : createGameEngine(canvas, {
                 onAssetLoadingState: (id, phase) => dispatch(setAssetPhase({ id, phase })),
               })
-    return () => game.dispose()
+    return () => {
+      game.dispose()
+      // Drop the radar frame so a torn-down zone never lingers on the minimap.
+      clearMinimapSnapshot()
+    }
   }, [inGame, zoneId, dispatch])
 
   return <canvas ref={canvasRef} className="render-canvas" />

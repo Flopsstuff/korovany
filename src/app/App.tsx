@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GameCanvas } from '../scenes/GameCanvas'
 import { InventoryPanel } from './InventoryPanel'
+import { Minimap } from './Minimap'
 import { DamageNumbers, type DamageNumberEntry } from './DamageNumber'
 import { useGameAudio } from './useGameAudio'
 import { onDamage } from '../game/combat/damageEvents'
@@ -571,6 +572,11 @@ export function App() {
             </span>
           </div>
           <InventoryPanel inventory={inventory} />
+          <Minimap
+            phase={phase}
+            objectiveDone={caravansRaided}
+            objectiveTarget={objectiveTarget}
+          />
           {phase === 'playing' ? (
             <>
               <button

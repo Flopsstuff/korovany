@@ -1,5 +1,6 @@
 import type { LootDrop } from '../game/loot'
 import type { CombatKillTarget } from '../game/progression'
+import type { MinimapSnapshot } from '../game/minimap'
 import { getZone } from '../game/world'
 import { createForestScene } from './forestScene'
 import { createHumanLandsScene } from './humanLandsScene'
@@ -24,6 +25,12 @@ export interface ZoneSceneOptions {
    * crawl outcome to the capsule controller (MPG.6). Defaults to full speed.
    */
   getSpeedMultiplier?: () => number
+  /**
+   * Fired from the fixed-step loop, **throttled to ~10 Hz**, with a top-down
+   * radar snapshot of the live player + objective + threat positions for the HUD
+   * minimap (FLO-449). Positions stay scene-owned; this never touches Redux.
+   */
+  onMinimapTick?: (snapshot: MinimapSnapshot) => void
 }
 
 /** The minimal handle the GameCanvas needs to tear a zone scene down. */

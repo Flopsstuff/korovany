@@ -81,6 +81,12 @@ unit-tested state machine (`src/game/objective/objectiveMachine.ts`) that drives
 the `app` phase into `won`/`lost`; per-run progress and score live in
 `gameSlice`. Full details: [`docs/guide/objective-loop.md`](docs/guide/objective-loop.md).
 
+A bottom-centre **minimap radar** shows the player (with a facing indicator), the
+caravans to raid (gold), and threats (red) on a top-down map of the play area, so
+the objective is always findable. Live positions stay scene-owned and are pushed
+to the HUD on a throttled ~10 Hz bridge (no per-frame Redux/React updates). Full
+details: [`docs/guide/minimap.md`](docs/guide/minimap.md).
+
 ## World map & fast-travel
 
 The world has **four zones** (Human lands, Empire, Forest, Mountains). During

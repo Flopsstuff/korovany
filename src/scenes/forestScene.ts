@@ -33,8 +33,9 @@ import {
   type Damageable,
   type Vec3,
 } from '../game/combat'
-import { registerPlayer, takeSpawn } from '../game/save/playerRuntime'
+import { readPlayerTransform, registerPlayer, takeSpawn } from '../game/save/playerRuntime'
 import type { PlayerTransform } from '../game/save'
+import type { MinimapSnapshot } from '../game/minimap'
 import { type CorpseStore } from '../game/corpses'
 import type { LootDrop } from '../game/loot'
 import type { CombatKillTarget } from '../game/progression'
@@ -265,6 +266,11 @@ export interface ForestSceneOptions {
    * (MPG.6) so a severed leg slows movement. Defaults to full speed.
    */
   getSpeedMultiplier?: () => number
+  /**
+   * Fired from the fixed-step loop, throttled to ~10 Hz, with a top-down radar
+   * snapshot for the HUD minimap (FLO-449). Positions stay scene-owned.
+   */
+  onMinimapTick?: (snapshot: MinimapSnapshot) => void
 }
 
 export interface ForestScene {
@@ -288,6 +294,9 @@ export interface ForestScene {
 }
 
 const DEFAULT_HERO_URL = '/models/korovany_hero_player-default.glb'
+
+/** Minimap publish cadence — ~10 Hz, decoupled from the render frame rate (FLO-449). */
+const MINIMAP_TICK_INTERVAL = 1 / 10
 
 /** This zone's content (landmarks + encounter anchors), the single source of
  * truth seeded from `docs/guide/worlds/lysaen-emerald-thicket.md` (FLO-411,
@@ -370,6 +379,7 @@ export function createForestScene(
     onEnemyKilled,
     isPaused,
     getSpeedMultiplier,
+    onMinimapTick,
   } = options
 
   const engine = createEngine(canvas)
@@ -547,6 +557,23 @@ export function createForestScene(
   let meleeState = createMeleeAttack()
   let prevAttack = false
 
+  // Minimap radar (FLO-449): publish a top-down snapshot to the HUD bridge,
+  // throttled to ~10 Hz so the bottom-screen radar tracks the player + caravans
+  // + threats without a per-frame React/Redux round-trip.
+  let minimapAccum = MINIMAP_TICK_INTERVAL // emit on the first frame
+  const emitMinimap = () => {
+    const player = readPlayerTransform()
+    if (!player) return
+    onMinimapTick?.({
+      player: { x: player.position.x, z: player.position.z, rotationY: player.rotationY },
+      caravans: caravans.filter((c) => !c.isDead()).map((c) => ({ x: c.position.x, z: c.position.z })),
+      soldiers: [
+        ...soldiers.filter((s) => !s.isDead()),
+        ...archers.filter((a) => !a.isDead()),
+      ].map((e) => ({ x: e.mesh.position.x, z: e.mesh.position.z })),
+    })
+  }
+
   const loop = new FixedStepLoop({ world: undefined, dt: 1 / 60 })
   loop.scheduler.register(controller)
   for (const s of soldiers) loop.scheduler.register(s)
@@ -626,6 +653,17 @@ export function createForestScene(
 
     loop.advance(dt)
     clampToWorld(controller.mesh.position) // contain the player within the world bounds
+
+    // Minimap radar tick — throttled to ~10 Hz off the accumulated sim time so
+    // the HUD radar updates without a per-frame snapshot (FLO-449).
+    if (onMinimapTick) {
+      minimapAccum += dt
+      if (minimapAccum >= MINIMAP_TICK_INTERVAL) {
+        minimapAccum = 0
+        emitMinimap()
+      }
+    }
+
     rig.update(frameIntent.lookDX, frameIntent.lookDY)
     scene.render()
   }

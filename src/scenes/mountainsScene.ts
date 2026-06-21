@@ -15,9 +15,10 @@ import { ThirdPersonCamera } from '../game/camera'
 import { CharacterController } from '../game/controller'
 import { createInputController, type Intent } from '../game/input'
 import { FixedStepLoop } from '../game/loop'
-import { registerPlayer, takeSpawn } from '../game/save/playerRuntime'
+import { readPlayerTransform, registerPlayer, takeSpawn } from '../game/save/playerRuntime'
 import type { PlayerTransform } from '../game/save'
 import type { LootDrop } from '../game/loot'
+import type { MinimapSnapshot } from '../game/minimap'
 import {
   createMeleeAttack,
   getMeleeHits,
@@ -66,6 +67,11 @@ export interface MountainsSceneOptions {
    * crawl outcome to the capsule controller (MPG.6). Defaults to full speed.
    */
   getSpeedMultiplier?: () => number
+  /**
+   * Fired from the fixed-step loop, throttled to ~10 Hz, with a top-down radar
+   * snapshot for the HUD minimap (FLO-449). Positions stay scene-owned.
+   */
+  onMinimapTick?: (snapshot: MinimapSnapshot) => void
 }
 
 export interface MountainsScene {
@@ -119,6 +125,9 @@ const PEAK_SPECS: readonly { x: number; z: number; height: number }[] = [
   { x: 0, z: 40, height: 18 },
 ]
 
+/** Minimap publish cadence — ~10 Hz, decoupled from the render frame rate (FLO-449). */
+const MINIMAP_TICK_INTERVAL = 1 / 10
+
 function defaultEngineFactory(canvas: HTMLCanvasElement): Engine {
   return new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }, true)
 }
@@ -143,6 +152,7 @@ export function createMountainsScene(
     onPlayerDamaged,
     onCaravanLooted,
     getSpeedMultiplier,
+    onMinimapTick,
   } = options
 
   const engine = createEngine(canvas)
@@ -293,6 +303,21 @@ export function createMountainsScene(
   let meleeState = createMeleeAttack()
   let prevAttack = false
 
+  // Minimap radar (FLO-449): throttled ~10 Hz publish to the HUD bridge.
+  let minimapAccum = MINIMAP_TICK_INTERVAL // emit on the first frame
+  const emitMinimap = () => {
+    const player = readPlayerTransform()
+    if (!player) return
+    onMinimapTick?.({
+      player: { x: player.position.x, z: player.position.z, rotationY: player.rotationY },
+      caravans: caravans.filter((c) => !c.isDead()).map((c) => ({ x: c.position.x, z: c.position.z })),
+      soldiers: [
+        ...soldiers.filter((s) => !s.isDead()),
+        ...archers.filter((a) => !a.isDead()),
+      ].map((e) => ({ x: e.mesh.position.x, z: e.mesh.position.z })),
+    })
+  }
+
   const frame = (dt: number) => {
     if (isPaused?.()) {
       scene.render()
@@ -337,6 +362,15 @@ export function createMountainsScene(
 
     loop.advance(dt)
     clampToWorld(controller.mesh.position) // contain the player within the world bounds
+
+    if (onMinimapTick) {
+      minimapAccum += dt
+      if (minimapAccum >= MINIMAP_TICK_INTERVAL) {
+        minimapAccum = 0
+        emitMinimap()
+      }
+    }
+
     rig.update(frameIntent.lookDX, frameIntent.lookDY)
     scene.render()
   }
