@@ -100,6 +100,8 @@ export class SoldierEnemy implements System, Damageable {
   private readonly getOrderContext?: () => SoldierOrderContext
   private readonly onAttackOrderTarget?: (dmg: number) => void
   private readonly onDefeated?: () => void
+  /** Spawn anchor (XZ) — patrol movement is leashed around this point (FLO-412). */
+  private readonly anchor: Vec3
 
   get position(): Vec3 {
     return { x: this.mesh.position.x, y: this.mesh.position.y, z: this.mesh.position.z }
@@ -112,6 +114,7 @@ export class SoldierEnemy implements System, Damageable {
     this.getOrderContext = options.getOrderContext
     this.onAttackOrderTarget = options.onAttackOrderTarget
     this.onDefeated = options.onDefeated
+    this.anchor = { x: options.spawn.x, y: options.spawn.y, z: options.spawn.z }
     this.fsm = createSoldierFSM(this.params)
 
     this.mesh = MeshBuilder.CreateCapsule(
@@ -181,6 +184,7 @@ export class SoldierEnemy implements System, Damageable {
       this.params,
       undefined,
       this.getOrderContext?.() ?? { order: null },
+      this.anchor,
     )
     this.fsm = result.state
 

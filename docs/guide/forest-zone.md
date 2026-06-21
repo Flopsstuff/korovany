@@ -120,6 +120,13 @@ made survivable **by placement first, lethality second**:
   so a player who walks straight into a patrol gets a beat to react instead of
   being deleted on contact. The grace clock advances only while unpaused.
 
+- **Patrol leash.** The buffer above is a *placement* guarantee — but soldiers
+  patrol. Each soldier is leashed to within `patrolLeashRadius` (6 m) of its
+  spawn anchor (`soldierFSM`, FLO-412), so the lone 19 m soldier can approach the
+  origin no closer than 13 m — still outside its 10 m `detectionRadius`. Without
+  the leash a patrol drifts unbounded and re-enters the cleared spawn within
+  ~30 s, which is exactly the regression the survival guard test now catches.
+
 The player walks at 4 m/s versus the soldier chase speed of 3 m/s, so a careful
 player can kite a cluster and pull patrols one at a time — challenge is retained,
 not removed. Global `DEFAULT_SOLDIER_PARAMS` are untouched (the human-lands zone

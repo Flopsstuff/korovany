@@ -16,7 +16,7 @@ any    ──[HP == 0]───────────────────�
 
 | Phase | Behaviour |
 |---|---|
-| **patrol** | Wander at 1.5 m/s; change direction every 3 s |
+| **patrol** | Wander at 1.5 m/s; change direction every 3 s. **Leashed** to within `patrolLeashRadius` (6 m) of the spawn anchor — once it drifts past, it steers straight back, so a patrol guards its post instead of wandering off it (FLO-412). The wander direction is deterministic (golden-angle rotation, no wall-clock seed). |
 | **chase** | Move toward player at 3 m/s |
 | **attack** | Deal 15 HP every 1.5 s to the player |
 | **follow** | Follow a commander until inside the follow distance |
@@ -35,6 +35,7 @@ any    ──[HP == 0]───────────────────�
 | Attack damage | 15 HP |
 | Attack cooldown | 1.5 s |
 | Patrol speed | 1.5 m/s |
+| Patrol leash radius | 6 m |
 | Chase speed | 3.0 m/s |
 | Follow distance | 2.5 m |
 | Move-to arrival radius | 0.35 m |
@@ -46,8 +47,9 @@ import { createSoldierFSM, stepSoldierFSM, applyDamageToSoldier } from '../game/
 
 let fsm = createSoldierFSM()
 
-// Each fixed step:
-const { state, moveDX, moveDZ, attacked } = stepSoldierFSM(fsm, soldierPos, playerPos, dt)
+// Each fixed step (pass the spawn anchor as the last arg to leash the patrol):
+const { state, moveDX, moveDZ, attacked } =
+  stepSoldierFSM(fsm, soldierPos, playerPos, dt, params, undefined, orderContext, anchorPos)
 fsm = state
 
 // When player melee hits:

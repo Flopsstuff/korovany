@@ -44,6 +44,78 @@ describe('patrol phase', () => {
   })
 })
 
+// FLO-412: a patrolling soldier must stay on its post. The reviewer found the
+// safe-spawn buffer was a t=0-only guarantee — an un-leashed patrol wandered
+// ~46 m over 31 s and drifted into the idle origin player's 10 m detection
+// radius, then killed them past the spawn grace. These guard the leash.
+describe('patrol leash (FLO-412)', () => {
+  // Free-run a soldier from an anchor for many seconds with the player far away,
+  // letting the FSM pick its own (deterministic) wander directions, and assert it
+  // never escapes the leash radius by more than one step's worth of travel.
+  function freeRunMaxDrift(anchor: { x: number; y: number; z: number }, steps: number) {
+    let state = createSoldierFSM()
+    let pos = { x: anchor.x, y: anchor.y, z: anchor.z }
+    let maxDrift = 0
+    const dt = 1 / 60
+    for (let i = 0; i < steps; i++) {
+      const r = stepSoldierFSM(state, pos, FAR_PLAYER, dt, P, undefined, undefined, anchor)
+      state = r.state
+      pos = { x: pos.x + r.moveDX, y: pos.y, z: pos.z + r.moveDZ }
+      const drift = Math.hypot(pos.x - anchor.x, pos.z - anchor.z)
+      if (drift > maxDrift) maxDrift = drift
+    }
+    return maxDrift
+  }
+
+  it('keeps a free-wandering patrol within the leash radius (+ one step)', () => {
+    const anchor = { x: 0, y: 0, z: 19 } // forest lone first-encounter anchor
+    // 3600 steps = 60 s of patrol — far longer than the 30 s survival window.
+    const maxDrift = freeRunMaxDrift(anchor, 3600)
+    const slack = P.patrolSpeed * (1 / 60) // at most one tick of overshoot
+    expect(maxDrift).toBeLessThanOrEqual(P.patrolLeashRadius + slack)
+  })
+
+  it('a leashed patrol at 19 m never aggros an idle player at the origin', () => {
+    // 19 m anchor − 6 m leash = 13 m closest approach > 10 m detectionRadius.
+    const anchor = { x: 0, y: 0, z: 19 }
+    let state = createSoldierFSM()
+    let pos = { x: anchor.x, y: anchor.y, z: anchor.z }
+    const idlePlayer = { x: 0, y: 0, z: 0 }
+    const dt = 1 / 60
+    let aggroed = false
+    for (let i = 0; i < 3600; i++) {
+      const r = stepSoldierFSM(state, pos, idlePlayer, dt, P, undefined, undefined, anchor)
+      state = r.state
+      pos = { x: pos.x + r.moveDX, y: pos.y, z: pos.z + r.moveDZ }
+      if (state.phase !== 'patrol') aggroed = true
+    }
+    expect(aggroed).toBe(false)
+  })
+
+  it('steers back toward the anchor once beyond the leash', () => {
+    const anchor = { x: 0, y: 0, z: 0 }
+    const farPos = { x: 20, y: 0, z: 0 } // well past the 6 m leash
+    const r = stepSoldierFSM(createSoldierFSM(), farPos, FAR_PLAYER, 1, P, undefined, undefined, anchor)
+    expect(r.moveDX).toBeLessThan(0) // heads back toward x=0
+  })
+
+  it('is deterministic without an anchor or injected dir (no wall-clock seed)', () => {
+    // Two independent runs of the same length must produce identical positions —
+    // proving the wander no longer depends on Date.now() (the CI flakiness cause).
+    const run = () => {
+      let state = createSoldierFSM()
+      let pos = { x: 0, y: 0, z: 0 }
+      for (let i = 0; i < 500; i++) {
+        const r = stepSoldierFSM(state, pos, FAR_PLAYER, 1 / 60, P)
+        state = r.state
+        pos = { x: pos.x + r.moveDX, y: pos.y, z: pos.z + r.moveDZ }
+      }
+      return pos
+    }
+    expect(run()).toEqual(run())
+  })
+})
+
 describe('patrol → chase transition', () => {
   it('transitions to chase when player enters detectionRadius', () => {
     const s = createSoldierFSM()

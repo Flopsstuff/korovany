@@ -40,6 +40,13 @@ export interface SoldierFSMParams {
   chaseSpeed: number
   /** Seconds between patrol direction changes. */
   patrolChangeDirInterval: number
+  /**
+   * Metres — a patrolling soldier stays within this radius of its spawn anchor.
+   * Once it wanders past the leash it steers straight back, so a patrol guards
+   * its post instead of drifting unbounded across the map (FLO-412). Only
+   * enforced when an `anchorPos` is passed to `stepSoldierFSM`.
+   */
+  patrolLeashRadius: number
   /** Metres — follower stops once this close to its commander. */
   followDistance: number
   /** Metres — move-to order completes inside this radius. */
@@ -55,6 +62,7 @@ export const DEFAULT_SOLDIER_PARAMS: SoldierFSMParams = {
   patrolSpeed: 1.5,
   chaseSpeed: 3.0,
   patrolChangeDirInterval: 3.0,
+  patrolLeashRadius: 6,
   followDistance: 2.5,
   moveToArrivalRadius: 0.35,
 }
@@ -109,6 +117,12 @@ export function stepSoldierFSM(
   nextPatrolDir?: [number, number],
   /** Optional trusted order context; order legality is validated before intake. */
   orderContext?: SoldierOrderContext,
+  /**
+   * Optional spawn anchor (XZ). When supplied, patrol movement is leashed to
+   * `params.patrolLeashRadius` around it so the soldier never drifts off its
+   * post into the player's safe-spawn buffer (FLO-412).
+   */
+  anchorPos?: Vec3,
 ): SoldierStepResult {
   if (state.phase === 'dead') {
     return { state, moveDX: 0, moveDZ: 0, attacked: false, attackedTarget: null }
@@ -189,13 +203,28 @@ export function stepSoldierFSM(
   // ── Phase behaviours ───────────────────────────────────────────────────
   if (phase === 'patrol') {
     patrolTimer -= dt
-    if (patrolTimer <= 0) {
+    // Leash: if the soldier has wandered past its post, head straight back so a
+    // patrol never drifts into the player's safe-spawn buffer (FLO-412). The
+    // leash overrides the wander so it takes priority over the timer below.
+    const anchorDist = anchorPos
+      ? dist2d(soldierPos.x, soldierPos.z, anchorPos.x, anchorPos.z)
+      : 0
+    if (anchorPos && anchorDist > params.patrolLeashRadius) {
+      const len = anchorDist || 1
+      patrolDirX = (anchorPos.x - soldierPos.x) / len
+      patrolDirZ = (anchorPos.z - soldierPos.z) / len
+      // Hold this heading until we're back near the post before re-rolling.
+      patrolTimer = params.patrolChangeDirInterval
+    } else if (patrolTimer <= 0) {
       patrolTimer = params.patrolChangeDirInterval
       if (nextPatrolDir) {
         ;[patrolDirX, patrolDirZ] = nextPatrolDir
       } else {
-        // Pseudo-random direction via simple sin/cos of accumulated time
-        const angle = (Math.sin(Date.now() * 0.001) * Math.PI * 2)
+        // Deterministic wander: rotate the current heading by the golden angle.
+        // Seed-free (no Date.now()) so behaviour is reproducible in tests and CI
+        // while still spreading directions evenly over many turns (FLO-412).
+        const prev = Math.atan2(patrolDirZ, patrolDirX)
+        const angle = prev + 2.399963229728653 // golden angle (rad)
         patrolDirX = Math.cos(angle)
         patrolDirZ = Math.sin(angle)
       }
