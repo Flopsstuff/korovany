@@ -317,9 +317,7 @@ one at a time as predecessors land (no speculative spawns).
     `injurySlice`: per-limb status (intact / severed / prosthetic) for hand·leg·eye;
     bleed-out timer for untreated severance; save-migration v5 (guard validates base
     fields only). 649 tests green.
-  - **E6.1.2 Combat → dismemberment hook** `[ ]` — high-damage/critical melee can
-    sever a limb instead of (or before) killing; emits a `dismemberEvent` on the
-    existing `damageEvents` bridge. Deterministic via seeded RNG.
+  - **E6.1.2 Combat → dismemberment hook** `[~]` — **FLO-402** (Wayland, in_progress) — seeded RNG helper + `shouldSever`/`pickLimb` resolver; wire after `takeDamage` dispatch; emit `dismemberEvent`.
   - **E6.1.3 Hand loss & bleed-out** `[ ]` — severed hand disables attack/grab; if
     not treated before the timer, player dies. Treatment item (bandage) stops it.
   - **E6.1.4 Eye loss → half-screen overlay** `[ ]` — non-lethal; a post-process /
