@@ -1,4 +1,5 @@
 import type { SaveSlotSummary } from '../game/save'
+import { onUiClick, uiHoverProps } from '../game/audio'
 
 export interface SaveSlotsPanelProps {
   /** Fixed slot grid (empty + occupied). */
@@ -62,13 +63,19 @@ export function SaveSlotsPanel({ slots, onLoad, onDelete, onNewGame, onBack }: S
               <div className="save-slot-actions" aria-label={`Actions for slot ${slot.slot + 1}`}>
                 {!slot.isEmpty ? (
                   <>
-                    <button type="button" className="primary-action" onClick={() => onLoad(slot.slot)}>
+                    <button
+                      type="button"
+                      className="primary-action"
+                      onClick={onUiClick(() => onLoad(slot.slot))}
+                      {...uiHoverProps()}
+                    >
                       Load
                     </button>
                     <button
                       type="button"
-                      onClick={() => onDelete(slot.slot)}
+                      onClick={onUiClick(() => onDelete(slot.slot))}
                       aria-label={`Delete slot ${slot.slot + 1}`}
+                      {...uiHoverProps()}
                     >
                       Delete
                     </button>
@@ -76,12 +83,13 @@ export function SaveSlotsPanel({ slots, onLoad, onDelete, onNewGame, onBack }: S
                 ) : null}
                 <button
                   type="button"
-                  onClick={() => onNewGame(slot.slot)}
+                  onClick={onUiClick(() => onNewGame(slot.slot))}
                   aria-label={
                     slot.isEmpty
                       ? `New game in slot ${slot.slot + 1}`
                       : `Overwrite slot ${slot.slot + 1} with a new game`
                   }
+                  {...uiHoverProps()}
                 >
                   {slot.isEmpty ? 'New Game' : 'New Game (overwrite)'}
                 </button>
@@ -91,7 +99,7 @@ export function SaveSlotsPanel({ slots, onLoad, onDelete, onNewGame, onBack }: S
         </ul>
 
         <div className="menu-actions" aria-label="Save manager navigation">
-          <button type="button" onClick={onBack}>
+          <button type="button" onClick={onUiClick(onBack)} {...uiHoverProps()}>
             Back
           </button>
         </div>

@@ -329,9 +329,9 @@ one at a time as predecessors land (no speculative spawns).
     prosthetics through the existing economy/transactions system; fitting clears the
     injury penalty. Reuses E4.4 currency. **This closes the dismemberment counterplay
     loop and subsumes E6.1.4 (eye prosthetic fitting).**
-- **E6.2 Audio** `[~ partial]` — footsteps + forest ambience shipped (FLO-401) and
-  combat SFX via the `damageEvents` bridge (MPG.4/FLO-383). Remaining: **E6.2.x UI
-  click cues + ambient music bed** — **[FLO-433](/FLO/issues/FLO-433)** (Soren, backlog).
+- **E6.2 Audio** `[x]` ✅ — footsteps + forest ambience (FLO-401), combat SFX via
+  the `damageEvents` bridge (MPG.4/FLO-383), UI click/hover cues + per-zone
+  ambience beds — **[FLO-433](/FLO/issues/FLO-433)** (Soren, done).
 - **E6.3 Quests / objectives** `[~]` — **[FLO-429](/FLO/issues/FLO-429)** (Wayland, backlog) — per-faction objective chains (elf raids,
   palace-guard commander orders, villain free-command). Builds on the objective
   machine + commander/order system (E4.3).
@@ -458,6 +458,9 @@ speculative batches (FLO-270).
 
 *Revision history*
 
+- **r40** (2026-06-21) — **E6.2 audio polish landed (FLO-433).** UI click/hover cue API
+  (`uiCues.ts`), per-zone looped ambience beds, menu/faction/shop/settings wiring.
+  (Soren)
 - **r39** (2026-06-21) — **FLO-432 ranged archer merged.** Rebased + merged PR #98 (`87cbfd3`): archer FSM, line-of-sight, arrow-volley projectiles, corpse manager, 22 files, 790 tests green. FLO-422 (procedural avatar) and FLO-438 (lock-reap) cleaned up. Phase 8 backlog: FLO-427 (Empire zone), FLO-428 (Mountains), FLO-429 (quests), FLO-430 (leg locomotion), FLO-433 (audio polish) all waiting for activation. (Prospero)
 - **r38** (2026-06-21) — **Phase 6 wave landed; FLO-422 procedural avatar supersedes GLB.** Merged PR #95 (FLO-424 prosthetics shop, `9f4a3a2`), PR #96 (FLO-431 save-slot manager, `a77b6f1`), PR #97 (FLO-422 procedural avatar, `e54b4b7`); each rebased + binary-hash-verified (hero GLB stayed cfd64cf throughout). FLO-422 deliberately retires static GLB hero in favour of `playerAvatar.ts` (boxer-guard flat-shaded procedural avatar). Durable memory: CLEAN PR on busy tree ≠ safe for binary assets. 753 tests. (Prospero)
 - **r37** (2026-06-21) — **Phase 7 COMPLETE. E6.4 + FLO-426 landed.** P7.4 avatar/ground feel (`371b715`) and E6.4 settings panel (`363f451`) merged; archer + palace-guard GLBs (`92f652a`) on main. All five P7.x tickets ✅. Phase 7 header updated to `[x]`. FLO-409 (epic) already closed done. Next: re-audit the deployed build end-to-end to confirm first session is survivable; then activate Phase 8 + remaining Phase 6 backlog. (Daedalus)

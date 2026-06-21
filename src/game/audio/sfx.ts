@@ -15,10 +15,14 @@ export type SfxName =
   | 'playerHurt' // the player takes damage
   | 'attack' // the player swings (whiff/swing)
   | 'uiClick' // a UI button press
+  | 'uiHover' // a UI hover/focus tick
   | 'win' // run won
   | 'lose' // run lost
   | 'footstep' // player footstep on ground
-  | 'forestAmbience' // background forest ambience (looped)
+  | 'forestAmbience' // looped forest zone bed
+  | 'humanLandsAmbience' // looped human-lands zone bed
+  | 'empireAmbience' // looped empire zone bed
+  | 'mountainsAmbience' // looped mountains zone bed
 
 /** name → the voices that make up that clip. */
 const RECIPES: Record<SfxName, ToneSpec[]> = {
@@ -44,6 +48,8 @@ const RECIPES: Record<SfxName, ToneSpec[]> = {
   ],
   // UI click: a tiny high blip.
   uiClick: [{ type: 'sine', freq: 880, duration: 0.05, gain: 0.3, decay: 0.02 }],
+  // UI hover: softer, slightly lower tick for focus/hover affordance.
+  uiHover: [{ type: 'sine', freq: 660, duration: 0.035, gain: 0.18, decay: 0.015 }],
   // Win sting: a bright ascending major triad (C5-E5-G5), each note delayed by
   // layering longer attacks so they bloom in sequence.
   win: [
@@ -62,15 +68,29 @@ const RECIPES: Record<SfxName, ToneSpec[]> = {
     { type: 'sine', freq: 120, freqEnd: 60, duration: 0.08, gain: 0.5, decay: 0.03 },
     { type: 'noise', freq: 0, duration: 0.04, gain: 0.2, decay: 0.02 },
   ],
-  // Forest ambience: a shorter loop (2 seconds) of wind and distant wildlife.
-  // Mix of wind (broad noise), crickets (high ticks), and ambient drone.
+  // Forest ambience: wind, crickets, and a low drone (2 s loop).
   forestAmbience: [
-    // Wind: filtered noise, slow LFO modulation.
     { type: 'noise', freq: 0, duration: 2, gain: 0.12, decay: 1, attack: 0.5 },
-    // Distant crickets: random high clicks.
     { type: 'sine', freq: 2000, duration: 2, gain: 0.05, decay: 0.02 },
-    // Ambient drone: very low sine for depth.
     { type: 'sine', freq: 55, duration: 2, gain: 0.08, decay: 0.5, attack: 1 },
+  ],
+  // Human lands: open road — light breeze and a warm mid drone.
+  humanLandsAmbience: [
+    { type: 'noise', freq: 0, duration: 2.5, gain: 0.08, decay: 1.2, attack: 0.6 },
+    { type: 'sine', freq: 110, duration: 2.5, gain: 0.06, decay: 0.8, attack: 0.8 },
+    { type: 'triangle', freq: 330, duration: 2.5, gain: 0.04, decay: 0.4, attack: 1 },
+  ],
+  // Empire: low march pulse and distant brass-ish tone.
+  empireAmbience: [
+    { type: 'sine', freq: 73, duration: 2, gain: 0.1, decay: 0.3, attack: 0.05 },
+    { type: 'triangle', freq: 146, duration: 2, gain: 0.07, decay: 0.25, attack: 0.1 },
+    { type: 'noise', freq: 0, duration: 2, gain: 0.05, decay: 0.5, attack: 0.2 },
+  ],
+  // Mountains: cold wind and a high whistle bed.
+  mountainsAmbience: [
+    { type: 'noise', freq: 0, duration: 3, gain: 0.14, decay: 1.5, attack: 0.8 },
+    { type: 'sine', freq: 880, duration: 3, gain: 0.04, decay: 0.6, attack: 1.2 },
+    { type: 'sine', freq: 44, duration: 3, gain: 0.06, decay: 1, attack: 1 },
   ],
 }
 

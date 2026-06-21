@@ -4,7 +4,7 @@ import { InventoryPanel } from './InventoryPanel'
 import { DamageNumbers, type DamageNumberEntry } from './DamageNumber'
 import { useGameAudio } from './useGameAudio'
 import { onDamage } from '../game/combat/damageEvents'
-import { audioBus } from '../game/audio'
+import { audioBus, onUiClick, playUiClick, uiHoverProps } from '../game/audio'
 import { WorldMap } from '../components/WorldMap'
 import { OnboardingIntroCard } from '../components/OnboardingIntroCard'
 import { SaveSlotsPanel } from '../components/SaveSlotsPanel'
@@ -127,8 +127,8 @@ export function App() {
   // win/lose stings on phase change. Mirrors the HUD's event-driven consumption.
   useGameAudio(phase)
 
-  // Locomotion + ambience: loop forest ambience while playing and emit a
-  // footstep whenever the player's transform moves far enough on the ground.
+  // Locomotion + ambience: loop the current zone's music bed while playing and
+  // emit a footstep whenever the player's transform moves far enough on the ground.
   useEffect(() => {
     if (phase !== 'playing') {
       audioBus.stopAmbience()
@@ -136,12 +136,13 @@ export function App() {
       return
     }
 
-    audioBus.startAmbience()
+    const zone = zoneId as ZoneId
+    audioBus.startZoneAmbience(zone)
 
     // Browsers gate audio until a user gesture; unlock on the first interaction.
     const tryUnlock = () => {
       void audioBus.unlock()
-      audioBus.startAmbience() // start now that the context can produce sound
+      audioBus.startZoneAmbience(zone) // start now that the context can produce sound
       window.removeEventListener('pointerdown', tryUnlock)
       window.removeEventListener('keydown', tryUnlock)
     }
@@ -172,7 +173,7 @@ export function App() {
       cancelAnimationFrame(frameId)
       audioBus.stopAmbience()
     }
-  }, [phase])
+  }, [phase, zoneId])
 
   const [hasSaveSlot, setHasSaveSlot] = useState(false)
   const [continueHint, setContinueHint] = useState<string | null>(null)
@@ -426,7 +427,7 @@ export function App() {
   // New Game opens the faction picker; the campaign only starts once a faction
   // is chosen so the choice is recorded in `factionSlice` and the save.
   const onNewGame = useCallback(() => {
-    audioBus.play('uiClick')
+    playUiClick()
     setNewGameTargetSlot(null)
     setMenuView('factions')
   }, [])
@@ -451,7 +452,7 @@ export function App() {
   // Restart from the win/lose screen: fresh run, same faction (no need to
   // re-pick), straight back into play (MPG.1).
   const onRestart = useCallback(() => {
-    audioBus.play('uiClick')
+    playUiClick()
     resetRunState()
     dispatch(startNewGame())
   }, [resetRunState, dispatch])
@@ -469,7 +470,7 @@ export function App() {
         void refreshSaveMeta()
         return
       }
-      audioBus.play('uiClick')
+      playUiClick()
       restoreFromSave(data, slot)
     },
     [restoreFromSave, refreshSaveMeta],
@@ -484,13 +485,13 @@ export function App() {
   )
 
   const onNewGameIntoSlot = useCallback((slot: SlotId) => {
-    audioBus.play('uiClick')
+    playUiClick()
     setNewGameTargetSlot(slot)
     setMenuView('factions')
   }, [])
 
   const onOpenSaveManager = useCallback(() => {
-    audioBus.play('uiClick')
+    playUiClick()
     void refreshSaveMeta()
     setMenuView('saves')
   }, [refreshSaveMeta])
@@ -651,6 +652,7 @@ export function App() {
                 type="button"
                 className="primary-action"
                 onClick={onNewGame}
+                {...uiHoverProps()}
               >
                 New Game
               </button>
@@ -663,21 +665,20 @@ export function App() {
                 aria-label={
                   continueHint ? `Continue latest save — ${continueHint}` : 'Continue latest save'
                 }
+                {...uiHoverProps()}
               >
                 <span className="menu-action-label">Continue</span>
                 {continueHint ? (
                   <span className="menu-action-detail">{continueHint}</span>
                 ) : null}
               </button>
-              <button type="button" onClick={onOpenSaveManager}>
+              <button type="button" onClick={onOpenSaveManager} {...uiHoverProps()}>
                 Manage Saves
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  audioBus.play('uiClick')
-                  setSettingsOpen(true)
-                }}
+                onClick={onUiClick(() => setSettingsOpen(true))}
+                {...uiHoverProps()}
               >
                 Settings
               </button>
@@ -702,22 +703,18 @@ export function App() {
                 ref={pausePrimaryActionRef}
                 type="button"
                 className="primary-action"
-                onClick={() => {
-                  audioBus.play('uiClick')
-                  dispatch(togglePause())
-                }}
+                onClick={onUiClick(() => dispatch(togglePause()))}
+                {...uiHoverProps()}
               >
                 Resume
               </button>
-              <button type="button" onClick={() => dispatch(returnToMenu())}>
+              <button type="button" onClick={() => dispatch(returnToMenu())} {...uiHoverProps()}>
                 Quit to Main Menu
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  audioBus.play('uiClick')
-                  setSettingsOpen(true)
-                }}
+                onClick={onUiClick(() => setSettingsOpen(true))}
+                {...uiHoverProps()}
               >
                 Settings
               </button>
@@ -728,10 +725,7 @@ export function App() {
       {settingsOpen ? (
         <SettingsPanel
           closeButtonRef={settingsPrimaryActionRef}
-          onClose={() => {
-            audioBus.play('uiClick')
-            setSettingsOpen(false)
-          }}
+          onClose={onUiClick(() => setSettingsOpen(false))}
         />
       ) : null}
       {phase === 'won' || phase === 'lost' ? (
@@ -758,10 +752,15 @@ export function App() {
                 type="button"
                 className="primary-action"
                 onClick={onRestart}
+                {...uiHoverProps()}
               >
                 Restart
               </button>
-              <button type="button" onClick={() => dispatch(returnToMenu())}>
+              <button
+                type="button"
+                onClick={onUiClick(() => dispatch(returnToMenu()))}
+                {...uiHoverProps()}
+              >
                 Main Menu
               </button>
             </div>

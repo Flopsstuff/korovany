@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { PlayableFactionId, PlayableFactionOption } from '../game/faction'
+import { onUiClick, uiHoverProps } from '../game/audio'
 
 /** Lifecycle the picker reflects while a choice is being committed. */
 export type FactionPickerStatus = 'idle' | 'loading'
@@ -56,10 +57,11 @@ export function FactionPicker({ factions, status = 'idle', onConfirm, onBack }: 
                   <button
                     type="button"
                     className={`faction-card${isSelected ? ' is-selected' : ''}`}
-                    onClick={() => setSelected(faction.id)}
+                    onClick={onUiClick(() => setSelected(faction.id))}
                     disabled={busy}
                     aria-disabled={busy}
                     aria-pressed={isSelected}
+                    {...uiHoverProps()}
                   >
                     <span className="faction-card-name">{faction.name}</span>
                     <span className="faction-card-role">{faction.role}</span>
@@ -85,18 +87,29 @@ export function FactionPicker({ factions, status = 'idle', onConfirm, onBack }: 
               <button
                 type="button"
                 className="primary-action"
-                onClick={() => onConfirm(selectedFaction.id)}
+                onClick={onUiClick(() => onConfirm(selectedFaction.id))}
+                {...uiHoverProps()}
               >
                 Begin
               </button>
-              <button type="button" onClick={() => setSelected(null)}>
+              <button
+                type="button"
+                onClick={onUiClick(() => setSelected(null))}
+                {...uiHoverProps()}
+              >
                 Clear
               </button>
             </div>
           ) : (
             <p className="faction-hint">Select a faction to begin.</p>
           )}
-          <button type="button" className="faction-back" onClick={onBack} disabled={busy}>
+          <button
+            type="button"
+            className="faction-back"
+            onClick={onUiClick(onBack)}
+            disabled={busy}
+            {...uiHoverProps()}
+          >
             Back
           </button>
         </footer>

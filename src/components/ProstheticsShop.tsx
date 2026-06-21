@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { onUiClick, uiHoverProps } from '../game/audio'
 import {
   PROSTHETIC_OFFERS,
   canUseProsthetic,
@@ -66,7 +67,13 @@ export function ProstheticsShop({
             <p className="prosthetics-kicker">Safe-area service</p>
             <h2 id="prosthetics-title">Prosthetics shop</h2>
           </div>
-          <button type="button" className="prosthetics-close" onClick={onClose} aria-label="Close prosthetics shop">
+          <button
+            type="button"
+            className="prosthetics-close"
+            onClick={onUiClick(onClose)}
+            aria-label="Close prosthetics shop"
+            {...uiHoverProps()}
+          >
             Close
           </button>
         </header>
@@ -102,7 +109,8 @@ export function ProstheticsShop({
                       type="button"
                       disabled={disabled}
                       aria-disabled={disabled}
-                      onClick={() => onBuy(offer.kind)}
+                      onClick={onUiClick(() => onBuy(offer.kind))}
+                      {...uiHoverProps()}
                     >
                       Fit {offer.kind}
                     </button>

@@ -178,10 +178,11 @@ describe('AudioBus', () => {
 })
 
 describe('ambience', () => {
-  it('startAmbience plays a single looped, master-routed forest source', () => {
+  it('startZoneAmbience plays a single looped, master-routed forest source', () => {
     const { bus, ctx } = makeBus()
-    bus.startAmbience()
+    bus.startZoneAmbience('forest')
     expect(bus.isAmbiencePlaying()).toBe(true)
+    expect(bus.getAmbienceZoneId()).toBe('forest')
     expect(ctx.sources).toHaveLength(1)
     const src = ctx.sources[0]
     expect(src.buffer).not.toBeNull()
@@ -190,24 +191,41 @@ describe('ambience', () => {
     expect(src.started).toBe(true)
   })
 
-  it('stopAmbience stops the source and clears playing state', () => {
+  it('startZoneAmbience switches tracks when the zone changes', () => {
     const { bus, ctx } = makeBus()
-    bus.startAmbience()
-    bus.stopAmbience()
-    expect(bus.isAmbiencePlaying()).toBe(false)
+    bus.startZoneAmbience('forest')
+    bus.startZoneAmbience('human-lands')
+    expect(bus.getAmbienceZoneId()).toBe('human-lands')
+    expect(ctx.sources).toHaveLength(2)
     expect(ctx.sources[0].stopped).toBe(true)
+    expect(ctx.sources[1].started).toBe(true)
   })
 
-  it('startAmbience is idempotent (one source while already looping)', () => {
+  it('startZoneAmbience is idempotent for the same zone', () => {
     const { bus, ctx } = makeBus()
-    bus.startAmbience()
-    bus.startAmbience()
+    bus.startZoneAmbience('forest')
+    bus.startZoneAmbience('forest')
     expect(ctx.sources).toHaveLength(1)
+  })
+
+  it('startAmbience remains a forest alias', () => {
+    const { bus } = makeBus()
+    bus.startAmbience()
+    expect(bus.getAmbienceZoneId()).toBe('forest')
+  })
+
+  it('stopAmbience stops the source and clears playing state', () => {
+    const { bus, ctx } = makeBus()
+    bus.startZoneAmbience('forest')
+    bus.stopAmbience()
+    expect(bus.isAmbiencePlaying()).toBe(false)
+    expect(bus.getAmbienceZoneId()).toBeNull()
+    expect(ctx.sources[0].stopped).toBe(true)
   })
 
   it('stays silent (no source) while the context is suspended', () => {
     const { bus, ctx } = makeBus({ state: 'suspended' })
-    bus.startAmbience()
+    bus.startZoneAmbience('forest')
     expect(bus.isAmbiencePlaying()).toBe(false)
     expect(ctx.sources).toHaveLength(0)
   })

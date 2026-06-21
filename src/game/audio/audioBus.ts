@@ -14,6 +14,15 @@
  * with a stubbed Web Audio API — jsdom has no real one. See `docs/guide/audio.md`.
  */
 import { renderSfx, type SfxName } from './sfx'
+import type { ZoneId } from '../world/types'
+
+/** Loopable zone ambience beds — one per canonical zone id. */
+export const ZONE_AMBIENCE: Readonly<Record<ZoneId, SfxName>> = {
+  forest: 'forestAmbience',
+  'human-lands': 'humanLandsAmbience',
+  empire: 'empireAmbience',
+  mountains: 'mountainsAmbience',
+}
 
 /** Persisted, user-controllable audio settings. */
 export interface AudioSettings {
@@ -85,8 +94,9 @@ export class AudioBus {
   // the cooldown is frame-rate independent and deterministic in tests.
   private stepClock = 0
   private lastStepAt = -Infinity
-  // Looped forest ambience source; null while stopped.
+  // Looped zone ambience source; null while stopped.
   private ambienceSource: AudioBufferSourceNode | null = null
+  private ambienceZoneId: ZoneId | null = null
 
   constructor(options: AudioBusOptions = {}) {
     this.createContext = options.createContext ?? defaultContextFactory
@@ -193,12 +203,13 @@ export class AudioBus {
   }
 
   /**
-   * Start the looped forest ambience. Idempotent; a no-op while muted-silent is
-   * not enforced here (the master gain handles mute), but it stays silent until
-   * the context is unlocked. No-op if already playing or the context is missing.
+   * Start the looped ambience bed for a zone. Idempotent when the same zone is
+   * already playing; switches tracks when the zone changes. Silent until the
+   * context is unlocked (autoplay policy).
    */
-  startAmbience(): void {
-    if (this.ambienceSource) return
+  startZoneAmbience(zoneId: ZoneId): void {
+    if (this.ambienceSource && this.ambienceZoneId === zoneId) return
+    this.stopAmbience()
     let ctx: AudioContext
     try {
       ctx = this.ensure()
@@ -206,15 +217,24 @@ export class AudioBus {
       return // no Web Audio here — nothing to loop.
     }
     if (ctx.state === 'suspended') return // wait for unlock()
+    const name = ZONE_AMBIENCE[zoneId]
     const source = ctx.createBufferSource()
-    source.buffer = this.bufferFor(ctx, 'forestAmbience')
+    source.buffer = this.bufferFor(ctx, name)
     source.loop = true
     source.connect(this.master as GainNode)
     source.start()
     this.ambienceSource = source
+    this.ambienceZoneId = zoneId
   }
 
-  /** Stop the forest ambience if playing. Idempotent. */
+  /**
+   * @deprecated Use {@link startZoneAmbience} — kept as a forest alias for older call sites.
+   */
+  startAmbience(): void {
+    this.startZoneAmbience('forest')
+  }
+
+  /** Stop the zone ambience if playing. Idempotent. */
   stopAmbience(): void {
     if (!this.ambienceSource) return
     try {
@@ -223,11 +243,17 @@ export class AudioBus {
       // Already stopped / never started — nothing to do.
     }
     this.ambienceSource = null
+    this.ambienceZoneId = null
   }
 
-  /** True while the forest ambience loop is active. */
+  /** True while a zone ambience loop is active. */
   isAmbiencePlaying(): boolean {
     return this.ambienceSource !== null
+  }
+
+  /** Zone id of the currently looped ambience bed, if any. */
+  getAmbienceZoneId(): ZoneId | null {
+    return this.ambienceZoneId
   }
 
   private ensure(): AudioContext {

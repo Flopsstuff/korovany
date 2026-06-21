@@ -1,6 +1,7 @@
 import type { RefObject } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { AudioControls } from '../app/AudioControls'
+import { onUiClick, uiHoverProps } from '../game/audio'
 import type { InputAction } from '../game/input/intent'
 import { defaultBindings } from '../game/input/bindings'
 import {
@@ -100,7 +101,8 @@ export function SettingsPanel({ onClose, closeButtonRef }: SettingsPanelProps) {
                     type="button"
                     className="settings-rebind-btn"
                     aria-pressed={isActive}
-                    onClick={() => (isActive ? cancelRebind() : startRebind(action))}
+                    onClick={onUiClick(() => (isActive ? cancelRebind() : startRebind(action)))}
+                    {...uiHoverProps()}
                   >
                     {isActive ? 'Cancel' : 'Rebind'}
                   </button>
@@ -117,10 +119,11 @@ export function SettingsPanel({ onClose, closeButtonRef }: SettingsPanelProps) {
           <button
             type="button"
             className="settings-reset-btn"
-            onClick={() => {
+            onClick={onUiClick(() => {
               settingsStore.resetKeyBindings()
               cancelRebind()
-            }}
+            })}
+            {...uiHoverProps()}
           >
             Reset controls to defaults
           </button>
@@ -135,7 +138,7 @@ export function SettingsPanel({ onClose, closeButtonRef }: SettingsPanelProps) {
           <h3 id="settings-graphics-heading">Graphics</h3>
           <fieldset className="settings-quality">
             <legend className="visually-hidden">Graphics quality</legend>
-            <label className="settings-quality-option">
+            <label className="settings-quality-option" {...uiHoverProps()}>
               <input
                 type="radio"
                 name="graphics-quality"
@@ -145,7 +148,7 @@ export function SettingsPanel({ onClose, closeButtonRef }: SettingsPanelProps) {
               />
               Low
             </label>
-            <label className="settings-quality-option">
+            <label className="settings-quality-option" {...uiHoverProps()}>
               <input
                 type="radio"
                 name="graphics-quality"
@@ -167,6 +170,7 @@ export function SettingsPanel({ onClose, closeButtonRef }: SettingsPanelProps) {
             type="button"
             className="primary-action"
             onClick={onClose}
+            {...uiHoverProps()}
           >
             Done
           </button>
