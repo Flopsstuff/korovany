@@ -361,6 +361,28 @@ describe('<App /> surfaced injury & score systems (MPG.6)', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/Bleeding/)
   })
 
+  // P7.5 (FLO-418): the prompt must not instruct toward a bandage the player
+  // can't act on. With no bandage carried it reads an honest "losing HP" line —
+  // never the old "find a bandage" (the findable item lands in P7.2/FLO-417).
+  it('shows an honest bleed prompt with no bandage carried (no false item)', () => {
+    renderApp('playing', {}, DEFAULT_PLAYER_STATE, full, noInventory, bleeding)
+    const status = screen.getByRole('status')
+    expect(status).toHaveTextContent('Bleeding — losing HP')
+    expect(status).not.toHaveTextContent(/find a bandage/i)
+  })
+
+  it('points to the bandage only when one is actually carried', () => {
+    renderApp(
+      'playing',
+      {},
+      DEFAULT_PLAYER_STATE,
+      full,
+      { counts: { bandage: 1 }, equippedItemId: null },
+      bleeding,
+    )
+    expect(screen.getByRole('status')).toHaveTextContent('Bleeding — use a bandage')
+  })
+
   it('hides the bleeding indicator when not bleeding', () => {
     renderApp('playing', {}, DEFAULT_PLAYER_STATE, full, noInventory, createInjuryState())
     expect(screen.queryByText(/Bleeding/)).not.toBeInTheDocument()

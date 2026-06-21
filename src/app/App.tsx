@@ -82,6 +82,13 @@ export function App() {
   const hasHalfScreenBlackout = useAppSelector(selectHasHalfScreenBlackout)
   const score = useAppSelector(selectScore)
   const lootCount = totalItemCount(inventory)
+  // Conditional bleed prompt (P7.5/FLO-418): only point the player at a bandage
+  // when one is actually carried — the bandage item + world pickup land in P7.2
+  // (FLO-417), so today this is always false and the prompt shows an honest
+  // "losing HP" line instead of instructing toward an item that isn't in the
+  // game yet. When P7.2 ships the findable bandage, it owns refining the
+  // no-bandage copy back to "find a bandage".
+  const hasBandage = (inventory.counts.bandage ?? 0) > 0
   const menuPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const onboardingPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const pausePrimaryActionRef = useRef<HTMLButtonElement>(null)
@@ -397,13 +404,16 @@ export function App() {
           {isBleeding ? (
             <div className="hud-bleeding" role="status">
               <span className="hud-bleeding-dot" aria-hidden="true" />
-              Bleeding — find a bandage
+              {hasBandage ? 'Bleeding — use a bandage' : 'Bleeding — losing HP'}
             </div>
           ) : null}
           <div className="hud-score" role="group" aria-label="Score">
             <span className="hud-score-stat">
               <span className="hud-score-label">Score</span>
               <span className="hud-score-value">{score}</span>
+            </span>
+            <span className="hud-score-sep" aria-hidden="true">
+              ·
             </span>
             <span className="hud-score-stat">
               <span className="hud-score-label">Loot</span>

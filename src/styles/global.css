@@ -111,31 +111,36 @@ body {
   }
 }
 
-/* Score panel (MPG.6) — kill tally + loot count. */
+/* Score panel (MPG.6) — kill tally + loot count. P7.5 (FLO-418): a single
+   inline row "Score N · Loot N" matching the objective row above it (Gestalt
+   similarity), replacing the old two-column stack that read as "ScoreNLootN". */
 .hud-score {
   display: flex;
-  gap: 1rem;
+  align-items: baseline;
+  gap: 0.5rem;
   margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
 }
 
 .hud-score-stat {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
 }
 
 .hud-score-label {
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.8;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
 }
 
 .hud-score-value {
-  font-size: 1.125rem;
-  font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* Decorative middot separating the two tallies. */
+.hud-score-sep {
+  opacity: 0.45;
 }
 
 /* Win-objective counter (MPG.1) — "Raid caravans N/3" above the score panel. */

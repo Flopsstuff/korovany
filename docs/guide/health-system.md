@@ -42,11 +42,16 @@ Alongside it the HUD surfaces the other built-but-previously-invisible systems
 (MPG.6, FLO-366):
 
 - **Bleeding indicator** (`.hud-bleeding`, ARIA `status`) — shown while
-  `selectIsBleeding` is true, with a pulsing dot and a "find a bandage" prompt.
-- **Score panel** (`.hud-score`, ARIA `group` "Score") — two tabular stats:
-  **Kills** (`selectScore`, the `game.score` tally) and **Loot**
-  (`totalItemCount(inventory)`). Kill increments are wired by the objective loop
-  (MPG.1, FLO-363); the panel surfaces the counter regardless.
+  `selectIsBleeding` is true, with a pulsing dot and a **conditional** prompt
+  (P7.5, FLO-418): `Bleeding — use a bandage` when a `bandage` item is carried,
+  otherwise an honest `Bleeding — losing HP`. It deliberately does **not** say
+  "find a bandage" until the findable bandage pickup ships (P7.2, FLO-417), which
+  owns refining the no-bandage copy then.
+- **Score panel** (`.hud-score`, ARIA `group` "Score") — a single inline row
+  `Score N · Loot N` (P7.5): **Score** (`selectScore`, the `game.score` tally)
+  and **Loot** (`totalItemCount(inventory)`), tabular-nums, separated by a
+  middot to match the objective row above it. Kill increments are wired by the
+  objective loop (MPG.1, FLO-363); the panel surfaces the counter regardless.
 - **Eye-loss vignette** (`.injury-vignette`) — a full-viewport, click-through
   overlay darkening the left half of the screen, rendered (outside the menu)
   whenever `selectHasHalfScreenBlackout` is true. It carries no `z-index`,
