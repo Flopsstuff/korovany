@@ -67,7 +67,22 @@ export const ITEMS = {
     equippable: true,
     value: 60,
   },
+  bandage: {
+    id: 'bandage',
+    name: 'Bandage',
+    description: 'A strip of clean cloth — stanches the bleeding from a severed limb.',
+    equippable: false,
+    value: 15,
+  },
 } as const satisfies Record<string, ItemDef>
+
+/**
+ * Item id of the bandage — the dismemberment counterplay consumable (P7.2). A
+ * carried bandage can be spent to stop bleeding; see `useBandage` in
+ * `src/store/injurySlice.ts`. Exported so the injury wiring and HUD reference one
+ * canonical id rather than a stray string literal.
+ */
+export const BANDAGE_ITEM_ID = 'bandage'
 
 /** Ids that exist in the catalog. Foreign/legacy ids are still valid strings. */
 export type KnownItemId = keyof typeof ITEMS

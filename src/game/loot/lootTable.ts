@@ -40,7 +40,9 @@ export interface LootDrop {
 }
 
 /**
- * Default caravan haul: common coin, frequent supplies, occasional valuables.
+ * Default caravan haul: common coin, frequent supplies, occasional valuables,
+ * and the odd bandage — the dismemberment counterplay consumable (P7.2), so a
+ * player who loses a hand can find what the "find a bandage" prompt asks for.
  * Weights are relative; quantities vary so each ambush feels different while
  * staying reproducible per seed.
  */
@@ -49,6 +51,7 @@ export const DEFAULT_CARAVAN_LOOT: LootTable = {
   entries: [
     { id: 'gold', label: 'Gold coins', weight: 50, minQty: 5, maxQty: 25 },
     { id: 'grain', label: 'Sack of grain', weight: 30, minQty: 1, maxQty: 3 },
+    { id: 'bandage', label: 'Bandage', weight: 20, minQty: 1, maxQty: 2 },
     { id: 'cloth', label: 'Bolt of cloth', weight: 15, minQty: 1, maxQty: 2 },
     { id: 'blade', label: 'Looted blade', weight: 5, minQty: 1, maxQty: 1 },
   ],

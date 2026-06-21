@@ -80,6 +80,7 @@ export {
   severPlayerLimb,
   tickInjuries,
   treatPlayerBleeding,
+  useBandage,
 } from './injurySlice'
 export { restorePlayer, resetPlayer, setZone, DEFAULT_PLAYER_STATE } from './playerSlice'
 export type { PlayerState } from './playerSlice'

@@ -58,9 +58,11 @@ and there is no `max-width` container (`src/styles/global.css` resets
 `html/body/#root` and hides overflow). React overlays sit above the canvas for
 the HUD, main menu, and pause screen. The app boots into the main menu; **New
 Game** enters play, **Continue** resumes the latest save (see
-[Saving progress](#saving-progress)), `ESC` toggles `playing ⇄ paused`, and `M`
+[Saving progress](#saving-progress)), `ESC` toggles `playing ⇄ paused`, `M`
 (or the HUD **Travel** button) opens the world map (see
-[World map & fast-travel](#world-map--fast-travel)).
+[World map & fast-travel](#world-map--fast-travel)), and `B` spends a carried
+**bandage** to stop bleeding from a severed limb (see
+[`docs/guide/health-system.md`](docs/guide/health-system.md#dismemberment-counterplay-p72)).
 
 The Babylon `Engine`/`Scene` lifecycle lives in **[`src/engine/`](src/engine/index.ts)**,
 not inline in a component. `createGameEngine(canvas)` owns engine + scene

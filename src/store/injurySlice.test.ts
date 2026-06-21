@@ -6,7 +6,7 @@ import { gameReducer } from './gameSlice'
 import { streamingReducer } from './streamingSlice'
 import { playerReducer } from './playerSlice'
 import { healthReducer, damagePlayer } from './healthSlice'
-import { inventoryReducer } from './inventorySlice'
+import { inventoryReducer, pickUpLoot } from './inventorySlice'
 import { progressionReducer } from './progressionSlice'
 import {
   advanceBleed,
@@ -20,6 +20,7 @@ import {
   severPlayerLimb,
   tickInjuries,
   treatPlayerBleeding,
+  useBandage,
 } from './injurySlice'
 
 // Mirror the real store's reducer map so dispatch is typed like AppDispatch
@@ -129,5 +130,40 @@ describe('tickInjuries thunk (health wiring)', () => {
     store.dispatch(treatPlayerBleeding())
     store.dispatch(tickInjuries(5))
     expect(store.getState().health.player.current).toBe(100)
+  })
+})
+
+describe('useBandage thunk (P7.2 counterplay)', () => {
+  it('spends one bandage to stop bleeding and returns true', () => {
+    const store = makeStore()
+    store.dispatch(pickUpLoot({ itemId: 'bandage', count: 2 }))
+    store.dispatch(severPlayerLimb('leftHand')) // opens a bleeding wound
+    expect(selectIsBleeding(store.getState())).toBe(true)
+
+    const used = store.dispatch(useBandage())
+
+    expect(used).toBe(true)
+    expect(selectIsBleeding(store.getState())).toBe(false)
+    expect(store.getState().inventory.counts.bandage).toBe(1)
+  })
+
+  it('is a no-op without a bandage even while bleeding', () => {
+    const store = makeStore()
+    store.dispatch(severPlayerLimb('leftHand'))
+
+    const used = store.dispatch(useBandage())
+
+    expect(used).toBe(false)
+    expect(selectIsBleeding(store.getState())).toBe(true)
+  })
+
+  it('is a no-op (and keeps the bandage) when not bleeding', () => {
+    const store = makeStore()
+    store.dispatch(pickUpLoot({ itemId: 'bandage', count: 1 }))
+
+    const used = store.dispatch(useBandage())
+
+    expect(used).toBe(false)
+    expect(store.getState().inventory.counts.bandage).toBe(1)
   })
 })

@@ -10,7 +10,7 @@ import { WorldMap } from '../components/WorldMap'
 import { OnboardingIntroCard } from '../components/OnboardingIntroCard'
 import { FactionPicker } from '../components/FactionPicker'
 import { PLAYABLE_FACTIONS, type PlayableFactionId } from '../game/faction'
-import { totalItemCount } from '../game/economy'
+import { BANDAGE_ITEM_ID, totalItemCount } from '../game/economy'
 import { hasSave, loadLatest, saveGame } from '../game/save'
 import { listZones, planTravel, type ZoneId } from '../game/world'
 import {
@@ -45,6 +45,7 @@ import {
   togglePause,
   useAppDispatch,
   useAppSelector,
+  useBandage,
   winGame,
 } from '../store'
 import { evaluateOutcome } from '../game/objective/objectiveMachine'
@@ -82,13 +83,7 @@ export function App() {
   const hasHalfScreenBlackout = useAppSelector(selectHasHalfScreenBlackout)
   const score = useAppSelector(selectScore)
   const lootCount = totalItemCount(inventory)
-  // Conditional bleed prompt (P7.5/FLO-418): only point the player at a bandage
-  // when one is actually carried — the bandage item + world pickup land in P7.2
-  // (FLO-417), so today this is always false and the prompt shows an honest
-  // "losing HP" line instead of instructing toward an item that isn't in the
-  // game yet. When P7.2 ships the findable bandage, it owns refining the
-  // no-bandage copy back to "find a bandage".
-  const hasBandage = (inventory.counts.bandage ?? 0) > 0
+  const bandageCount = inventory.counts[BANDAGE_ITEM_ID] ?? 0
   const menuPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const onboardingPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const pausePrimaryActionRef = useRef<HTMLButtonElement>(null)
@@ -258,6 +253,13 @@ export function App() {
         event.preventDefault()
         if (!traveling) setWorldMapOpen((open) => !open)
       }
+      // B spends a carried bandage to stop bleeding (P7.2 counterplay). The
+      // thunk is a no-op when not bleeding or out of bandages, so it's safe to
+      // fire unconditionally during play.
+      if (event.code === 'KeyB' && phase === 'playing') {
+        event.preventDefault()
+        dispatch(useBandage())
+      }
     }
 
     window.addEventListener('keydown', onKeyDown)
@@ -404,7 +406,13 @@ export function App() {
           {isBleeding ? (
             <div className="hud-bleeding" role="status">
               <span className="hud-bleeding-dot" aria-hidden="true" />
-              {hasBandage ? 'Bleeding — use a bandage' : 'Bleeding — losing HP'}
+              {bandageCount > 0 ? (
+                <>
+                  Bleeding — press <kbd>B</kbd> to bandage ({bandageCount})
+                </>
+              ) : (
+                'Bleeding — find a bandage'
+              )}
             </div>
           ) : null}
           <div className="hud-score" role="group" aria-label="Score">

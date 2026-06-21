@@ -387,7 +387,7 @@ injury mechanics that have a **counterplay**, and (4) see a world that reads as
 **re-verify in the deployed build** (rendered, not just unit-tested).
 
 - **P7.1 Safe spawn & difficulty curve** `[x]` ✅ — **[FLO-412](/FLO/issues/FLO-412)** (Wayland, done, `92a3586`) — 18 m soldier-free buffer, ramped 1-then-many encounter, 2 s spawn grace; 694 tests green.
-- **P7.2 Dismemberment counterplay** `[~]` P0 — **[FLO-417](/FLO/issues/FLO-417)** (Wayland, todo — queued) — soften/gate the E6.1.2 hook (raise SEVER_DAMAGE_THRESHOLD to 0.5, lower SEVER_CHANCE to 0.15) and ship a minimal **bandage pickup** that stops bleeding; the "find a bandage" prompt must reference a real item.
+- **P7.2 Dismemberment counterplay** `[x]` ✅ P0 — **[FLO-417](/FLO/issues/FLO-417)** (Wayland, done) — softened the E6.1.2 hook (threshold 15→20 HP, cap 0.6→0.15, base/ramp halved) and shipped a real **bandage** item (`BANDAGE_ITEM_ID`): it drops from caravans and the `useBandage()` thunk (bound to **B**) spends one to stop bleeding, so the "find a bandage" prompt now points at an item that exists. Docs in health-system.md / economy.md / README.
 - **P7.3 World presence: texture the soldier + populate the spawn area** `[x]` ✅ — **[FLO-419](/FLO/issues/FLO-419)** (Aldric, done, `51ac72f`) — forest presence props (logs/stumps) in spawn clearing.
 - **P7.4 Player-character & ground feel** `[ ]` (Iris-gated) — fix the "arms-raised" idle/
   attack read so the avatar looks like a fighter; give the ground a low-poly material so it

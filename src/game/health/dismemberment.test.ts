@@ -98,6 +98,20 @@ describe('pickLimb', () => {
   })
 })
 
+describe('P7.2 softened balance', () => {
+  it('keeps even an overkill hit a rare, non-routine sever (cap ≤ 0.15)', () => {
+    // Counterplay only matters if losing a limb is the exception, not the rule.
+    expect(DISMEMBER_MAX_CHANCE).toBeLessThanOrEqual(0.15)
+    expect(dismemberChance(10_000)).toBeLessThanOrEqual(0.15)
+  })
+
+  it('never dismembers an ordinary light blow', () => {
+    // A 19 HP hit is below the raised threshold, so it can never take a limb.
+    expect(dismemberChance(DISMEMBER_DAMAGE_THRESHOLD - 1)).toBe(0)
+    expect(shouldSever(DISMEMBER_DAMAGE_THRESHOLD - 1, createInjuryState(), seq(0))).toBe(false)
+  })
+})
+
 describe('resolveDismemberment', () => {
   it('returns a limb when the hit severs (roll under chance, then a pick)', () => {
     // First draw decides the sever (0 < chance), second draw indexes the limb.

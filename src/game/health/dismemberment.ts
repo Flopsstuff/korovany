@@ -25,14 +25,23 @@ import { LIMBS } from './injuryModel'
 import type { Rng } from '../util/rng'
 import { pick } from '../util/rng'
 
-/** Hit damage (HP) below which a hit can never dismember. */
-export const DISMEMBER_DAMAGE_THRESHOLD = 15
+/**
+ * Hit damage (HP) below which a hit can never dismember. Raised in P7.2 (from
+ * 15) so ordinary blows in the spawn area can't lop a limb off a fresh player —
+ * dismemberment is reserved for genuinely heavy hits.
+ */
+export const DISMEMBER_DAMAGE_THRESHOLD = 20
 /** Dismemberment probability for a hit exactly at the threshold. */
-export const DISMEMBER_BASE_CHANCE = 0.1
+export const DISMEMBER_BASE_CHANCE = 0.05
 /** Extra probability per HP of damage above the threshold. */
-export const DISMEMBER_CHANCE_PER_DAMAGE = 0.02
-/** Ceiling on the per-hit chance — even an overkill blow is never a sure sever. */
-export const DISMEMBER_MAX_CHANCE = 0.6
+export const DISMEMBER_CHANCE_PER_DAMAGE = 0.01
+/**
+ * Ceiling on the per-hit chance — even an overkill blow is never a sure sever.
+ * Softened in P7.2 (from 0.6) to ~1-in-7 so losing a limb stays a rare, dramatic
+ * event with real counterplay (the bandage pickup stops the resulting bleed),
+ * not a routine outcome of every big hit.
+ */
+export const DISMEMBER_MAX_CHANCE = 0.15
 
 /**
  * Probability that a hit of `amount` HP severs a limb, ignoring how many limbs

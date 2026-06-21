@@ -37,9 +37,14 @@ tradeable.
 | Item | Value (buy) | Sell (×0.5) |
 | --- | --- | --- |
 | Gold (currency) | 1 | — (never traded) |
+| Bandage | 15 | 7 |
 | Grain | 8 | 4 |
 | Bolt of Cloth | 25 | 12 |
 | Looted Blade | 60 | 30 |
+
+The **Bandage** is also the dismemberment counterplay consumable (P7.2): it drops
+from caravans and can be spent to stop bleeding from a severed limb — see
+[health-system.md](./health-system.md#dismemberment-counterplay-p72).
 
 Price helpers in `src/game/economy/transactions.ts`: `itemValue(id)`,
 `buyPrice(id, qty)`, `unitSellPrice(id)`, `sellPrice(id, qty)`, and

@@ -1,7 +1,9 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import * as injuryModel from '../game/health/injuryModel'
 import type { InjuryState, Limb } from '../game/health/injuryModel'
+import { BANDAGE_ITEM_ID } from '../game/economy'
 import { damagePlayer } from './healthSlice'
+import { dropItem } from './inventorySlice'
 import type { AppDispatch, RootState } from './index'
 
 const injurySlice = createSlice({
@@ -44,6 +46,24 @@ export const tickInjuries =
     const { damage } = injuryModel.tickBleed(before, deltaSeconds)
     dispatch(advanceBleed(deltaSeconds))
     if (damage > 0) dispatch(damagePlayer(damage))
+  }
+
+/**
+ * Dismemberment counterplay (P7.2): spend one carried bandage to stop the
+ * bleeding from a severed limb. A no-op (returns `false`) when the player isn't
+ * bleeding or carries no bandage, so it's safe to fire from a key press without
+ * the HUD having to gate it. On success it consumes one bandage and clears the
+ * bleed, returning `true` so the caller can react (e.g. play a confirmation).
+ */
+export const useBandage =
+  () =>
+  (dispatch: AppDispatch, getState: () => RootState): boolean => {
+    const state = getState()
+    if (!injuryModel.isBleeding(state.injury)) return false
+    if ((state.inventory.counts[BANDAGE_ITEM_ID] ?? 0) <= 0) return false
+    dispatch(dropItem({ itemId: BANDAGE_ITEM_ID, count: 1 }))
+    dispatch(treatPlayerBleeding())
+    return true
   }
 
 // --- Selectors --------------------------------------------------------------

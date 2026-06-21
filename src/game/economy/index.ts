@@ -8,6 +8,7 @@
 
 export {
   ITEMS,
+  BANDAGE_ITEM_ID,
   getItemDef,
   itemName,
   isEquippable,

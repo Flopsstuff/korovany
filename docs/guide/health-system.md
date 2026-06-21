@@ -42,11 +42,10 @@ Alongside it the HUD surfaces the other built-but-previously-invisible systems
 (MPG.6, FLO-366):
 
 - **Bleeding indicator** (`.hud-bleeding`, ARIA `status`) — shown while
-  `selectIsBleeding` is true, with a pulsing dot and a **conditional** prompt
-  (P7.5, FLO-418): `Bleeding — use a bandage` when a `bandage` item is carried,
-  otherwise an honest `Bleeding — losing HP`. It deliberately does **not** say
-  "find a bandage" until the findable bandage pickup ships (P7.2, FLO-417), which
-  owns refining the no-bandage copy then.
+  `selectIsBleeding` is true, with a pulsing dot. The prompt is conditional
+  (P7.2): with no bandage carried it reads "find a bandage"; once a bandage is in
+  the inventory it becomes "press **B** to bandage (N)" — see
+  [Dismemberment counterplay](#dismemberment-counterplay-p72) below.
 - **Score panel** (`.hud-score`, ARIA `group` "Score") — a single inline row
   `Score N · Loot N` (P7.5): **Score** (`selectScore`, the `game.score` tally)
   and **Loot** (`totalItemCount(inventory)`), tabular-nums, separated by a
@@ -135,7 +134,7 @@ Limbs are taken off by combat, not scripted events. The resolver lives in
 
 | Function | Returns | Notes |
 |---|---|---|
-| `dismemberChance(amount)` | `number` | 0 below `DISMEMBER_DAMAGE_THRESHOLD` (15 HP); ramps `DISMEMBER_BASE_CHANCE` + `DISMEMBER_CHANCE_PER_DAMAGE` per HP over it; capped at `DISMEMBER_MAX_CHANCE` (0.6) |
+| `dismemberChance(amount)` | `number` | 0 below `DISMEMBER_DAMAGE_THRESHOLD` (20 HP); ramps `DISMEMBER_BASE_CHANCE` (0.05) + `DISMEMBER_CHANCE_PER_DAMAGE` (0.01) per HP over it; capped at `DISMEMBER_MAX_CHANCE` (0.15) |
 | `intactLimbs(state)` | `Limb[]` | the slots a hit can still take off |
 | `shouldSever(amount, state, rng)` | `boolean` | one roll; false when no limbs remain |
 | `pickLimb(state, rng)` | `Limb \| null` | uniform pick among intact limbs |
@@ -148,6 +147,24 @@ blackout / crawl outcomes — and fires `emitDismember(limb)` on the combat even
 bridge (`src/game/combat/damageEvents.ts`, `onDismember`) so downstream feedback
 (audio, HUD) can subscribe without reaching into the scene. Combat is not
 reproducible, so a plain `Math.random` generator is used (not the seeded RNG).
+
+### Dismemberment counterplay (P7.2)
+
+The hook shipped its punishment (E6.1.2) before its counterplay. P7.2 closes that
+gap on two fronts:
+
+1. **Softened odds.** The constants above were lowered so losing a limb is a rare,
+   dramatic event rather than a routine outcome of every big hit: the threshold
+   rose 15 → 20 HP, the per-hit cap dropped 0.6 → 0.15, and the base/ramp were
+   halved. Ordinary spawn-area blows can no longer maim a fresh player.
+2. **The bandage.** Bleeding can now be *stopped by the player*. `bandage` is a
+   real catalog item (`BANDAGE_ITEM_ID`, `src/game/economy/items.ts`) that drops
+   from caravans (`DEFAULT_CARAVAN_LOOT`). The `useBandage()` thunk
+   (`src/store/injurySlice.ts`) spends one carried bandage and dispatches
+   `treatPlayerBleeding()`; it's a no-op (returns `false`) when the player isn't
+   bleeding or has no bandage. `App.tsx` binds it to the **B** key during play,
+   and the bleeding indicator switches to "press **B** to bandage (N)" once one is
+   carried — so the "find a bandage" prompt now points at an item that exists.
 
 ## Tests
 

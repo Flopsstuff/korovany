@@ -20,6 +20,19 @@ describe('rollLoot — determinism', () => {
   })
 })
 
+describe('default caravan loot — bandage counterplay (P7.2)', () => {
+  it('includes a bandage so the dismemberment prompt references a real drop', () => {
+    expect(ids(DEFAULT_CARAVAN_LOOT).has('bandage')).toBe(true)
+  })
+
+  it('drops at least one bandage across a sample of seeds', () => {
+    const dropped = Array.from({ length: 200 }, (_, seed) =>
+      rollLoot(DEFAULT_CARAVAN_LOOT, createSeededRng(seed)),
+    ).some((drop) => drop.items.some((s) => s.id === 'bandage'))
+    expect(dropped).toBe(true)
+  })
+})
+
 describe('rollLoot — shape & bounds', () => {
   it('only drops items that exist in the table', () => {
     const known = ids(DEFAULT_CARAVAN_LOOT)
