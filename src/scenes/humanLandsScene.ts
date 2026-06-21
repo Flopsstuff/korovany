@@ -37,6 +37,7 @@ import { type AnchorRespawnState, getAnchorsToRearm } from '../game/ai'
 import { getZoneContent, type EncounterKind } from '../game/world'
 import { ZONE_MAPS } from '../game/world/mapProps'
 import { renderMapProps } from './mapPropsRenderer'
+import { type PalaceGuardProp, spawnPalaceGuardProps } from './palaceGuardProp'
 
 /** Zone id used for the human-lands scene's save/corpse persistence. */
 export const HUMAN_LANDS_ZONE_ID = 'human-lands'
@@ -77,6 +78,11 @@ export interface HumanLandsSceneOptions {
   onMinimapTick?: (snapshot: MinimapSnapshot) => void
   /** Display-only stamina push for the HUD (FLO-465); fired on rounded-% change. */
   onStaminaChange?: (current: number, max: number) => void
+  /**
+   * Palace-guard GLB for static toll-gate decor (FLO-471); `null` skips the fetch
+   * (headless tests) but still spawns placement roots.
+   */
+  palaceGuardGlbUrl?: string | null
 }
 
 export interface HumanLandsScene {
@@ -87,6 +93,8 @@ export interface HumanLandsScene {
   readonly caravans: readonly CaravanEnemy[]
   /** All soldier patrols spawned into the zone on enter (MPG.5). */
   readonly soldiers: readonly SoldierEnemy[]
+  /** Static ceremonial palace-guard decor at the toll gate (FLO-471). */
+  readonly palaceGuards: readonly PalaceGuardProp[]
   /** Advance one frame by `dt` seconds (tests drive this directly). */
   step(dt: number): void
   dispose(): void
@@ -135,6 +143,7 @@ export function createHumanLandsScene(
     getLocomotionMode,
     onMinimapTick,
     onStaminaChange,
+    palaceGuardGlbUrl,
   } = options
 
   const engine = createEngine(canvas)
@@ -210,6 +219,8 @@ export function createHumanLandsScene(
   const hitFlash = new HitFlashManager()
   const deathEmphasis = new DeathEmphasisManager(engine as TimeScaleable)
   const screenShake = new ScreenShakeManager()
+
+  const palaceGuards = spawnPalaceGuardProps(scene, undefined, palaceGuardGlbUrl)
 
   const soldiers = HUMAN_LANDS_SOLDIER_SPAWNS.map(
     (spawn) =>
@@ -349,6 +360,7 @@ export function createHumanLandsScene(
     controller,
     caravans,
     soldiers,
+    palaceGuards,
     step: frame,
     dispose() {
       if (disposed) return
@@ -359,6 +371,7 @@ export function createHumanLandsScene(
       engine.stopRenderLoop()
       mapProps.dispose(false, true) // disposes the thin-instanced map + its materials
       for (const mesh of landmarkMeshes) mesh.dispose()
+      for (const g of palaceGuards) g.dispose()
       for (const s of soldiers) s.dispose()
       for (const c of caravans) c.dispose()
       scene.dispose()

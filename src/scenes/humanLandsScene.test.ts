@@ -8,6 +8,7 @@ function boot(opts: Parameters<typeof createHumanLandsScene>[1] = {}) {
   const canvas = document.createElement('canvas')
   return createHumanLandsScene(canvas, {
     heroUrl: null,
+    palaceGuardGlbUrl: null,
     createEngine: () => new NullEngine(),
     ...opts,
   })
@@ -49,6 +50,16 @@ describe('createHumanLandsScene', () => {
     expect(game.soldiers.length).toBeGreaterThanOrEqual(3)
     expect(game.caravans.every((caravan) => !caravan.isDead())).toBe(true)
     expect(game.soldiers.every((soldier) => !soldier.isDead())).toBe(true)
+    game.dispose()
+  })
+
+  it('spawns two static palace-guard decor props at the toll gate (FLO-471)', () => {
+    const game = boot()
+    expect(game.palaceGuards).toHaveLength(2)
+    expect(game.palaceGuards.map((g) => g.id)).toEqual([
+      'palace-guard-toll-left',
+      'palace-guard-toll-right',
+    ])
     game.dispose()
   })
 

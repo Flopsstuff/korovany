@@ -201,6 +201,11 @@ ships preview-only/untextured).
 - **Rig:** ships **static (no skeleton)** — inherits the soldier's mesh.
 - **Verification:** loads headless via `node tools/meshy-3d/smoke_load_glb.mjs
   public/models/empire-palace-guard.glb` → 2 meshes, 2793 tris, no errors.
+- **In-scene (Human Lands):** two static ceremonial guards flank the Empire toll
+  gate on the Salt Road, spawned by `spawnPalaceGuardProps` in
+  `src/scenes/palaceGuardProp.ts` and wired from `humanLandsScene.ts` (FLO-471).
+  No AI or combat registration — pure decor. The textured GLB gets the same
+  in-engine `flatShade` conform as other characters (FLO-452).
 
 ### Roadside shrine (Salt Road) — Phase 3.5 (MPG)
 
