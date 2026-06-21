@@ -32,6 +32,8 @@ import { emitAttack, emitDamage, emitKill, emitShake } from '../game/combat/dama
 import { SoldierEnemy } from './soldierEnemy'
 import { CaravanEnemy } from './caravanEnemy'
 import { getZoneContent, type EncounterKind } from '../game/world'
+import { ZONE_MAPS } from '../game/world/mapProps'
+import { renderMapProps } from './mapPropsRenderer'
 
 /** Zone id used for the human-lands scene's save/corpse persistence. */
 export const HUMAN_LANDS_ZONE_ID = 'human-lands'
@@ -127,6 +129,13 @@ export function createHumanLandsScene(
   // walled by a perimeter bounding box (FLO-368). `clampToWorld` keeps the
   // capsule inside the walls each frame (the controller has no wall collision).
   const { clamp: clampToWorld } = createWorldBounds(scene, new Color3(0.62, 0.55, 0.38))
+
+  // Populate the wider world from the spec's 20×20 text map (FLO-445): road,
+  // farms, hedges, pines, dry riverbed, toll gate, shrine, watchtower, overlook,
+  // caravan staging and barriers as greybox primitives spread across the full
+  // 600 m world so it no longer reads as an empty box. Thin-instanced, ~1 draw
+  // call per symbol; non-pickable so the player passes through. Swap to GLBs later.
+  const mapProps = renderMapProps(scene, ZONE_MAPS[HUMAN_LANDS_ZONE_ID])
 
   // Greybox marker boxes standing in for the Salt Road's landmarks (toll gate,
   // shrine, watchtower) so the zone reads as visually distinct from the forest.
@@ -290,6 +299,7 @@ export function createHumanLandsScene(
       window.removeEventListener('resize', onResize)
       input.dispose()
       engine.stopRenderLoop()
+      mapProps.dispose(false, true) // disposes the thin-instanced map + its materials
       for (const mesh of landmarkMeshes) mesh.dispose()
       for (const s of soldiers) s.dispose()
       for (const c of caravans) c.dispose()

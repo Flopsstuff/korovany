@@ -7,15 +7,15 @@ import {
   Vector3,
   VertexBuffer,
 } from '@babylonjs/core'
+import { WORLD_SIZE } from '../game/world/gridSize'
 
 /**
- * Side length of a zone's playable ground plane, in world units. The Phase-3
- * zones shipped a cramped 60×60 clearing; per board feedback (FLO-357 →
- * FLO-368) the world is scaled **10× per axis** (100× area) so it no longer
- * reads as a tiny empty box. New zones should size their ground from this
- * constant rather than re-hardcoding a magic number.
+ * Side length of a zone's playable ground plane, in world units. Re-exported from
+ * the Babylon-free {@link WORLD_SIZE} constant module (FLO-445) so the pure
+ * map-prop builder can share it without importing this renderer. New zones should
+ * size their ground from this constant rather than re-hardcoding a magic number.
  */
-export const WORLD_SIZE = 600
+export { WORLD_SIZE }
 
 /** Height of the perimeter walls, tall enough to read as a hard boundary. */
 const WALL_HEIGHT = 10

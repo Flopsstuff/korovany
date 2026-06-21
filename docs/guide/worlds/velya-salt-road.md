@@ -84,6 +84,14 @@ Each row contains 20 cells. North is row 01, west is column 01.
 | 19 | `FFF..RR...........PP` |
 | 20 | `FFFF..RR............` |
 
+> **Code binding (FLO-445):** this grid + its legend are mirrored verbatim in
+> `src/game/world/mapProps.ts` (`HUMAN_LANDS_MAP`) and rendered as greybox
+> primitives spread across the full 600 m world by `src/scenes/mapPropsRenderer.ts`
+> (thin-instanced, one draw call per symbol). Until real models exist each symbol
+> renders as a sized/coloured box, slab, cylinder, cone, or sphere; swap a symbol's
+> base mesh for a streamed GLB without touching the placement data. **Keep this
+> table and `HUMAN_LANDS_MAP` in sync** — the builder enforces the 20×20 shape.
+
 ## Landmark briefs
 
 | Landmark | Player use | Implementation notes |

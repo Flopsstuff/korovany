@@ -40,6 +40,8 @@ korovany/
 | Commander orders / squad AI    | `src/game/ai/orders.ts` + `src/game/ai/soldierFSM.ts` — see [Enemy AI](./enemy-ai) |
 | Character progression (XP/stats/skills) | `src/game/progression/` + `src/store/progressionSlice.ts` — see [Character progression](./character-progression) |
 | Asset streaming (GLB on demand)| `src/game/streaming/`               |
+| Zone landmark/encounter content| `src/game/world/zoneContent.ts` (data) — seeded from `docs/guide/worlds/*.md` |
+| Zone map population (greybox)  | `src/game/world/mapProps.ts` (20×20 grid → prop data) + `src/scenes/mapPropsRenderer.ts` (thin-instanced render) — FLO-445 |
 | Persistent enemy corpses       | `src/game/corpses/` + `src/scenes/corpseManager.ts` — see [Corpses](./corpses) |
 | Save/load (IndexedDB)          | `src/game/save/`                    |
 | User settings (rebind, quality)| `src/game/settings/` — see [Settings](./settings) |

@@ -45,6 +45,8 @@ import { ArrowVolley } from './arrowVolley'
 import { CaravanEnemy } from './caravanEnemy'
 import { CorpseManager } from './corpseManager'
 import { getZoneContent, type EncounterKind } from '../game/world'
+import { ZONE_MAPS } from '../game/world/mapProps'
+import { renderMapProps } from './mapPropsRenderer'
 
 /** Zone id used for the forest scene's corpse persistence. */
 export const FOREST_ZONE_ID = 'forest'
@@ -386,6 +388,14 @@ export function createForestScene(
   const { clamp: clampToWorld } = createWorldBounds(scene, new Color3(0.27, 0.36, 0.21))
   createForestSpawnProps(scene)
 
+  // Populate the wider world from the spec's 20×20 text map (FLO-445): dense and
+  // sparse tree fields, trails, the village ring + giant stump hall, elevated
+  // huts, rope bridges, marsh pools, the moonwell, axecut clearing and empire camp
+  // — greybox primitives spread across the full 600 m world so the forest reads as
+  // a thicket, not an empty clearing. Thin-instanced (~1 draw call per symbol),
+  // non-pickable so the player passes through; swap to streamed GLBs later.
+  const mapProps = renderMapProps(scene, ZONE_MAPS[FOREST_ZONE_ID])
+
   // ------------------------------------------------------------------
   // Streaming — the zone's environment is streamed via the
   // ZoneStreamingManager (E3.2 / FLO-345). Entering the forest manifest loads
@@ -633,6 +643,7 @@ export function createForestScene(
         `[zone] dispose ${FOREST_ZONE_ID} (${zoneManager.residentInstanceCount} streamed instances)`,
       )
       zoneManager.dispose()
+      mapProps.dispose(false, true) // disposes the thin-instanced map + its materials
       for (const s of soldiers) s.dispose()
       for (const a of archers) a.dispose()
       for (const c of caravans) c.dispose()
