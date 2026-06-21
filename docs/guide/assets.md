@@ -24,18 +24,19 @@ any Community/showcase page.
 
 ## Characters & props
 
-> **Player avatar — procedural is live; v1.2-compliant GLB now exists (FLO-422 → FLO-440).**
-> The live player visual is built procedurally from flat-shaded box primitives in a
-> boxer's guard — see `src/scenes/playerAvatar.ts` (`buildPlayerAvatar`). It was adopted
-> (FLO-422) because the then-shipped hero GLB read as a wide arms-out "scarecrow" T-pose
-> with a semi-realistic, off-spec surface. **Both defects are now fixed in the GLB:**
-> FLO-434 reposed it to a natural arms-down survivor idle, and FLO-440 re-textured it to
-> a flat, matte, unlit base-color (v1.2-compliant — see hero README v13). The GLB is
-> still **rig-less / static** and is **not yet mounted** — swapping `buildPlayerAvatar`
-> → GLB load across forest/human-lands/controllerPlayground is the engine-wiring
-> follow-up (Daedalus). When wired, apply `mesh.convertToFlatShadedMesh()` + a matte
-> material at load (as `worldBounds.ts` does for the ground) so the faceted hard-edge
-> read lands. It remains a two-way door behind the same `root` + animator contract.
+> **Player avatar — flat-albedo survivor GLB, faceted in-engine, live (FLO-440 → FLO-443).**
+> The live player visual is the `korovany_hero_player-default.glb` survivor avatar
+> (2,884 tris · 1× 1024 flat base-color), mounted by `mountSurvivorAvatar`
+> (`src/scenes/survivorAvatar.ts`) across the forest, human-lands, and
+> controller-playground scenes. An earlier interim used a procedural box-fighter
+> (`playerAvatar.ts`, FLO-422) while the GLB carried two defects — a wide arms-out
+> "scarecrow" T-pose and a semi-realistic surface; **both are fixed in the GLB**:
+> FLO-434 reposed it to a natural arms-down survivor idle, FLO-440 re-textured it to
+> a flat, matte, unlit base-color (v1.2-compliant — see hero README v13), and FLO-443
+> wired it in (retiring the box-fighter). The GLB is **rig-less**: the mount applies
+> `mesh.convertToFlatShadedMesh()` + a matte material at load (as `worldBounds.ts`
+> does for the ground) so the faceted hard-edge read lands, and whole-body
+> bob/lean/lunge/topple drive the single `root` via the animator contract.
 
 | Asset | File | Tris | Size | Rig | Meshy task id |
 |-------|------|------|------|-----|---------------|

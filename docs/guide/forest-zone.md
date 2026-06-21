@@ -62,24 +62,28 @@ Meshy pipeline under visual-language v1.2 (≤ 3000 tris). Register them via
 
 ## Avatar & ground feel
 
-The player is rendered by a **procedural low-poly fighter** built in
-`buildPlayerAvatar` (`src/scenes/playerAvatar.ts`) from flat-shaded box
-primitives — head, torso, legs/boots, and arms posed in a boxer's guard (fists
-up beside the head, elbows out, staggered stance, torso braced slightly forward).
-The collision capsule itself is invisible; the avatar `root` is parented to it at
-`(0, -0.9, 0)` so the feet sit on the ground plane (the "ground feel"), every
-part is `isPickable: false` so it never intercepts the controller's downward ray,
-and the `root` is handed to `controller.animator.node` for procedural motion
+The player is rendered by the **flat-albedo survivor GLB**
+(`korovany_hero_player-default.glb`, 2,884 tris · 1× 1024 flat base-color),
+mounted by `mountSurvivorAvatar` (`src/scenes/survivorAvatar.ts`) and **faceted
+in-engine** (FLO-443). The mount is **fire-and-forget**, mirroring
+`soldierEnemy`/`archerEnemy`: the scene factory stays synchronous, gameplay runs
+on the invisible capsule from frame 0, and the visual mesh pops in (~200 ms) once
+the GLB resolves. At load each geometry mesh gets `convertToFlatShadedMesh()` (so
+the silhouette reads hard-faceted, not smooth — the v1.2 low-poly read) plus a
+matte near-zero-specular material; the welded `root` is parented to the capsule at
+`(0, -0.9, 0)` so the feet sit on the ground plane (the "ground feel"), every part
+is `isPickable: false` so it never intercepts the controller's downward ray, and
+the `root` is handed to `controller.animator.node` for procedural motion
 (bob/lean/lunge/topple). `heroUrl: null` skips the avatar for headless tests; any
-other value (including the default) mounts the procedural fighter.
+other value (including the default GLB path) mounts the survivor.
 
-**Why procedural, not the hero GLB (P7.4 / FLO-422).** The default hero GLB is a
-single welded mesh (`node0`, 2894 tris, one material, **no skeleton/bones**) baked
-in a splayed arms-out pose — it reads as a surrendering bystander, not a fighter,
-and **cannot be reposed in code** (no rig to rotate, no separable arm sub-mesh).
-Rather than block on a 3D-art re-author, the player is built from geometry in the
-target fighter pose at zero asset cost. It is a two-way door: a future rigged hero
-can drop back in behind the same `root` + animator contract.
+**Rig-less, animated procedurally (FLO-440 → FLO-443).** The GLB is a single
+welded mesh with **no skeleton/bones**, re-textured in FLO-440 to a flat, matte,
+unlit base-color (v1.2-compliant) and posed in a natural relaxed survivor idle.
+bob/lean/lunge/topple are whole-body `root` transforms, so the rig-less single
+mesh satisfies the animator contract unchanged. The capsule is the placeholder if
+the fetch ever fails; a cheap placeholder box could be added later if the brief
+pop-in matters — it currently does not.
 
 ## Scene options
 
