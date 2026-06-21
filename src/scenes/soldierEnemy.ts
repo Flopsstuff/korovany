@@ -29,6 +29,47 @@ import type { System } from '../game/loop'
 /** FLO-311 Empire soldier mesh — web-ready GLB shipped in /public/models. */
 export const DEFAULT_SOLDIER_GLB = '/models/empire-soldier.glb'
 
+type SoldierMaterialRole = 'coat' | 'leather' | 'metal'
+
+const SOLDIER_PALETTE: Record<SoldierMaterialRole, Color3> = {
+  coat: new Color3(0.22, 0.34, 0.24),
+  leather: new Color3(0.34, 0.18, 0.09),
+  metal: new Color3(0.43, 0.39, 0.32),
+}
+
+function soldierMaterial(scene: Scene, role: SoldierMaterialRole): StandardMaterial {
+  const mat = new StandardMaterial(`empireSoldier:${role}`, scene)
+  mat.diffuseColor = SOLDIER_PALETTE[role]
+  mat.specularColor = new Color3(0.08, 0.08, 0.08)
+  return mat
+}
+
+function roleForMesh(mesh: AbstractMesh, index: number): SoldierMaterialRole {
+  const name = mesh.name.toLowerCase()
+  if (name.includes('rifle') || name.includes('musket') || name.includes('gun')) return 'metal'
+  if (name.includes('boot') || name.includes('belt') || name.includes('strap')) return 'leather'
+  return index % 3 === 2 ? 'leather' : 'coat'
+}
+
+/**
+ * The FLO-311 soldier asset is a preview GLB with no baked texture pass. This
+ * in-engine palette gives every loaded submesh a readable Empire uniform until
+ * a future binary retexture asset replaces it.
+ */
+export function applyEmpireSoldierTexture(scene: Scene, meshes: readonly AbstractMesh[]): void {
+  const materials = {
+    coat: soldierMaterial(scene, 'coat'),
+    leather: soldierMaterial(scene, 'leather'),
+    metal: soldierMaterial(scene, 'metal'),
+  }
+
+  meshes
+    .filter((mesh) => mesh.getTotalVertices() > 0)
+    .forEach((mesh, index) => {
+      mesh.material = materials[roleForMesh(mesh, index)]
+    })
+}
+
 export interface SoldierEnemyOptions {
   spawn: Vector3
   params?: SoldierFSMParams
@@ -82,7 +123,8 @@ export class SoldierEnemy implements System, Damageable {
     this.mesh.isPickable = false
 
     const mat = new StandardMaterial('soldierMat', scene)
-    mat.diffuseColor = new Color3(0.6, 0.25, 0.1)
+    mat.diffuseColor = SOLDIER_PALETTE.coat
+    mat.specularColor = new Color3(0.08, 0.08, 0.08)
     this.mesh.material = mat
 
     this.animator = new CharacterAnimator(-0.9, 0)
@@ -94,6 +136,7 @@ export class SoldierEnemy implements System, Damageable {
       void import('./modelLoader')
         .then(({ loadModel }) =>
           loadModel(scene, glbUrl, { targetSize: 1.8, groundIt: true }).then((model) => {
+            applyEmpireSoldierTexture(scene, model.meshes)
             model.root.parent = this.mesh
             model.root.position = new Vector3(0, -0.9, 0)
             for (const m of model.meshes) m.isPickable = false

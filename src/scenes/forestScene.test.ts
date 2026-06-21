@@ -2,8 +2,10 @@ import { NullEngine, Scene, Vector3 } from '@babylonjs/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   FOREST_TREE_ASSET_ID,
+  FOREST_SPAWN_PROP_SPECS,
   FOREST_ZONE_ID,
   WOODEN_HUT_ASSET_ID,
+  createForestSpawnProps,
   createForestScene,
   reapDeadSoldiers,
   seedForestAssets,
@@ -61,6 +63,23 @@ describe('seedForestAssets', () => {
   })
 })
 
+describe('createForestSpawnProps', () => {
+  it('creates every configured spawn-area prop', () => {
+    const scene = new Scene(new NullEngine())
+    createForestSpawnProps(scene)
+    const propMeshes = scene.meshes.filter((mesh) => mesh.name.startsWith('forest-prop:'))
+    expect(propMeshes.length).toBeGreaterThanOrEqual(FOREST_SPAWN_PROP_SPECS.length)
+    expect(scene.getTransformNodeByName('forest-spawn-props')).not.toBeNull()
+  })
+
+  it('keeps the immediate player spawn radius clear', () => {
+    for (const spec of FOREST_SPAWN_PROP_SPECS) {
+      const distance = Math.hypot(spec.position.x, spec.position.z)
+      expect(distance).toBeGreaterThanOrEqual(3.5)
+    }
+  })
+})
+
 describe('createForestScene', () => {
   it('boots a live scene with an active camera', () => {
     const game = boot()
@@ -81,6 +100,14 @@ describe('createForestScene', () => {
     const ground = game.scene.getMeshByName('ground')
     expect(ground).not.toBeNull()
     expect(ground!.isPickable).toBe(true)
+    game.dispose()
+  })
+
+  it('populates the spawn clearing with lightweight forest props', () => {
+    const game = boot()
+    expect(game.scene.getTransformNodeByName('forest-spawn-props')).not.toBeNull()
+    expect(game.scene.meshes.some((mesh) => mesh.name.startsWith('forest-prop:log:'))).toBe(true)
+    expect(game.scene.meshes.some((mesh) => mesh.name.startsWith('forest-prop:stump:'))).toBe(true)
     game.dispose()
   })
 

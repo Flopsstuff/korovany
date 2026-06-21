@@ -1,10 +1,13 @@
 import {
   type AbstractEngine,
+  type AbstractMesh,
   Color3,
   Engine,
   HemisphericLight,
+  MeshBuilder,
   Scene,
   StandardMaterial,
+  TransformNode,
   Vector3,
 } from '@babylonjs/core'
 import { createWorldBounds } from './worldBounds'
@@ -73,6 +76,27 @@ export function reapDeadSoldiers(
 
 export { FOREST_TREE_ASSET_ID, WOODEN_HUT_ASSET_ID }
 
+type ForestSpawnPropKind = 'stump' | 'log' | 'rock' | 'shrub'
+
+export interface ForestSpawnPropSpec {
+  readonly kind: ForestSpawnPropKind
+  readonly position: Readonly<{ x: number; z: number }>
+  readonly yaw: number
+  readonly scale: number
+}
+
+/** Ground clutter around the forest spawn; keeps the inner 3.5m combat radius open. */
+export const FOREST_SPAWN_PROP_SPECS: readonly ForestSpawnPropSpec[] = [
+  { kind: 'stump', position: { x: 4.2, z: 1.7 }, yaw: 0.2, scale: 1 },
+  { kind: 'log', position: { x: -4.8, z: 2.6 }, yaw: -0.85, scale: 1.1 },
+  { kind: 'rock', position: { x: 2.8, z: -4.9 }, yaw: 0.5, scale: 0.9 },
+  { kind: 'shrub', position: { x: -3.7, z: -4.2 }, yaw: 0.1, scale: 1 },
+  { kind: 'log', position: { x: 6.7, z: -2.4 }, yaw: 0.6, scale: 0.85 },
+  { kind: 'rock', position: { x: -6.2, z: -1.6 }, yaw: -0.3, scale: 0.75 },
+  { kind: 'stump', position: { x: 1.8, z: 6.1 }, yaw: -0.1, scale: 0.8 },
+  { kind: 'shrub', position: { x: -1.5, z: 6.5 }, yaw: 0.8, scale: 0.9 },
+]
+
 /** Seed the forest environment assets into a registry. */
 export function seedForestAssets(registry: AssetRegistry): void {
   registry.register(FOREST_TREE_ASSET_ID, {
@@ -83,6 +107,94 @@ export function seedForestAssets(registry: AssetRegistry): void {
     url: '/models/wooden-hut.glb',
     metadata: { label: 'Wooden hut', targetSize: 3 },
   })
+}
+
+function propMaterial(scene: Scene, name: string, color: Color3): StandardMaterial {
+  const mat = new StandardMaterial(name, scene)
+  mat.diffuseColor = color
+  mat.specularColor = new Color3(0.05, 0.05, 0.05)
+  return mat
+}
+
+/**
+ * Create cheap procedural clutter around the player spawn so the forest reads
+ * as inhabited before distant streamed GLBs finish loading.
+ */
+export function createForestSpawnProps(
+  scene: Scene,
+  specs: readonly ForestSpawnPropSpec[] = FOREST_SPAWN_PROP_SPECS,
+): TransformNode {
+  const root = new TransformNode('forest-spawn-props', scene)
+  const bark = propMaterial(scene, 'forestPropBarkMat', new Color3(0.36, 0.22, 0.12))
+  const cut = propMaterial(scene, 'forestPropCutWoodMat', new Color3(0.63, 0.49, 0.31))
+  const stone = propMaterial(scene, 'forestPropStoneMat', new Color3(0.34, 0.36, 0.32))
+  const leaf = propMaterial(scene, 'forestPropLeafMat', new Color3(0.12, 0.34, 0.15))
+
+  const attach = (mesh: AbstractMesh, spec: ForestSpawnPropSpec) => {
+    mesh.parent = root
+    mesh.position.x = spec.position.x
+    mesh.position.z = spec.position.z
+    mesh.rotation.y = spec.yaw
+    mesh.isPickable = false
+  }
+
+  specs.forEach((spec, index) => {
+    if (spec.kind === 'stump') {
+      const stump = MeshBuilder.CreateCylinder(
+        `forest-prop:stump:${index}`,
+        { height: 0.55 * spec.scale, diameterTop: 0.55 * spec.scale, diameterBottom: 0.7 * spec.scale, tessellation: 7 },
+        scene,
+      )
+      stump.position.y = 0.275 * spec.scale
+      stump.material = bark
+      attach(stump, spec)
+      const top = MeshBuilder.CreateCylinder(
+        `forest-prop:stump-cut:${index}`,
+        { height: 0.03, diameter: 0.5 * spec.scale, tessellation: 7 },
+        scene,
+      )
+      top.position.y = 0.565 * spec.scale
+      top.material = cut
+      attach(top, spec)
+      return
+    }
+
+    if (spec.kind === 'log') {
+      const log = MeshBuilder.CreateCylinder(
+        `forest-prop:log:${index}`,
+        { height: 1.45 * spec.scale, diameter: 0.36 * spec.scale, tessellation: 8 },
+        scene,
+      )
+      log.position.y = 0.18 * spec.scale
+      log.rotation.z = Math.PI / 2
+      log.material = bark
+      attach(log, spec)
+      return
+    }
+
+    if (spec.kind === 'rock') {
+      const rock = MeshBuilder.CreateSphere(
+        `forest-prop:rock:${index}`,
+        { diameterX: 0.8 * spec.scale, diameterY: 0.42 * spec.scale, diameterZ: 0.58 * spec.scale, segments: 5 },
+        scene,
+      )
+      rock.position.y = 0.21 * spec.scale
+      rock.material = stone
+      attach(rock, spec)
+      return
+    }
+
+    const shrub = MeshBuilder.CreateSphere(
+      `forest-prop:shrub:${index}`,
+      { diameterX: 0.9 * spec.scale, diameterY: 0.55 * spec.scale, diameterZ: 0.75 * spec.scale, segments: 6 },
+      scene,
+    )
+    shrub.position.y = 0.28 * spec.scale
+    shrub.material = leaf
+    attach(shrub, spec)
+  })
+
+  return root
 }
 
 // ---------------------------------------------------------------------------
@@ -212,6 +324,7 @@ export function createForestScene(
   // each frame, since the controller has no horizontal collision of its own.
   // ------------------------------------------------------------------
   const { clamp: clampToWorld } = createWorldBounds(scene, new Color3(0.2, 0.38, 0.15))
+  createForestSpawnProps(scene)
 
   // ------------------------------------------------------------------
   // Streaming — the zone's environment is streamed via the

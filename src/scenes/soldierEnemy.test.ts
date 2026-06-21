@@ -1,6 +1,6 @@
-import { NullEngine, Scene, Vector3 } from '@babylonjs/core'
+import { MeshBuilder, NullEngine, Scene, StandardMaterial, Vector3 } from '@babylonjs/core'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { SoldierEnemy } from './soldierEnemy'
+import { SoldierEnemy, applyEmpireSoldierTexture } from './soldierEnemy'
 import { DEFAULT_SOLDIER_PARAMS } from '../game/ai'
 
 // Integration coverage for the Babylon wrapper that drives the pure FSM (the
@@ -122,5 +122,20 @@ describe('SoldierEnemy (scene integration)', () => {
 
     expect(damageDealt).toEqual([])
     expect(targetDamage).toEqual([P.attackDamage])
+  })
+})
+
+describe('applyEmpireSoldierTexture', () => {
+  it('assigns a readable Empire palette to loaded soldier meshes', () => {
+    const scene = makeScene()
+    const body = MeshBuilder.CreateBox('soldier-body', {}, scene)
+    const musket = MeshBuilder.CreateBox('soldier-musket', {}, scene)
+    const boots = MeshBuilder.CreateBox('soldier-boots', {}, scene)
+
+    applyEmpireSoldierTexture(scene, [body, musket, boots])
+
+    expect((body.material as StandardMaterial).name).toBe('empireSoldier:coat')
+    expect((musket.material as StandardMaterial).name).toBe('empireSoldier:metal')
+    expect((boots.material as StandardMaterial).name).toBe('empireSoldier:leather')
   })
 })

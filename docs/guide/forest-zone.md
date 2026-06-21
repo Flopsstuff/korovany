@@ -3,7 +3,8 @@
 The forest zone (E1.3) is the first playable environment in the Phase-1 vertical
 slice. It lives in `src/scenes/forestScene.ts` and wires together the full
 gameplay spine — streaming assets, third-person controller, follow camera — over
-a grassy ground plane with a sparse scatter of low-poly trees and huts.
+a grassy ground plane with a sparse scatter of low-poly trees, huts, and
+lightweight stump/log/rock/shrub clutter around the spawn clearing.
 
 ## Try it
 
@@ -45,9 +46,10 @@ Meshy pipeline under visual-language v1.2 (≤ 3000 tris). Register them via
    `seedForestAssets` registers the tree and hut URLs. Each prop calls
    `spawnStreamedInstance` which shows a placeholder box immediately and swaps
    to the GLB on load.
-3. **Props** — 12 trees and 3 huts placed at hard-coded (x, z) coordinates that
-   keep a 4-unit clear zone around the spawn point. Static for the stub; LOD
-   and procedural scatter are Phase 5.
+3. **Props** — 12 streamed trees and 3 streamed huts placed at hard-coded (x, z)
+   coordinates, plus cheap procedural stumps, logs, rocks, and shrubs around the
+   spawn clearing. The inner 3.5-unit radius stays clear so the first combat
+   beats have readable movement space.
 4. **Controller + camera** — the same `CharacterController` and `ThirdPersonCamera`
    from E1.1, spawned at `(0, 2, 0)` above the ground.
 
@@ -87,16 +89,17 @@ never while paused.
 
 ## Enemies & corpses
 
-The forest spawns one Empire soldier (E2.3, see [enemy-ai.md](enemy-ai.md)). When
-a soldier dies the scene converts it into a persistent, inert corpse via
+The forest spawns at least five Empire soldier patrols (MPG.5, see
+[enemy-ai.md](enemy-ai.md)). When a soldier dies the scene converts it into a
+persistent, inert corpse via
 `reapDeadSoldiers` + `CorpseManager`. Corpses are capped and survive a zone
 re-enter within a session — full details in [corpses.md](corpses.md).
 
 ## Tests
 
-- `forestScene.test.ts` — `seedForestAssets` (registry entries + sizes), scene
-  boot (live camera, capsule, ground pickable), dispose idempotency, corpse
-  re-spawn on boot, the `reapDeadSoldiers` live→corpse transition, and the
-  **pause-gating** regression (FLO-326): stepping the scene while paused moves no
-  soldier and deals no player damage, with a live control proving combat does
-  advance when unpaused.
+- `forestScene.test.ts` — `seedForestAssets` (registry entries + sizes), spawn
+  clutter placement, scene boot (live camera, capsule, ground pickable), dispose
+  idempotency, corpse re-spawn on boot, the `reapDeadSoldiers` live→corpse
+  transition, and the **pause-gating** regression (FLO-326): stepping the scene
+  while paused moves no soldier and deals no player damage, with a live control
+  proving combat does advance when unpaused.

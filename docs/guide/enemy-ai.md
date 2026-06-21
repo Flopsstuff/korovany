@@ -97,8 +97,12 @@ render loop:
 mounts the **FLO-311 Empire soldier GLB** (`/models/empire-soldier.glb`) onto it,
 mirroring how the hero model is parented to the player capsule. The GLB load is
 best-effort: if the model can't be fetched (e.g. headless tests), the bare
-capsule placeholder stays visible. Pass `glbUrl: null` to force the placeholder.
-On death the mesh topples (rotates 90°) and stays in place for E2.4 to take over.
+capsule placeholder stays visible. The FLO-311 GLB is a preview mesh with no
+baked texture pass, so `applyEmpireSoldierTexture()` assigns an in-engine Empire
+palette (green coat, brown leather, muted metal) to loaded submeshes and the
+placeholder capsule uses the same coat tone. Pass `glbUrl: null` to force the
+placeholder. On death the mesh topples procedurally and stays in place for E2.4
+to take over.
 
 ## Spawn
 
@@ -111,4 +115,6 @@ capsule half-height (`0.9`) so each patrol rests on the ground.
 
 `src/game/ai/orders.test.ts` covers command intake validation. `src/game/ai/soldierFSM.test.ts`
 covers default FSM transitions plus ordered follow/hold/move/attack behaviours.
-`src/scenes/ordersPlayground.test.ts` smoke-tests the dev scene wiring.
+`src/scenes/ordersPlayground.test.ts` smoke-tests the dev scene wiring, and
+`src/scenes/soldierEnemy.test.ts` covers the scene wrapper plus the in-engine
+soldier material palette.
