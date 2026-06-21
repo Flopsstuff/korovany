@@ -17,7 +17,7 @@ are mirrored into Redux so the HUD can show “Loading…”.
 | `placeholder.ts`        | `createPlaceholderBox` — 1×1 box until the GLB arrives.              |
 | `streamedInstance.ts`   | `spawnStreamedInstance` — placeholder → model swap (error-safe).     |
 | `zoneStreaming.ts`      | `ZoneStreamingManager` — load a zone's content on entry, dispose the zone left behind (FLO-333). |
-| `treeImpostor.ts`       | `attachTreeImpostor` — billboard LOD for distant trees + `measureLODRender` (FLO-394). |
+| `treeImpostor.ts`       | `attachTreeImpostor` — billboard LOD for distant trees with anti-pop hysteresis + `measureLODRender` (FLO-394/393). |
 | `index.ts`              | `createAssetStreaming` factory + public barrel.                      |
 
 Babylon imports are isolated to the loader glue and placeholder helpers; the
@@ -141,6 +141,7 @@ import { attachTreeImpostor, DEFAULT_IMPOSTOR_SWAP_DISTANCE } from '../game/stre
 const tree = await loadModel(scene, '/models/forest-tree.glb', { targetSize: 4 })
 const impostor = attachTreeImpostor(scene, tree.meshes, {
   swapDistance: 35, // camera distance (units) beyond which the billboard takes over
+  hysteresisBand: 5, // anti-pop dead-zone half-width (default); 0 = hard cut
   // texture: sharedAtlas, // reuse one bake across many trees of the same species
 })
 // …on teardown:
@@ -164,11 +165,20 @@ axis to face the camera. Under a headless `NullEngine` (tests) the bake is a
 no-op and the plane falls back to a flat green stand-in; the LOD wiring is
 identical.
 
-**Swap pop is acceptable (this ticket).** The mesh→billboard switch is a hard
-cut. Hiding it with hysteresis / cross-fade is **E5.2 (FLO-393)** and
-thin-instancing the whole forest is **E5.3** — both deliberately out of scope
-here. A configurable `cullDistance` can drop the impostor entirely past a far
-range.
+**Anti-pop hysteresis (E5.2, FLO-393).** A single-distance swap flickers when the
+camera lingers right on the threshold. `attachTreeImpostor` wraps the source
+meshes' `getLOD` with a small stateful dead-zone: the full→impostor swap fires at
+`swapDistance + hysteresisBand` and only reverts at `swapDistance − hysteresisBand`,
+so the state can't oscillate inside the band. Because Babylon already calls
+`getLOD` once per mesh per frame during active-mesh evaluation, this needs **no
+loop of its own** and stays per-instance — there is no separate LOD manager. All
+of a tree's meshes share one resolved state (distance measured from the primary's
+bounding sphere), so the canopy billboard and the trunk cull in lockstep rather
+than a few units apart. `hysteresisBand` defaults to
+`DEFAULT_HYSTERESIS_BAND` (5 units); pass `0` for a hard single-distance cut. The
+same dead-zone is applied to the optional `cullDistance` boundary, which can drop
+the impostor entirely past a far range. Thin-instancing the whole forest remains
+**E5.3**.
 
 **Measuring the win.** `measureLODRender(sources, camera)` resolves each source
 mesh through its LOD chain (full mesh → impostor → culled) and sums the meshes +

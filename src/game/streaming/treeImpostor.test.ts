@@ -10,6 +10,7 @@ import {
 } from '@babylonjs/core'
 import { describe, expect, it } from 'vitest'
 import {
+  DEFAULT_HYSTERESIS_BAND,
   DEFAULT_IMPOSTOR_SWAP_DISTANCE,
   attachTreeImpostor,
   measureLODRender,
@@ -156,5 +157,88 @@ describe('measureLODRender — dense forest reduction', () => {
     expect(stats.triangles).toBe(400)
     // Order-of-magnitude reduction vs the full forest.
     expect(stats.triangles).toBeLessThan(fullTriangles / 10)
+  })
+})
+
+describe('attachTreeImpostor — anti-pop hysteresis (E5.2)', () => {
+  it('exposes a default hysteresis band', () => {
+    expect(DEFAULT_HYSTERESIS_BAND).toBeGreaterThan(0)
+  })
+
+  it('holds the LOD across a dead-zone in both directions (no flicker)', () => {
+    const { scene } = boot()
+    const { canopy } = makeTree(scene)
+    attachTreeImpostor(scene, [canopy], { swapDistance: 20, hysteresisBand: 5 })
+    const impostorName = 'tree-impostor'
+
+    // Approach from close → full mesh.
+    expect(canopy.getLOD(cameraAt(scene, 5))).toBe(canopy)
+    // Past the swap distance but inside the dead-zone (20 < d < 25): still full,
+    // the swap does NOT fire early.
+    expect(canopy.getLOD(cameraAt(scene, 22))).toBe(canopy)
+    // Beyond the far edge (d > 25): now the impostor takes over.
+    expect(canopy.getLOD(cameraAt(scene, 27))?.name).toBe(impostorName)
+    // Moving back into the dead-zone (15 < d < 20): stays impostor, no flip back.
+    expect(canopy.getLOD(cameraAt(scene, 18))?.name).toBe(impostorName)
+    // Below the near edge (d < 15): reverts to the full mesh.
+    expect(canopy.getLOD(cameraAt(scene, 12))).toBe(canopy)
+  })
+
+  it('swaps the canopy and culls the trunk in lockstep (coherent tree)', () => {
+    const { scene } = boot()
+    const { meshes, canopy, trunk } = makeTree(scene)
+    attachTreeImpostor(scene, meshes, { swapDistance: 20, hysteresisBand: 5 })
+
+    // Inside the dead-zone the whole tree stays full — the trunk must not cull a
+    // few units before the canopy billboards.
+    const deadZone = cameraAt(scene, 22)
+    expect(canopy.getLOD(deadZone)).toBe(canopy)
+    expect(trunk.getLOD(deadZone)).toBe(trunk)
+
+    // Past the far edge both flip together: canopy → billboard, trunk → culled.
+    const out = cameraAt(scene, 30)
+    expect(canopy.getLOD(out)?.name).toBe('tree-impostor')
+    expect(trunk.getLOD(out)).toBeNull()
+  })
+
+  it('band 0 is a hard single-distance cut (no dead-zone)', () => {
+    const { scene } = boot()
+    const { canopy } = makeTree(scene)
+    attachTreeImpostor(scene, [canopy], { swapDistance: 20, hysteresisBand: 0 })
+
+    expect(canopy.getLOD(cameraAt(scene, 19))).toBe(canopy) // below → full
+    expect(canopy.getLOD(cameraAt(scene, 21))?.name).toBe('tree-impostor') // above → impostor
+  })
+
+  it('settles a far-to-near camera jump through both boundaries in one frame', () => {
+    const { scene } = boot()
+    const { canopy } = makeTree(scene)
+    attachTreeImpostor(scene, [canopy], {
+      swapDistance: 20,
+      cullDistance: 60,
+      hysteresisBand: 5,
+    })
+
+    // Start culled (far beyond cull edge).
+    expect(canopy.getLOD(cameraAt(scene, 100))).toBeNull()
+    // Jump all the way in: a single getLOD call must resolve culled → full,
+    // not stall one LOD step per frame.
+    expect(canopy.getLOD(cameraAt(scene, 3))).toBe(canopy)
+  })
+
+  it('removes the getLOD override on dispose', () => {
+    const { scene } = boot()
+    const { canopy, trunk } = makeTree(scene)
+    const impostor = attachTreeImpostor(scene, [canopy, trunk], {
+      swapDistance: 20,
+    })
+
+    expect(Object.prototype.hasOwnProperty.call(canopy, 'getLOD')).toBe(true)
+    expect(Object.prototype.hasOwnProperty.call(trunk, 'getLOD')).toBe(true)
+
+    impostor.dispose()
+
+    expect(Object.prototype.hasOwnProperty.call(canopy, 'getLOD')).toBe(false)
+    expect(Object.prototype.hasOwnProperty.call(trunk, 'getLOD')).toBe(false)
   })
 })

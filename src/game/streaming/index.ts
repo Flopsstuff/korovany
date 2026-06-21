@@ -17,11 +17,11 @@ export {
   FOREST_TREE_ASSET_ID,
   WOODEN_HUT_ASSET_ID,
 } from './zoneManifests'
-export { LODManager, type LODConfig, type LODInstance } from './lodManager'
 export {
   attachTreeImpostor,
   measureLODRender,
   DEFAULT_IMPOSTOR_SWAP_DISTANCE,
+  DEFAULT_HYSTERESIS_BAND,
   type TreeImpostor,
   type TreeImpostorOptions,
   type LODRenderStats,
