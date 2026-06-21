@@ -569,7 +569,11 @@ export function App() {
               {Math.min(caravansRaided, objectiveTarget)}/{objectiveTarget}
             </span>
           </p>
-          <p className="hud-directive" data-directive={zoneDirective.kind} role="status">
+          {/* Standing objective banner — a persistent note, not a live status
+              region. Keeping it as role="status" made it compete with the
+              urgent transient status regions (bleeding warning, prosthetic
+              confirmation) and broke single-status assertions (FLO-466). */}
+          <p className="hud-directive" data-directive={zoneDirective.kind} role="note">
             {zoneDirective.summary}
           </p>
           {isBleeding ? (
