@@ -40,6 +40,8 @@ implementation notes, and a 20-by-20 text map:
   corridor, and first caravan-robbery map.
 - [The Emerald Thicket of Lysaen](./worlds/lysaen-emerald-thicket.md) — Forest
   Elf homeland, dense woodland, stealth, and LOD proving ground.
+- [The Imperial March](./worlds/imperial-palace.md) — Empire lands, the palace
+  seat, and the asymmetric attack/defend map (E8.1).
 - [Black Crown Pass](./worlds/black-crown-pass.md) — mountain lands, villain
   fortress approach, and vertical combat map.
 

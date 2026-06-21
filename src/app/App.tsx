@@ -28,7 +28,7 @@ import {
   type SaveSlotSummary,
   type SlotId,
 } from '../game/save'
-import { listZones, planTravel, type ZoneId } from '../game/world'
+import { getZoneDirective, listZones, planTravel, type ZoneId } from '../game/world'
 import {
   applyPlayerTransform,
   readPlayerTransform,
@@ -105,6 +105,10 @@ export function App() {
   const score = useAppSelector(selectScore)
   const lootCount = totalItemCount(inventory)
   const bandageCount = inventory.counts[BANDAGE_ITEM_ID] ?? 0
+  // Faction-aware standing order for the current zone (E8.1): the same palace reads
+  // as "defend" to a Palace Guard and "raid" to an Elf/Villain. Flavour/direction
+  // only — the win condition stays the caravan-raid count below.
+  const zoneDirective = getZoneDirective(zoneId, playerFactionId)
   const menuPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const onboardingPrimaryActionRef = useRef<HTMLButtonElement>(null)
   const pausePrimaryActionRef = useRef<HTMLButtonElement>(null)
@@ -543,6 +547,9 @@ export function App() {
             <span className="hud-objective-count">
               {Math.min(caravansRaided, objectiveTarget)}/{objectiveTarget}
             </span>
+          </p>
+          <p className="hud-directive" data-directive={zoneDirective.kind} role="status">
+            {zoneDirective.summary}
           </p>
           {isBleeding ? (
             <div className="hud-bleeding" role="status">

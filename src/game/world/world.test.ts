@@ -34,10 +34,10 @@ describe('zone registry', () => {
     }
   })
 
-  it('ships Forest and Human lands as available, Empire and Mountains locked', () => {
+  it('ships Forest, Human lands and Empire as available, Mountains locked', () => {
     expect(isZoneAvailable('forest')).toBe(true)
     expect(isZoneAvailable('human-lands')).toBe(true)
-    expect(isZoneAvailable('empire')).toBe(false)
+    expect(isZoneAvailable('empire')).toBe(true) // palace scene (E8.1 / FLO-427)
     expect(isZoneAvailable('mountains')).toBe(false)
   })
 
@@ -59,8 +59,16 @@ describe('planTravel (fast-travel resolver)', () => {
     }
   })
 
+  it('plans travel to the now-available empire (palace) zone (E8.1)', () => {
+    const result = planTravel('forest', 'empire')
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.plan.zone.id).toBe('empire')
+      expect(result.plan.spawn).toEqual(ZONES.empire.spawn)
+    }
+  })
+
   it('rejects travel to a locked zone', () => {
-    expect(planTravel('forest', 'empire')).toEqual({ ok: false, reason: 'zone-locked' })
     expect(planTravel('forest', 'mountains')).toEqual({ ok: false, reason: 'zone-locked' })
   })
 

@@ -71,6 +71,7 @@ export interface ZoneContent {
  * Sources:
  * - `human-lands` ← `docs/guide/worlds/velya-salt-road.md`
  * - `forest` ← `docs/guide/worlds/lysaen-emerald-thicket.md`
+ * - `empire` ← `docs/guide/worlds/imperial-palace.md`
  */
 export const ZONE_CONTENT: Readonly<Record<ZoneId, ZoneContent>> = {
   'human-lands': {
@@ -167,10 +168,68 @@ export const ZONE_CONTENT: Readonly<Record<ZoneId, ZoneContent>> = {
       { id: 'archer-2', kind: 'archer', position: { x: -22, y: 0.9, z: 26 } },
     ],
   },
-  // Locked zones: declared so the table is total over ZoneId, but empty until
-  // their scenes (and specs' content) are built. Black Crown Pass spec exists as
-  // prose; its content binding lands with the mountains scene.
-  empire: { landmarks: [], encounterAnchors: [] },
+  empire: {
+    // The Imperial March / palace zone (E8.1, docs/guide/worlds/imperial-palace.md).
+    // The third canonical zone: a fortified palace ringed by Palace-Guard patrols.
+    // Landmarks render as greybox boxes today; a later asset ticket (the pending
+    // palace-guard / palace GLBs) swaps them in via `assetKey` without touching the
+    // scene. The palace keep is the zone's objective focus — both the Guard's
+    // *defend* and the raider's *attack* directive (see `zoneDirectives.ts`) point
+    // at it.
+    landmarks: [
+      {
+        id: 'palace-keep',
+        role: 'Imperial palace keep — objective focus / commander seat (E4.3)',
+        position: { x: 0, z: 16 },
+        height: 9,
+        size: 6,
+        color: { r: 0.62, g: 0.58, b: 0.5 }, // pale crown stone
+      },
+      {
+        id: 'crown-gate',
+        role: 'Crown gate — fortified palace approach / escalation point',
+        position: { x: 0, z: 7 },
+        height: 5,
+        size: 4,
+        color: { r: 0.5, g: 0.42, b: 0.32 },
+      },
+      {
+        id: 'guard-barracks',
+        role: 'Palace-guard barracks — patrol muster point',
+        position: { x: -13, z: 11 },
+        height: 3,
+        size: 3,
+        color: { r: 0.45, g: 0.4, b: 0.34 },
+      },
+      {
+        id: 'crown-banner',
+        role: 'Crown banner pillar — imperial march marker / silhouette',
+        position: { x: 13, z: 11 },
+        height: 6,
+        size: 1.5,
+        color: { r: 0.72, g: 0.56, b: 0.2 }, // imperial gold
+      },
+    ],
+    // Palace-Guard patrols ring the keep (kind `soldier` until the dedicated
+    // palace-guard archetype/GLB lands — placeholder per the E8.1 brief). One wall
+    // archer covers the approach behind the keep; two tribute wagons (caravans) sit
+    // at the outer roads so the raid/loot objective has live targets. The capsule
+    // spawns at (0, 2, 0); guards sit ≥ 12 m out so the player is not swarmed on
+    // arrival (mirrors human-lands, no ramped safe-spawn buffer — that is forest's
+    // first-session curve, FLO-412).
+    encounterAnchors: [
+      { id: 'guard-1', kind: 'soldier', position: { x: -6, y: 0.9, z: 12 } },
+      { id: 'guard-2', kind: 'soldier', position: { x: 6, y: 0.9, z: 12 } },
+      { id: 'guard-3', kind: 'soldier', position: { x: -11, y: 0.9, z: 19 } },
+      { id: 'guard-4', kind: 'soldier', position: { x: 11, y: 0.9, z: 19 } },
+      { id: 'wall-archer-1', kind: 'archer', position: { x: 0, y: 0.9, z: 23 } },
+      { id: 'tribute-1', kind: 'caravan', position: { x: -15, y: 1, z: -8 } },
+      { id: 'tribute-2', kind: 'caravan', position: { x: 15, y: 1, z: -8 } },
+    ],
+  },
+  // Locked zone: declared so the table is total over ZoneId, but empty until its
+  // scene (and the spec's content) is built. Black Crown Pass spec exists as prose;
+  // its content binding lands with the mountains scene.
   mountains: { landmarks: [], encounterAnchors: [] },
 }
 

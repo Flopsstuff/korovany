@@ -2,8 +2,9 @@ import type { ZoneDefinition, ZoneId } from './types'
 
 /**
  * The four world zones (game-plan §0). Forest and Human lands ship a playable
- * scene in E3.1; Empire and Mountains are declared `locked` so the world map
- * lists all four, but travel to them is disabled until their scenes exist.
+ * scene in E3.1; Empire (the palace) joins them in E8.1. Mountains stays `locked`
+ * so the world map lists all four, but travel to it is disabled until its scene
+ * exists.
  *
  * Lore names and faction colour come from `docs/guide/world-specs.md`. Spawns
  * are the capsule pose each zone's scene teleports the player to on arrival.
@@ -26,7 +27,7 @@ export const ZONES: Readonly<Record<ZoneId, ZoneDefinition>> = {
     ownerFaction: 'empire',
     ownerLabel: 'The Emperor',
     spawn: { position: { x: 0, y: 2, z: 0 }, rotationY: 0 },
-    status: 'locked',
+    status: 'available', // playable palace scene (E8.1 / FLO-427)
     streaming: { manifestId: 'zone.empire', sceneKey: 'empire' },
   },
   forest: {

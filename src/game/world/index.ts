@@ -12,6 +12,8 @@ export type {
   ZoneLandmark,
 } from './zoneContent'
 export { ZONE_CONTENT, getZoneContent } from './zoneContent'
+export type { DirectiveKind, ZoneDirective } from './zoneDirectives'
+export { getZoneDirective, ownerFactionId } from './zoneDirectives'
 
 /** All four zones in world-map display order. */
 export function listZones(): ZoneDefinition[] {

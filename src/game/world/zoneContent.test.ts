@@ -16,9 +16,20 @@ describe('zone content table', () => {
     }
   })
 
-  it('keeps locked zones minimal', () => {
-    expect(getZoneContent('empire').landmarks).toHaveLength(0)
+  it('keeps still-locked zones minimal', () => {
     expect(getZoneContent('mountains').landmarks).toHaveLength(0)
+  })
+
+  it('populates the now-available empire (palace) zone (E8.1)', () => {
+    const empire = getZoneContent('empire')
+    expect(empire.landmarks.length).toBeGreaterThanOrEqual(1)
+    // Palace-Guard patrols + at least one caravan target (MPG.5 + raid objective).
+    const guards = empire.encounterAnchors.filter((a) => a.kind === 'soldier')
+    const caravans = empire.encounterAnchors.filter((a) => a.kind === 'caravan')
+    expect(guards.length).toBeGreaterThanOrEqual(3)
+    expect(caravans.length).toBeGreaterThanOrEqual(1)
+    // The palace keep is the objective focus both directives point at.
+    expect(empire.landmarks.some((l) => l.id === 'palace-keep')).toBe(true)
   })
 
   it('validates the landmark shape for every entry (trust the boundary)', () => {

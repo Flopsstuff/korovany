@@ -163,6 +163,28 @@ body {
   color: #f2c14e;
 }
 
+/* Faction-aware standing order for the current zone (E8.1). Colour-coded by drive:
+   defend = imperial gold, raid = warning red, patrol = muted neutral. */
+.hud-directive {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  opacity: 0.92;
+}
+
+.hud-directive[data-directive='defend'] {
+  color: #f2c14e;
+}
+
+.hud-directive[data-directive='raid'] {
+  color: #e06c5a;
+}
+
+.hud-directive[data-directive='patrol'] {
+  color: #9fb3c0;
+}
+
 .hud-inventory {
   margin-top: 0.75rem;
   max-width: 12rem;
