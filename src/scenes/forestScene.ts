@@ -26,6 +26,7 @@ import {
   FOREST_CHEST_ASSET_ID,
   FOREST_STATIC_ELF_ASSET_ID,
   FOREST_TREE_ASSET_ID,
+  FOREST_WATCHTOWER_ASSET_ID,
   WOODEN_HUT_ASSET_ID,
   ZoneStreamingManager,
   defaultLoadGlb,
@@ -104,6 +105,7 @@ export {
   FOREST_CHEST_ASSET_ID,
   FOREST_STATIC_ELF_ASSET_ID,
   FOREST_TREE_ASSET_ID,
+  FOREST_WATCHTOWER_ASSET_ID,
   WOODEN_HUT_ASSET_ID,
 }
 
@@ -153,6 +155,10 @@ export function seedForestAssets(registry: AssetRegistry): void {
   registry.register(FOREST_STATIC_ELF_ASSET_ID, {
     url: '/models/korovany_hero_player-default.glb',
     metadata: { label: 'Static forest elf', targetSize: 1.8 },
+  })
+  registry.register(FOREST_WATCHTOWER_ASSET_ID, {
+    url: '/models/watchtower.glb',
+    metadata: { label: 'Forest watchtower', targetSize: 9 },
   })
 }
 
