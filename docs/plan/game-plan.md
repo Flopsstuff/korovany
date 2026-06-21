@@ -322,22 +322,26 @@ one at a time as predecessors land (no speculative spawns).
     not treated before the timer, player dies. Treatment item (bandage) stops it.
   - **E6.1.4 Eye loss → half-screen overlay** `[ ]` — non-lethal; a post-process /
     DOM vignette blacks out half the viewport until an eye prosthetic is fitted.
-  - **E6.1.5 Leg loss → locomotion modes** `[ ]` — severed leg degrades movement to
+  - **E6.1.5 Leg loss → locomotion modes** `[~]` — **[FLO-430](/FLO/issues/FLO-430)** (Wayland, backlog, after E6.1.6) — severed leg degrades movement to
     crawl (slow) or wheelchair (item); leg prosthetic restores normal gait. Wires
     into the movement controller.
-  - **E6.1.6 Prosthetics shop (Daggerfall-style)** `[ ]` — buy/fit hand·leg·eye
+  - **E6.1.6 Prosthetics shop (Daggerfall-style)** `[~]` — **[FLO-424](/FLO/issues/FLO-424)** (Aldric, active) — buy/fit hand·leg·eye
     prosthetics through the existing economy/transactions system; fitting clears the
-    injury penalty. Reuses E4.4 currency.
-- **E6.2 Audio** `[~ partial]` — combat SFX already shipped via the `damageEvents`
-  bridge (MPG.4/FLO-383, Web Audio bus). Remaining: footsteps, ambience (streamed),
-  UI clicks. Cut as E6.2.x once Phase 5 lands.
-- **E6.3 Quests / objectives** `[ ]` — per-faction objective chains (elf raids,
+    injury penalty. Reuses E4.4 currency. **This closes the dismemberment counterplay
+    loop and subsumes E6.1.4 (eye prosthetic fitting).**
+- **E6.2 Audio** `[~ partial]` — footsteps + forest ambience shipped (FLO-401) and
+  combat SFX via the `damageEvents` bridge (MPG.4/FLO-383). Remaining: **E6.2.x UI
+  click cues + ambient music bed** — **[FLO-433](/FLO/issues/FLO-433)** (Soren, backlog).
+- **E6.3 Quests / objectives** `[~]` — **[FLO-429](/FLO/issues/FLO-429)** (Wayland, backlog) — per-faction objective chains (elf raids,
   palace-guard commander orders, villain free-command). Builds on the objective
   machine + commander/order system (E4.3).
-- **E6.4 Settings & accessibility** `[ ]` — graphics quality tiers (hook E5.4 perf
-  budgets), control rebinding UI, colour-blind-safe palette toggle.
-- **E6.5 Menu, save management, polish pass** `[ ]` — save slot management UI,
+- **E6.4 Settings & accessibility** `[~]` — **[FLO-425](/FLO/issues/FLO-425)** (Soren, active) — control rebinding UI, master
+  volume/mute (audio bus), graphics quality toggle (hook E5.4 perf budgets).
+- **E6.5 Menu, save management, polish pass** `[~]` — **[FLO-431](/FLO/issues/FLO-431)** (Soren, backlog, after E6.4) — save-slot management UI,
   main-menu polish, final cross-zone playthrough verification.
+- **Combat depth — ranged enemy archetype** `[~]` — **[FLO-432](/FLO/issues/FLO-432)** (Aldric, backlog, after FLO-426 asset) — second
+  enemy type (archer): keep-distance AI + projectiles through the existing damage
+  funnel; combat is currently a single melee soldier.
 
 ### Phase 7 — Playability hardening & first-session experience `[~]` ⭐ HIGHEST PRIORITY
 
@@ -400,6 +404,23 @@ injury mechanics that have a **counterplay**, and (4) see a world that reads as
 > onboarding dups **FLO-364**/**FLO-382** (real work landed under FLO-386=done) remain
 > board-cancel-only (cross-agent 403 boundary) — flagged to the board to close.
 
+### Phase 8 — World completion: zones 3 & 4 + faction endgames `[ ]`
+
+Epic: **[FLO-423](/FLO/issues/FLO-423)** — opened 2026-06-21 by Daedalus (CTO),
+child of FLO-273, from board ask **FLO-421** ("80/86 done but far from a full game —
+create ~10 tasks ahead and distribute").
+
+The canonical brief specifies a **four-zone** world; today only **Forest** and
+**Human Lands** are playable. Empire (palace) and Mountains (villain fort) exist in
+the zone registry but are locked in the map with no scene. This phase finishes the
+world so all three factions have a place to play their asymmetric goal. Reuses the
+zone-content data layer (`zoneContent.ts`, ADR-0004), streaming/LOD (Phase 5), and
+faction/commander systems (Phase 4) — widen, don't re-architect.
+
+- **E8.1 Empire zone — palace scene (attack/defend)** `[ ]` — **[FLO-427](/FLO/issues/FLO-427)** (Wayland, backlog).
+- **E8.2 Mountains zone — villain fort scene** `[ ]` — **[FLO-428](/FLO/issues/FLO-428)** (Aldric, backlog).
+- **Asset — ranged-enemy + Empire palace-guard GLBs** `[~]` — **[FLO-426](/FLO/issues/FLO-426)** (Pygmalion, active; Iris art sign-off).
+
 ## 4. Asset roadmap (gated, per-character only)
 
 Models are generated **only** on concrete tickets, via the `tools/meshy-3d`
@@ -440,6 +461,21 @@ speculative batches (FLO-270).
 
 *Revision history*
 
+- **r36** (2026-06-21) — **Backlog stocked toward a full game (board ask FLO-421).**
+  Status check: 80/86 tasks done, but Phases 5–7 are essentially complete while the
+  game is still far from the full canonical vision. Opened **Phase 8 — World
+  completion** (epic **FLO-423**) and cut **10 new oneshots**, distributed across the
+  team: 3 **active now** — E6.1.6 prosthetics shop (**FLO-424** Aldric), E6.4 settings
+  & accessibility (**FLO-425** Soren), ranged-enemy + palace-guard assets (**FLO-426**
+  Pygmalion); 7 **stockpiled (backlog, owners named)** — E8.1 Empire palace
+  (**FLO-427** Wayland), E8.2 Mountains fort (**FLO-428** Aldric), E6.3 per-faction
+  quests (**FLO-429** Wayland), E6.1.5 leg locomotion (**FLO-430** Wayland), E6.5
+  save-slot/menu (**FLO-431** Soren), combat-depth ranged enemy (**FLO-432** Aldric),
+  E6.2.x audio polish (**FLO-433** Soren). Backlog items are left unassigned-but-named
+  to avoid spawning 7 concurrent runs on the shared tree (worktree-isolation
+  notwithstanding); they activate as predecessors land and capacity frees. Biggest
+  remaining gap to "a full game": the two missing zones (only 2 of 4 playable) and
+  per-faction endgames. (Daedalus)
 - **r33** (2026-06-21) — **P7.1 + P7.2 fully landed.** Rebased + merged patrol-leash fix (`c80e921`) — soldiers now leash to their spawn anchor so the 18 m buffer is durable post-spawn; 705 tests green. P7.2 dismemberment counterplay (`5eb7d8b`) merged by sibling. P7.1/P7.2/P7.3/P7.5 all ✅; P7.4 pending Iris. (Prospero)
 - **r30** (2026-06-21) — **Phase 7 — Playability hardening opened (FLO-409)** after a
   live audit of the deployed build. Drove korovany.aimost.pl end-to-end as a first-time
