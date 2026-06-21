@@ -30,6 +30,7 @@ export default defineConfig({
           { text: 'Character controller', link: '/guide/character-controller' },
           { text: 'Forest zone', link: '/guide/forest-zone' },
           { text: 'World map & zones', link: '/guide/world-map' },
+          { text: 'World-map overlay UX', link: '/guide/world-map-overlay-ux' },
           {
             text: 'World specs',
             link: '/guide/world-specs',

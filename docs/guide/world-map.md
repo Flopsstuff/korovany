@@ -6,7 +6,9 @@ This is the Phase-3 scaffolding (E3.1); zone-streaming on border crossing is
 E3.2, and the caravan/loot loop is E3.3/E3.4.
 
 For the level-design lore and layout targets behind each zone, see the
-[World specs](./world-specs).
+[World specs](./world-specs). For the overlay's interaction design, wireframes,
+states, tokens, and accessibility, see the
+[World-map overlay UX spec](./world-map-overlay-ux).
 
 ## The four zones
 
@@ -51,8 +53,9 @@ Zone ids are persisted in saves via `playerSlice.zoneId`, so they are **forever*
    spawn on boot (`takeSpawn`) — landing the player at the zone's spawn point.
 
 The overlay handles its **empty**, **loading** ("Travelling…"), and **error**
-states. It is built against the E3.1-UX requirements; visual polish tracks
-Iris's wireframes.
+states. Its interaction design, wireframes, state matrix, tokens, and
+accessibility are specified in the
+[World-map overlay UX spec](./world-map-overlay-ux) (E3.1-UX).
 
 ## Streaming entry point (E3.2, wired in FLO-345)
 

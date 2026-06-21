@@ -691,6 +691,20 @@ body {
   outline: none;
 }
 
+/* Primary confirm action: solid gold so "Travel" dominates "Cancel" at a
+   glance (visible hierarchy / Von Restorff). Dark label keeps AA on the fill. */
+.worldmap-confirm button.primary-action {
+  border-color: #f7d774;
+  background: #f7d774;
+  color: #1a1206;
+}
+
+.worldmap-confirm button.primary-action:hover,
+.worldmap-confirm button.primary-action:focus-visible {
+  background: #ffe48a;
+  border-color: #ffe48a;
+}
+
 .worldmap-hint,
 .worldmap-status,
 .worldmap-empty {
