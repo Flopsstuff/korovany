@@ -9,7 +9,7 @@ import {
   Vector3,
 } from '@babylonjs/core'
 import { createWorldBounds } from './worldBounds'
-import { buildPlayerAvatar } from './playerAvatar'
+import { mountSurvivorAvatar } from './survivorAvatar'
 import { resizeEngineToDisplay } from '../engine'
 import { ThirdPersonCamera } from '../game/camera'
 import { CharacterController } from '../game/controller'
@@ -215,13 +215,10 @@ export function createMountainsScene(
   controller.mesh.material = capsuleMat
   controller.mesh.isVisible = false
 
-  // Player visual: procedural low-poly fighter (P7.4 / FLO-422). `null` skips it.
+  // Player visual: the flat-albedo survivor GLB faceted in-engine (FLO-443/447),
+  // mounted fire-and-forget on the capsule. `heroUrl: null` (headless tests) skips it.
   if (heroUrl !== null) {
-    const avatar = buildPlayerAvatar(scene)
-    avatar.root.parent = controller.mesh
-    avatar.root.position = new Vector3(0, -0.9, 0)
-    controller.animator.node =
-      avatar.root as unknown as import('../game/animation/proceduralAnimator').AnimatableNode
+    mountSurvivorAvatar(scene, controller, heroUrl)
   }
 
   const hitFlash = new HitFlashManager()
