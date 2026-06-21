@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { isSaveData, migrate, parseSaveData } from './schema'
 import { SAVE_VERSION, type SaveData } from './types'
 import { createInventory } from '../economy'
+import { createInjuryState, severLimb } from '../health'
 import { FACTION_IDS } from '../faction'
 import { createProgression } from '../progression'
 
@@ -13,6 +14,7 @@ const valid: SaveData = {
   inventory: { counts: { gold: 5 }, equippedItemId: null },
   playerFactionId: FACTION_IDS.ForestElves,
   progression: createProgression(),
+  injury: createInjuryState(),
   savedAt: 42,
 }
 
@@ -38,15 +40,28 @@ const v2Save = {
   savedAt: 9,
 } as unknown as SaveData
 
+// A v4 save has progression but predates `injury` (v5).
+const v4Save = {
+  version: 4,
+  transform: { position: { x: 2, y: 1, z: 0 }, rotationY: 0.25 },
+  health: { current: 70, max: 100 },
+  zoneId: 'forest',
+  inventory: { counts: {}, equippedItemId: null },
+  playerFactionId: FACTION_IDS.Empire,
+  progression: createProgression(),
+  savedAt: 11,
+} as unknown as SaveData
+
 describe('isSaveData', () => {
   it('accepts a well-formed record', () => {
     expect(isSaveData(valid)).toBe(true)
   })
 
-  // playerFactionId (v3) and progression (v4) are not required by the guard so
-  // older saves still pass and get upgraded by migrate.
+  // playerFactionId (v3), progression (v4), and injury (v5) are not required by
+  // the guard so older saves still pass and get upgraded by migrate.
   it('accepts a record missing the later fields (pre-migration)', () => {
     expect(isSaveData(v2Save)).toBe(true)
+    expect(isSaveData(v4Save)).toBe(true)
   })
 
   it.each([
@@ -84,17 +99,23 @@ describe('migrate', () => {
     expect(migrate(malformed).progression).toEqual(createProgression())
   })
 
+  it('repairs a malformed current-version record with baseline injury', () => {
+    const malformed = { ...valid, injury: undefined } as unknown as SaveData
+    expect(migrate(malformed).injury).toEqual(createInjuryState())
+  })
+
   it('stamps an unknown version up to the current one', () => {
     const old = { ...valid, version: 0 }
     expect(migrate(old).version).toBe(SAVE_VERSION)
   })
 
-  it('migrates a v1 save forward with empty inventory, neutral faction and baseline progression', () => {
+  it('migrates a v1 save forward with empty inventory, neutral faction, baseline progression and injury', () => {
     const migrated = migrate(v1Save)
     expect(migrated.version).toBe(SAVE_VERSION)
     expect(migrated.inventory).toEqual(createInventory())
     expect(migrated.playerFactionId).toBe(FACTION_IDS.Neutral)
     expect(migrated.progression).toEqual(createProgression())
+    expect(migrated.injury).toEqual(createInjuryState())
     // Pre-existing fields are carried through untouched.
     expect(migrated.transform).toEqual(v1Save.transform)
     expect(migrated.health).toEqual(v1Save.health)
@@ -135,6 +156,19 @@ describe('migrate', () => {
     const old = { ...valid, version: 3, progression: progressed }
     expect(migrate(old).progression).toEqual(progressed)
   })
+
+  it('migrates a v4 save forward with baseline injury', () => {
+    const migrated = migrate(v4Save)
+    expect(migrated.version).toBe(SAVE_VERSION)
+    expect(migrated.injury).toEqual(createInjuryState())
+    expect(migrated.progression).toEqual(createProgression())
+  })
+
+  it('keeps existing injury when stamping an old version forward', () => {
+    const wounded = severLimb(createInjuryState(), 'leftHand')
+    const old = { ...valid, version: 4, injury: wounded }
+    expect(migrate(old).injury).toEqual(wounded)
+  })
 })
 
 describe('parseSaveData old-version round-trips', () => {
@@ -145,6 +179,7 @@ describe('parseSaveData old-version round-trips', () => {
     expect(parsed?.inventory).toEqual(createInventory())
     expect(parsed?.playerFactionId).toBe(FACTION_IDS.Neutral)
     expect(parsed?.progression).toEqual(createProgression())
+    expect(parsed?.injury).toEqual(createInjuryState())
   })
 
   it('loads a pre-faction save and upgrades it to the current schema (v2)', () => {
@@ -153,5 +188,13 @@ describe('parseSaveData old-version round-trips', () => {
     expect(parsed?.version).toBe(SAVE_VERSION)
     expect(parsed?.playerFactionId).toBe(FACTION_IDS.Neutral)
     expect(parsed?.progression).toEqual(createProgression())
+    expect(parsed?.injury).toEqual(createInjuryState())
+  })
+
+  it('loads a pre-injury save and upgrades it to the current schema (v4)', () => {
+    const parsed = parseSaveData(v4Save)
+    expect(parsed).not.toBeNull()
+    expect(parsed?.version).toBe(SAVE_VERSION)
+    expect(parsed?.injury).toEqual(createInjuryState())
   })
 })

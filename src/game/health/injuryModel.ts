@@ -12,7 +12,7 @@
  * trigger the existing death → menu transition.
  */
 
-export type LimbStatus = 'intact' | 'severed'
+export type LimbStatus = 'intact' | 'severed' | 'prosthetic'
 
 export type Limb =
   | 'leftHand'
@@ -77,12 +77,13 @@ export function severLimb(state: InjuryState, limb: Limb): InjuryState {
 }
 
 /**
- * Fit a prosthetic / patch: restore a slot to `intact`. For an eye this clears
- * the half-screen blackout. Does not stop bleeding — use `treatBleeding`.
+ * Fit a prosthetic: mark a severed slot as `prosthetic`. Clears derived penalties
+ * (blackout / crawl) without restoring the original limb. Does not stop bleeding
+ * on a hand — use `treatBleeding`.
  */
 export function fitProsthetic(state: InjuryState, limb: Limb): InjuryState {
-  if (state[limb] === 'intact') return state
-  return { ...state, [limb]: 'intact' }
+  if (state[limb] !== 'severed') return state
+  return { ...state, [limb]: 'prosthetic' }
 }
 
 /** Stop a bleeding wound (bandage / healing item). */
@@ -142,4 +143,35 @@ export function locomotionSpeedMultiplier(state: InjuryState): number {
 
 export function severedLimbs(state: InjuryState): Limb[] {
   return LIMBS.filter((limb) => state[limb] === 'severed')
+}
+
+const LIMB_STATUSES: readonly LimbStatus[] = ['intact', 'severed', 'prosthetic']
+
+function isLimbStatus(value: unknown): value is LimbStatus {
+  return typeof value === 'string' && (LIMB_STATUSES as readonly string[]).includes(value)
+}
+
+/** Structural guard for a persisted injury record (save migration). */
+export function isInjuryState(value: unknown): value is InjuryState {
+  if (typeof value !== 'object' || value === null) return false
+  const s = value as Record<string, unknown>
+  return (
+    LIMBS.every((limb) => isLimbStatus(s[limb])) &&
+    typeof s.bleeding === 'boolean' &&
+    typeof s.bleedElapsed === 'number' &&
+    Number.isFinite(s.bleedElapsed)
+  )
+}
+
+/** Normalise an untrusted injury blob for migration (coerce bad slots to intact). */
+export function coerceInjuryState(value: unknown): InjuryState {
+  if (!isInjuryState(value)) return createInjuryState()
+  const baseline = createInjuryState()
+  const next: InjuryState = { ...baseline }
+  for (const limb of LIMBS) {
+    next[limb] = isLimbStatus(value[limb]) ? value[limb] : 'intact'
+  }
+  next.bleeding = value.bleeding
+  next.bleedElapsed = value.bleedElapsed
+  return next
 }

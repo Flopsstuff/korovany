@@ -72,6 +72,7 @@ export {
   advanceBleed,
   fitPlayerProsthetic,
   resetInjuries,
+  restoreInjuries,
   selectHasHalfScreenBlackout,
   selectInjury,
   selectIsBleeding,

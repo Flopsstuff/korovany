@@ -3,11 +3,13 @@ import {
   BLEED_DAMAGE_PER_INTERVAL,
   CRAWL_SPEED_MULTIPLIER,
   blindedEyeCount,
+  coerceInjuryState,
   createInjuryState,
   fitProsthetic,
   hasHalfScreenBlackout,
   isBleeding,
   isCrawling,
+  isInjuryState,
   locomotionSpeedMultiplier,
   severLimb,
   severedLimbs,
@@ -58,9 +60,9 @@ describe('severLimb', () => {
 })
 
 describe('fitProsthetic', () => {
-  it('restores a severed slot to intact', () => {
+  it('marks a severed slot as prosthetic', () => {
     const lost = severLimb(createInjuryState(), 'leftEye')
-    expect(fitProsthetic(lost, 'leftEye').leftEye).toBe('intact')
+    expect(fitProsthetic(lost, 'leftEye').leftEye).toBe('prosthetic')
   })
 
   it('clears the half-screen blackout when an eye is patched', () => {
@@ -154,5 +156,32 @@ describe('severedLimbs', () => {
     state = severLimb(state, 'leftHand')
     state = severLimb(state, 'rightEye')
     expect(severedLimbs(state)).toEqual(['leftHand', 'rightEye'])
+  })
+
+  it('ignores prosthetic slots', () => {
+    const patched = fitProsthetic(severLimb(createInjuryState(), 'leftLeg'), 'leftLeg')
+    expect(severedLimbs(patched)).toEqual([])
+  })
+})
+
+describe('isInjuryState', () => {
+  it('accepts a well-formed record', () => {
+    expect(isInjuryState(createInjuryState())).toBe(true)
+  })
+
+  it('rejects malformed records', () => {
+    expect(isInjuryState(null)).toBe(false)
+    expect(isInjuryState({ ...createInjuryState(), leftHand: 'missing' })).toBe(false)
+  })
+})
+
+describe('coerceInjuryState', () => {
+  it('returns a baseline for garbage input', () => {
+    expect(coerceInjuryState(null)).toEqual(createInjuryState())
+  })
+
+  it('coerces an invalid limb slot to intact', () => {
+    const coerced = coerceInjuryState({ ...createInjuryState(), leftHand: 'cyborg' })
+    expect(coerced.leftHand).toBe('intact')
   })
 })

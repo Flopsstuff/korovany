@@ -313,11 +313,10 @@ E6.1 is broken into oneshot subtasks rather than treated as polish. Tickets are 
 one at a time as predecessors land (no speculative spawns).
 
 - **E6.1 Dismemberment & prosthetics** `[ ]` — the canonical limb system. Subtasks:
-  - **E6.1.1 Injury state model** `[~]` — **FLO-400** (Soren, in_progress) — Redux
-    `injurySlice`: per-limb status (intact / severed / prosthetic) for hand·leg·eye;
-    bleed-out timer for untreated severance; save-migration v_next (guard validates
-    base fields only). Pure reducer + tests, no rendering. Independent of Phase 5 —
-    parallelised onto an idle engineer.
+  - **E6.1.1 Injury state model** `[x]` — **FLO-400** ✅ — Redux `injurySlice`:
+    per-limb status (intact / severed / prosthetic) for hand·leg·eye; bleed-out
+    timer for untreated severance; save-migration v5 (guard validates base fields
+    only). Pure reducer + tests, no rendering.
   - **E6.1.2 Combat → dismemberment hook** `[ ]` — high-damage/critical melee can
     sever a limb instead of (or before) killing; emits a `dismemberEvent` on the
     existing `damageEvents` bridge. Deterministic via seeded RNG.

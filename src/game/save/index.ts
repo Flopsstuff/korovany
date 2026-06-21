@@ -60,6 +60,16 @@ export function createSaveData(snapshot: PlayerSnapshot, savedAt: number): SaveD
         survival: { ...snapshot.progression.skills.survival },
       },
     },
+    injury: {
+      leftHand: snapshot.injury.leftHand,
+      rightHand: snapshot.injury.rightHand,
+      leftEye: snapshot.injury.leftEye,
+      rightEye: snapshot.injury.rightEye,
+      leftLeg: snapshot.injury.leftLeg,
+      rightLeg: snapshot.injury.rightLeg,
+      bleeding: snapshot.injury.bleeding,
+      bleedElapsed: snapshot.injury.bleedElapsed,
+    },
     savedAt,
   }
 }

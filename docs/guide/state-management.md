@@ -178,8 +178,8 @@ hints. See [Asset streaming](./asset-streaming).
 
 - **Save/load** is **not** a slice. The [Save system](./save-system) lives in
   `src/game/save/` (IndexedDB + a pure schema). On *Continue* it dispatches
-  `restorePlayerHealth`, `restorePlayer`, `restoreInventory`, and
-  `restoreProgression` to rehydrate live slices; "does a save exist?" is local
+  `restorePlayerHealth`, `restorePlayer`, `restoreInventory`, `restoreProgression`,
+  and `restoreInjuries` to rehydrate live slices; "does a save exist?" is local
   React `useState` in `App.tsx`, not store state. The store holds *live* state;
   the save system serialises a snapshot of it.
 - **The player's world transform** lives in the Babylon scene and is reached via

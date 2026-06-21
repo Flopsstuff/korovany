@@ -164,9 +164,9 @@ carried [inventory](#inventory--loot), and character progression — is persiste
   Nothing is uploaded; saves are local to the browser.
 
 The schema is **forever** — fields are never renamed; format changes bump
-`SAVE_VERSION` and add a migration. `SAVE_VERSION` is currently **3** (v2 added
-`inventory`; v3 added `progression`; older saves migrate forward with empty /
-baseline values). Full details, slot
+`SAVE_VERSION` and add a migration. `SAVE_VERSION` is currently **5** (v2 added `inventory`; v3 added
+`playerFactionId`; v4 added `progression`; v5 added `injury`; older saves migrate
+forward with empty / baseline values). Full details, slot
 model, and the test approach (`fake-indexeddb`):
 [`docs/guide/save-system.md`](docs/guide/save-system.md).
 

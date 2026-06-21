@@ -1,4 +1,5 @@
 import type { HealthState } from '../health'
+import { createInjuryState, isInjuryState } from '../health'
 import { createInventory, isInventoryState } from '../economy'
 import { DEFAULT_PLAYER_FACTION_ID, isFactionId } from '../faction'
 import { createProgression, isProgressionState } from '../progression'
@@ -47,7 +48,8 @@ function isHealth(value: unknown): value is HealthState {
 /**
  * Structural guard for a loadable save record. Validates the fields present in
  * every version since v1 (the migration baseline). Fields added in later
- * versions — `inventory` (v2), `playerFactionId` (v3), `progression` (v4) — are
+ * versions — `inventory` (v2), `playerFactionId` (v3), `progression` (v4),
+ * `injury` (v5) — are
  * intentionally *not*
  * required here so older saves still pass the guard and get upgraded by
  * {@link migrate}; migrate is the single place that fills them in.
@@ -77,6 +79,8 @@ export function isSaveData(value: unknown): value is SaveData {
  *   id is also coerced to neutral rather than trusted.
  * - v3 → v4: `progression` was added (E4.5). Older saves start at the baseline
  *   progression model; later saves carry their XP/stats/skills forward.
+ * - v4 → v5: `injury` was added (E6.1.1). Older saves start fully intact;
+ *   malformed persisted injury blobs are coerced slot-by-slot.
  */
 export function migrate(data: SaveData): SaveData {
   const inventory = isInventoryState((data as { inventory?: unknown }).inventory)
@@ -89,15 +93,18 @@ export function migrate(data: SaveData): SaveData {
   const progression = isProgressionState((data as { progression?: unknown }).progression)
     ? data.progression
     : createProgression()
+  const persistedInjury = (data as { injury?: unknown }).injury
+  const injury = isInjuryState(persistedInjury) ? persistedInjury : createInjuryState()
   if (
     data.version === SAVE_VERSION &&
     inventory === data.inventory &&
     playerFactionId === data.playerFactionId &&
-    progression === data.progression
+    progression === data.progression &&
+    injury === data.injury
   ) {
     return data
   }
-  return { ...data, inventory, playerFactionId, progression, version: SAVE_VERSION }
+  return { ...data, inventory, playerFactionId, progression, injury, version: SAVE_VERSION }
 }
 
 /**

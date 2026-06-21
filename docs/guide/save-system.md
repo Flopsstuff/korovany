@@ -12,13 +12,14 @@ A save record is a single small JSON-shaped object:
 
 | Field       | Meaning                                                        |
 | ----------- | ------------------------------------------------------------- |
-| `version`         | Schema version the record was written with (currently `4`).   |
+| `version`         | Schema version the record was written with (currently `5`).   |
 | `transform`       | Player capsule pose: `position` (`x,y,z`) + `rotationY` (yaw). |
 | `health`          | Player health as `{ current, max }` so max HP survives reload. |
 | `zoneId`          | Identifier of the zone the player was in.                     |
 | `inventory`       | Carried loot: `{ counts: {itemId: n}, equippedItemId }` (v2).  |
 | `playerFactionId` | The chosen player faction (v3), sourced from `factionSlice`.   |
 | `progression`     | Character XP, level, stats, and skills (v4), sourced from `progressionSlice`. |
+| `injury`          | Per-limb injury state (v5), sourced from `injurySlice`. |
 | `savedAt`         | Epoch milliseconds the snapshot was taken (picks the latest). |
 
 Only this compact state is persisted. **Assets are never saved** — meshes,
@@ -31,8 +32,9 @@ The transform comes from the live Babylon capsule; `health` comes from the
 canonical `healthSlice` (`{ current, max }`, the single health authority);
 `zoneId` comes from the Redux `player` slice; `inventory` comes from the
 `inventory` slice (E3.4); `playerFactionId` comes from the `faction` slice
-(E4.2 — chosen at New Game); and `progression` comes from the `progression` slice
-(E4.5). (Zones are a placeholder today — E1.1 is movement + camera only — so the
+(E4.2 — chosen at New Game); `progression` comes from the `progression` slice
+(E4.5); and `injury` comes from the `injury` slice (E6.1.1). (Zones are a
+placeholder today — E1.1 is movement + camera only — so the
 `player` slice seeds a sensible default: `zoneId: "forest"`. Health is real as
 of E2.1.)
 
@@ -109,6 +111,9 @@ Version history:
 - **v4** — added `progression` (E4.5). `migrate()` fills a fresh baseline
   progression state for pre-v4 saves, while current saves carry XP, level, stat
   tracks, and skill tracks forward.
+- **v5** — added `injury` (E6.1.1). `migrate()` fills a fresh intact injury
+  state for pre-v5 saves; malformed persisted injury blobs are coerced slot-by-slot.
+  See the v4 → v5 migration test in `schema.test.ts`.
 
 ## Testing
 
