@@ -43,7 +43,7 @@ export interface ZoneLandmark {
 }
 
 /** What kind of encounter actor an anchor seeds. */
-export type EncounterKind = 'soldier' | 'caravan'
+export type EncounterKind = 'soldier' | 'caravan' | 'archer'
 
 /**
  * A named spawn point for an encounter actor, distilled from each spec's
@@ -159,6 +159,12 @@ export const ZONE_CONTENT: Readonly<Record<ZoneId, ZoneContent>> = {
       { id: 'caravan-1', kind: 'caravan', position: { x: -8, y: 1, z: -6 } },
       { id: 'caravan-2', kind: 'caravan', position: { x: 10, y: 1, z: -14 } },
       { id: 'caravan-3', kind: 'caravan', position: { x: -14, y: 1, z: 12 } },
+      // Ranged archers (FLO-432) — seeded *behind* the melee soldier wave (each
+      // ~34 m out, past every soldier cluster) so a player meets a melee front
+      // before any arrows fly. Both sit well beyond SAFE_SPAWN_BUFFER and the
+      // archer's 15 m detection radius, so neither engages from the spawn.
+      { id: 'archer-1', kind: 'archer', position: { x: 24, y: 0.9, z: -26 } },
+      { id: 'archer-2', kind: 'archer', position: { x: -22, y: 0.9, z: 26 } },
     ],
   },
   // Locked zones: declared so the table is total over ZoneId, but empty until

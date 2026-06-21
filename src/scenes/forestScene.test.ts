@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   FOREST_PLAYER_SPAWN,
   FOREST_SOLDIER_SPAWNS,
+  FOREST_ARCHER_SPAWNS,
   FOREST_TREE_ASSET_ID,
   FOREST_SPAWN_PROP_SPECS,
   FOREST_ZONE_ID,
@@ -361,6 +362,17 @@ describe('forest safe spawn & difficulty curve (FLO-412)', () => {
 
   it('keeps the MPG.5 soldier count (only the distribution changed)', () => {
     expect(FOREST_SOLDIER_SPAWNS).toHaveLength(5)
+  })
+
+  it('seeds ranged archers behind the whole melee wave (FLO-432)', () => {
+    expect(FOREST_ARCHER_SPAWNS.length).toBeGreaterThanOrEqual(1)
+    const farthestSoldier = Math.max(...FOREST_SOLDIER_SPAWNS.map(distFromSpawn))
+    for (const archer of FOREST_ARCHER_SPAWNS) {
+      // Past the safe buffer (no spawn aggro) AND beyond every soldier, so a
+      // player meets the melee front before any arrows fly.
+      expect(distFromSpawn(archer)).toBeGreaterThanOrEqual(SAFE_SPAWN_BUFFER)
+      expect(distFromSpawn(archer)).toBeGreaterThan(farthestSoldier)
+    }
   })
 
   it('nullifies soldier damage during the spawn grace, full damage after', () => {

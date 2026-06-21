@@ -23,6 +23,12 @@ export interface CorpseRecord {
   readonly position: Vec3
   /** Yaw (radians) the enemy faced when it died — keeps the body oriented. */
   readonly rotationY: number
+  /**
+   * Optional GLB to mount on this specific corpse, overriding the manager's
+   * default (FLO-432) — e.g. an archer falls as a ranger, not a musketeer. When
+   * omitted the CorpseManager's `glbUrl` is used. Session-only, never persisted.
+   */
+  readonly glbUrl?: string
 }
 
 /**

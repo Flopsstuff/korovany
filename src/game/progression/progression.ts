@@ -8,7 +8,7 @@
 
 export type StatId = 'strength' | 'agility' | 'endurance'
 export type SkillId = 'melee' | 'trade' | 'survival'
-export type CombatKillTarget = 'soldier' | 'caravan'
+export type CombatKillTarget = 'soldier' | 'caravan' | 'archer'
 
 export interface ProgressTrack {
   /** Current stat/skill rank. Stats start at 10; skills start at 1. */
@@ -149,6 +149,15 @@ export function combatKillProgressionEvent(target: CombatKillTarget): Progressio
       xp: 35,
       statXp: { strength: 12, endurance: 8 },
       skillXp: { melee: 20 },
+    }
+  }
+  if (target === 'archer') {
+    // A ranged skirmisher: harder to close on, rewards aggression (FLO-432).
+    return {
+      source: 'combat.kill.archer',
+      xp: 30,
+      statXp: { strength: 8, agility: 8 },
+      skillXp: { melee: 16 },
     }
   }
   return {

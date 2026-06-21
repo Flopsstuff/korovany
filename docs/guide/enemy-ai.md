@@ -1,6 +1,12 @@
-# Enemy AI — Empire Soldier (E2.3)
+# Enemy AI — Empire Soldier (E2.3) & Ranged Archer (FLO-432)
 
-The first enemy archetype is an Empire soldier with a deterministic finite-state machine (FSM). Pure game logic lives in `src/game/ai/`; the Babylon mesh wrapper in `src/scenes/soldierEnemy.ts`.
+The game ships two enemy archetypes, each a deterministic finite-state machine
+(FSM): the melee **Empire soldier** (E2.3) and the ranged **Empire archer**
+(FLO-432). Pure game logic lives in `src/game/ai/`; the Babylon mesh wrappers in
+`src/scenes/soldierEnemy.ts` and `src/scenes/archerEnemy.ts`. Both reuse the same
+`patrol → engage → dead` scaffolding, the same `HealthState` damage funnel, and
+the same FLO-412 patrol leash — the archer is a *behaviour* variant, not a new
+AI engine. The soldier is documented first; the archer section follows.
 
 ## Behaviour states
 
@@ -120,3 +126,115 @@ covers default FSM transitions plus ordered follow/hold/move/attack behaviours.
 `src/scenes/ordersPlayground.test.ts` smoke-tests the dev scene wiring, and
 `src/scenes/soldierEnemy.test.ts` covers the scene wrapper plus the in-engine
 soldier material palette.
+
+---
+
+# Ranged Archer (FLO-432)
+
+The second archetype is an Empire archer that **keeps its distance and looses
+arrows** instead of closing to melee. It reuses the soldier's FSM scaffolding —
+the same phase machine, the seed-free golden-angle patrol wander, the FLO-412
+spawn-anchor leash, and the `createHealth`/`applyDamage` funnel — so it is a
+behaviour variant, not a new engine. Pure logic: `src/game/ai/rangedArcherFSM.ts`;
+Babylon wrapper: `src/scenes/archerEnemy.ts`.
+
+## Behaviour states
+
+```
+patrol ──[player inside detectionRadius]──▶ engage
+engage ──[player escapes 1.3× detection]──▶ patrol
+engage:  too close (< minRange) ─────────▶ back-pedal (kite)
+engage:  too far / no line of sight ─────▶ close the gap
+engage:  in range + clear shot + off CD ─▶ fire an arrow
+any    ──[HP == 0]───────────────────────▶ dead  (terminal → corpse)
+```
+
+| Phase | Behaviour |
+|---|---|
+| **patrol** | Identical to the soldier: golden-angle wander, leashed to `patrolLeashRadius` (6 m) of the spawn anchor (FLO-412). |
+| **engage** | **Standoff kiting.** Hold `preferredRange` (8 m): back-pedal when the player crowds inside `minRange` (5 m), edge closer when beyond preferred range or when the shot is blocked. Loose an arrow on `attackCooldown` (2 s) when the player is inside `engageRange` (12 m) **and** there is a clear line of sight. The archer never enters melee range on its own. |
+| **dead** | Stop all behaviour; the scene converts it to a persistent corpse (its own ranger GLB) — see [corpses.md](corpses.md). |
+
+## Default parameters
+
+| Parameter | Value | Note |
+|---|---|---|
+| Max HP | 40 | Squishier than the 60-HP soldier — a glass-cannon skirmisher |
+| Detection radius | 15 m | Sees farther than the melee soldier (10 m) |
+| Engage range | 12 m | Must be this close to be shot at |
+| Preferred range | 8 m | The standoff distance it tries to hold |
+| Min range | 5 m | Closer than this → it back-pedals |
+| Attack damage | 12 HP | Per arrow |
+| Attack cooldown | 2.0 s | Draw + nock time |
+| Patrol speed | 1.2 m/s | |
+| Reposition speed | 2.4 m/s | Kiting / closing the gap |
+| Projectile speed | 20 m/s | Handed to the spawned arrow |
+
+## Line of sight
+
+The archer only fires with a clear shot. The pure helper
+`lineOfSightClear(from, to, obstacles, padding?)`
+(`src/game/combat/lineOfSight.ts`) is a segment-vs-circle test on the XZ plane:
+obstacles are flat ground circles (tree trunks, hut footprints), height ignored.
+The FSM consumes a single `hasLineOfSight` boolean; `ArcherEnemy` computes it from
+an optional `hasLineOfSight(from, to)` callback (defaults to always-clear open
+ground). With no clear shot the archer holds fire and repositions to regain it.
+
+## Projectiles & the damage funnel
+
+Arrows are a pure model in `src/game/combat/projectile.ts`. A `ProjectileField`
+holds at most `MAX_LIVE_PROJECTILES` (24) live arrows — a hard **budget cap**:
+excess shots are dropped so the frame cost can't grow unbounded. Each tick
+`stepProjectileField` advances every arrow, decays its time-to-live, and reports
+contacts against the registered targets *without* mutating them (mirroring
+`getMeleeHits`).
+
+The Babylon side is `ArrowVolley` (`src/scenes/arrowVolley.ts`), a `System`
+registered in the fixed-step loop. On each archer's `onFire` it spawns an arrow;
+each frame it resolves hits and calls `target.takeDamage(...)` on the player — the
+**same `Damageable` funnel** the player's melee uses. The player target's
+`takeDamage` applies the P7.1 spawn-grace scale and fires the `damageEvents`
+juice bridge (hurt SFX + camera shake via `emitShake`), so no ranged-specific
+feedback is special-cased. A capped mesh pool recycles one thin cylinder per live
+arrow.
+
+## Balance & seeding (P7.1)
+
+Forest archers are seeded **behind the melee soldier wave** — both anchors sit
+~34 m out, past every soldier cluster and well beyond `SAFE_SPAWN_BUFFER` (18 m)
+and the archer's 15 m detection radius — so a New Game player meets a melee front
+before any arrows fly and never aggros an archer from spawn. Arrow damage runs
+through the same spawn-grace window as soldier melee.
+
+## Mesh & corpse
+
+`ArcherEnemy` mounts the **FLO-426 ranged-archer GLB**
+(`/models/ranged-archer.glb`) on an invisible capsule, best-effort (the capsule
+is the headless/fallback). `applyArcherTexture()` assigns a hooded-ranger palette
+(mossy cloak, tan leather, bow-wood) so it reads apart from the green-coated
+musketeer. On death the archer falls into a persistent corpse via the shared
+`CorpseManager`, using a per-corpse GLB override (FLO-432) so a fallen archer
+keeps the ranger silhouette rather than borrowing the soldier body.
+
+## Pure FSM API
+
+```ts
+import { createArcherFSM, stepArcherFSM, applyDamageToArcher } from '../game/ai'
+
+let fsm = createArcherFSM()
+const { state, moveDX, moveDZ, fired, aimDirX, aimDirZ } =
+  stepArcherFSM(fsm, archerPos, playerPos, dt, params, { hasLineOfSight, anchorPos })
+fsm = state
+// if (fired) → spawn a projectile heading (aimDirX, aimDirZ)
+fsm = applyDamageToArcher(fsm, 25) // player melee hit
+```
+
+## Tests
+
+`src/game/ai/rangedArcherFSM.test.ts` covers engage transitions, firing (range,
+cooldown, line-of-sight gating), standoff kiting, death, and the patrol leash.
+`src/game/combat/projectile.test.ts` covers arrow travel, the budget cap, and hit
+resolution; `src/game/combat/lineOfSight.test.ts` the segment-vs-circle geometry.
+`src/scenes/archerEnemy.test.ts` and `src/scenes/arrowVolley.test.ts` cover the
+scene wrappers (firing, LOS hold, kiting, death) and the projectile→`Damageable`
+funnel.

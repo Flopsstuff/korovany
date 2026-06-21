@@ -40,7 +40,7 @@ describe('zone content table', () => {
     for (const id of ALL_IDS) {
       for (const a of getZoneContent(id).encounterAnchors) {
         expect(a.id).toBeTruthy()
-        expect(['soldier', 'caravan']).toContain(a.kind)
+        expect(['soldier', 'caravan', 'archer']).toContain(a.kind)
         expect(typeof a.position.x).toBe('number')
         expect(typeof a.position.y).toBe('number')
         expect(typeof a.position.z).toBe('number')

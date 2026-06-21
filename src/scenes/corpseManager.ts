@@ -62,9 +62,13 @@ export class CorpseManager {
     for (const rec of this.store.forZone(this.zoneId)) this.spawnMesh(rec)
   }
 
-  /** Convert an enemy death into a persistent corpse. Returns the new record. */
-  registerDeath(position: Vec3, rotationY: number): CorpseRecord {
-    const { corpse, evicted } = this.store.record(this.zoneId, position, rotationY)
+  /**
+   * Convert an enemy death into a persistent corpse. Returns the new record.
+   * `glbUrl` overrides the mounted body model for this corpse (FLO-432) — an
+   * archer falls as a ranger; omit it to use the manager's default GLB.
+   */
+  registerDeath(position: Vec3, rotationY: number, glbUrl?: string): CorpseRecord {
+    const { corpse, evicted } = this.store.record(this.zoneId, position, rotationY, glbUrl)
     this.spawnMesh(corpse)
     for (const ev of evicted) {
       const mesh = this.meshes.get(ev.id)
@@ -97,12 +101,14 @@ export class CorpseManager {
     mat.diffuseColor = CORPSE_COLOR
     mesh.material = mat
 
-    // Mount the soldier GLB as a child (best-effort — the toppled capsule is the
-    // fallback if the fetch fails, e.g. in headless tests).
-    if (this.glbUrl) {
+    // Mount the body GLB as a child (best-effort — the toppled capsule is the
+    // fallback if the fetch fails, e.g. in headless tests). A per-corpse override
+    // (FLO-432) lets an archer fall as a ranger; otherwise the manager default.
+    const glbUrl = rec.glbUrl ?? this.glbUrl
+    if (glbUrl) {
       void import('./modelLoader')
         .then(({ loadModel }) =>
-          loadModel(this.scene, this.glbUrl as string, { targetSize: 1.8, groundIt: true }).then(
+          loadModel(this.scene, glbUrl, { targetSize: 1.8, groundIt: true }).then(
             (model) => {
               if (mesh.isDisposed()) {
                 model.root.dispose()

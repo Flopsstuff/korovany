@@ -118,11 +118,14 @@ never while paused.
 ## Enemies & corpses
 
 The forest spawns at least five Empire soldier patrols (MPG.5, see
-[enemy-ai.md](enemy-ai.md)), placed from the zone-content `encounterAnchors`
-(`src/game/world/zoneContent.ts`, FLO-411). When a soldier dies the scene
-converts it into a persistent, inert corpse via `reapDeadSoldiers` +
-`CorpseManager`. Corpses are capped and survive a zone re-enter within a session
-— full details in [corpses.md](corpses.md).
+[enemy-ai.md](enemy-ai.md)) plus two ranged Empire archers (FLO-432), placed from
+the zone-content `encounterAnchors` (`src/game/world/zoneContent.ts`, FLO-411).
+The archers are seeded **behind the melee wave** (~34 m out, past every soldier),
+so the player meets a melee front before any arrows fly. When a soldier or archer
+dies the scene converts it into a persistent, inert corpse via `reapDeadEnemies` +
+`CorpseManager` (the archer falls as a ranger, its own GLB). Corpses are capped
+and survive a zone re-enter within a session — full details in
+[corpses.md](corpses.md).
 
 ## Safe spawn & difficulty curve (P7.1 / FLO-412)
 

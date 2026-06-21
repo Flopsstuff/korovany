@@ -28,3 +28,23 @@ export type {
   AttackEventListener,
   DismemberEventListener,
 } from './damageEvents'
+export { lineOfSightClear } from './lineOfSight'
+export type { SightObstacle } from './lineOfSight'
+export type {
+  CreateProjectileOptions,
+  Projectile,
+  ProjectileField,
+  ProjectileImpact,
+  StepProjectileFieldResult,
+} from './projectile'
+export {
+  createProjectile,
+  createProjectileField,
+  DEFAULT_PROJECTILE_HIT_RADIUS,
+  DEFAULT_PROJECTILE_SPEED,
+  DEFAULT_PROJECTILE_TTL,
+  MAX_LIVE_PROJECTILES,
+  spawnProjectile,
+  stepProjectile,
+  stepProjectileField,
+} from './projectile'

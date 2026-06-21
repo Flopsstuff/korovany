@@ -36,13 +36,23 @@ export class CorpseStore {
     this.field = createCorpseField(cap)
   }
 
-  /** Record a fresh corpse; returns it plus any evicted by the cap. */
-  record(zoneId: string, position: Vec3, rotationY: number): RecordCorpseResult {
+  /**
+   * Record a fresh corpse; returns it plus any evicted by the cap. `glbUrl`
+   * overrides the corpse's mounted model (FLO-432) — omit it to fall back to the
+   * CorpseManager's default GLB.
+   */
+  record(
+    zoneId: string,
+    position: Vec3,
+    rotationY: number,
+    glbUrl?: string,
+  ): RecordCorpseResult {
     const corpse: CorpseRecord = {
       id: `corpse-${this.seq++}`,
       zoneId,
       position: { x: position.x, y: position.y, z: position.z },
       rotationY,
+      ...(glbUrl !== undefined ? { glbUrl } : {}),
     }
     const { field, evicted } = addCorpse(this.field, corpse)
     this.field = field

@@ -36,3 +36,17 @@ export {
   DEFAULT_CARAVAN_PARAMS,
   stepCaravanFSM,
 } from './caravanFSM'
+
+export type {
+  ArcherFSMParams,
+  ArcherFSMState,
+  ArcherPhase,
+  ArcherStepOptions,
+  ArcherStepResult,
+} from './rangedArcherFSM'
+export {
+  applyDamageToArcher,
+  createArcherFSM,
+  DEFAULT_ARCHER_PARAMS,
+  stepArcherFSM,
+} from './rangedArcherFSM'

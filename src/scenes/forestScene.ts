@@ -40,6 +40,8 @@ import type { LootDrop } from '../game/loot'
 import type { CombatKillTarget } from '../game/progression'
 import { emitAttack, emitDamage, emitKill, emitShake } from '../game/combat/damageEvents'
 import { SoldierEnemy } from './soldierEnemy'
+import { ArcherEnemy, DEFAULT_ARCHER_GLB } from './archerEnemy'
+import { ArrowVolley } from './arrowVolley'
 import { CaravanEnemy } from './caravanEnemy'
 import { CorpseManager } from './corpseManager'
 import { getZoneContent, type EncounterKind } from '../game/world'
@@ -52,21 +54,33 @@ export const FOREST_ZONE_ID = 'forest'
  * mesh. Idempotent per soldier via `converted`. Exported so the live→corpse
  * transition is unit-testable without a render loop.
  */
+export function reapDeadEnemies<E extends { isDead(): boolean; mesh: AbstractMesh }>(
+  enemies: readonly E[],
+  converted: Set<E>,
+  corpses: Pick<CorpseManager, 'registerDeath'>,
+  onKilled?: () => void,
+  /** GLB mounted on the resulting corpse (FLO-432); omit for the manager default. */
+  glbUrl?: string,
+): void {
+  for (const e of enemies) {
+    if (!e.isDead() || converted.has(e)) continue
+    converted.add(e)
+    const p = e.mesh.position
+    const pos: Vec3 = { x: p.x, y: p.y, z: p.z }
+    corpses.registerDeath(pos, e.mesh.rotation.y, glbUrl)
+    e.mesh.setEnabled(false) // hide the live enemy; the corpse mesh takes over
+    onKilled?.() // edge-triggered once per enemy: feeds the run score (MPG.1)
+  }
+}
+
+/** Soldier-specific reap (back-compat wrapper around {@link reapDeadEnemies}). */
 export function reapDeadSoldiers(
   soldiers: readonly SoldierEnemy[],
   converted: Set<SoldierEnemy>,
   corpses: Pick<CorpseManager, 'registerDeath'>,
   onKilled?: () => void,
 ): void {
-  for (const s of soldiers) {
-    if (!s.isDead() || converted.has(s)) continue
-    converted.add(s)
-    const p = s.mesh.position
-    const pos: Vec3 = { x: p.x, y: p.y, z: p.z }
-    corpses.registerDeath(pos, s.mesh.rotation.y)
-    s.mesh.setEnabled(false) // hide the live soldier; the corpse mesh takes over
-    onKilled?.() // edge-triggered once per soldier: feeds the run score (MPG.1)
-  }
+  reapDeadEnemies(soldiers, converted, corpses, onKilled)
 }
 
 // ---------------------------------------------------------------------------
@@ -262,6 +276,8 @@ export interface ForestScene {
   readonly caravans: readonly CaravanEnemy[]
   /** All soldier patrols spawned into the zone on enter (MPG.5). */
   readonly soldiers: readonly SoldierEnemy[]
+  /** All ranged archers spawned into the zone on enter (FLO-432). */
+  readonly archers: readonly ArcherEnemy[]
   /**
    * Advance one frame by `dt` seconds. The render loop calls this every frame;
    * tests drive it directly to step the simulation deterministically.
@@ -287,10 +303,11 @@ function spawnsOf(kind: EncounterKind): Vector3[] {
 
 const FOREST_SOLDIER_SPAWNS = spawnsOf('soldier')
 const FOREST_CARAVAN_SPAWNS = spawnsOf('caravan')
+const FOREST_ARCHER_SPAWNS = spawnsOf('archer')
 
-/** Derived soldier spawn points (from the zone-content `encounterAnchors`).
+/** Derived soldier + archer spawn points (from the zone-content `encounterAnchors`).
  *  Exported so the safe-spawn buffer can be asserted in tests (P7.1 / FLO-412). */
-export { FOREST_SOLDIER_SPAWNS }
+export { FOREST_SOLDIER_SPAWNS, FOREST_ARCHER_SPAWNS }
 
 /** World-space spawn pose of a New Game player in the forest (matches the
  *  `new Vector3(0, 2, 0)` fallback below). Its XZ origin is what the difficulty
@@ -453,6 +470,36 @@ export function createForestScene(
   )
 
   // ------------------------------------------------------------------
+  // Ranged archers — FLO-432. A second enemy archetype that keeps its distance
+  // and looses arrows. Each arrow's hit routes through the SAME damage funnel as
+  // the melee soldier: a `Damageable` player target whose `takeDamage` applies
+  // the spawn-grace scale + the `damageEvents` juice bridge (hurt SFX + shake).
+  // ------------------------------------------------------------------
+  const playerTarget: Damageable = {
+    get position(): Vec3 {
+      const p = controller.mesh.position
+      return { x: p.x, y: p.y, z: p.z }
+    },
+    takeDamage(amount: number): void {
+      const dealt = amount * spawnGraceDamageScale(elapsed)
+      if (dealt <= 0) return // spawn grace: swallow the arrow (no damage, no shake)
+      onPlayerDamaged?.(dealt)
+      emitShake() // player-hurt SFX + camera shake bridge (mirrors the soldier path)
+    },
+  }
+  const arrows = new ArrowVolley(scene, { getTargets: () => [playerTarget] })
+
+  const archers = FOREST_ARCHER_SPAWNS.map(
+    (spawn) =>
+      new ArcherEnemy(scene, {
+        spawn,
+        getPlayerPos: () => controller.mesh.position,
+        onFire: (muzzle, dir, damage, speed) => arrows.fire(muzzle, dir, damage, speed),
+        onDefeated: () => onEnemyDefeated?.('archer'),
+      }),
+  )
+
+  // ------------------------------------------------------------------
   // Caravans — E3.3 loot piñatas wired into the live zone (E3.5), expanded for
   // MPG.5 so repeated raids are possible without leaving the zone. Each wanders
   // a loop until ambushed, flees when struck, and on defeat emits its rolled
@@ -482,6 +529,7 @@ export function createForestScene(
     glbUrl: corpseGlbUrl,
   })
   const convertedToCorpse = new Set<SoldierEnemy>()
+  const archersConvertedToCorpse = new Set<ArcherEnemy>()
 
   // Melee attack state for the player (edge-triggered on intent.attack).
   let meleeState = createMeleeAttack()
@@ -490,7 +538,9 @@ export function createForestScene(
   const loop = new FixedStepLoop({ world: undefined, dt: 1 / 60 })
   loop.scheduler.register(controller)
   for (const s of soldiers) loop.scheduler.register(s)
+  for (const a of archers) loop.scheduler.register(a)
   for (const c of caravans) loop.scheduler.register(c)
+  loop.scheduler.register(arrows) // arrows tick after the archers that fire them
 
   // One simulation+render frame. Extracted so the render loop and tests share
   // the exact same stepping path.
@@ -521,12 +571,13 @@ export function createForestScene(
       const playerPos = controller.mesh.position
       const forward = controller.mesh.forward
       const targets: Damageable[] = soldiers.filter((s) => !s.isDead())
+      targets.push(...archers.filter((a) => !a.isDead()))
       targets.push(...caravans.filter((c) => !c.isDead()))
       const hits = getMeleeHits(meleeState, playerPos as unknown as Vec3, forward as unknown as Vec3, targets)
       hits.forEach((h) => {
-        const wasDead = (h as SoldierEnemy | CaravanEnemy).isDead?.()
+        const wasDead = (h as SoldierEnemy | ArcherEnemy | CaravanEnemy).isDead?.()
         h.takeDamage(25)
-        const nowDead = (h as SoldierEnemy | CaravanEnemy).isDead?.()
+        const nowDead = (h as SoldierEnemy | ArcherEnemy | CaravanEnemy).isDead?.()
         // Feed the combat event bridge so the audio bus + HUD react (hit thud +
         // damage number on each hit, death sting on a kill). Centred screen
         // position is the same safe default human-lands uses pending full 3D→2D.
@@ -537,9 +588,17 @@ export function createForestScene(
       })
     }
 
-    // Turn any soldier that died this frame into a persistent corpse, scoring
-    // the kill (MPG.1) as it converts.
+    // Turn any soldier or archer that died this frame into a persistent corpse,
+    // scoring the kill (MPG.1) as it converts. Archers fall as rangers (their own
+    // GLB), so the corpse silhouette matches the enemy that died (FLO-432).
     reapDeadSoldiers(soldiers, convertedToCorpse, corpses, onEnemyKilled)
+    reapDeadEnemies(
+      archers,
+      archersConvertedToCorpse,
+      corpses,
+      onEnemyKilled,
+      corpseGlbUrl === null ? undefined : DEFAULT_ARCHER_GLB,
+    )
 
     loop.advance(dt)
     clampToWorld(controller.mesh.position) // contain the player within the world bounds
@@ -561,6 +620,7 @@ export function createForestScene(
     caravan,
     caravans,
     soldiers,
+    archers,
     step: frame,
     dispose() {
       if (disposed) return
@@ -574,7 +634,9 @@ export function createForestScene(
       )
       zoneManager.dispose()
       for (const s of soldiers) s.dispose()
+      for (const a of archers) a.dispose()
       for (const c of caravans) c.dispose()
+      arrows.dispose()
       corpses.dispose() // meshes only — store records persist for re-enter
       scene.dispose()
       engine.dispose()
