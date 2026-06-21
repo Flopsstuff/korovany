@@ -19,6 +19,7 @@ import { setAssetPhase } from '../store/streamingSlice'
 import { createCaravanPlayground } from './caravanPlayground'
 import { createControllerPlayground } from './controllerPlayground'
 import { createForestScene } from './forestScene'
+import { createMountainsScene } from './mountainsScene'
 import { createImpostorBench } from './impostorBench'
 import { createVegetationBench } from './vegetationBench'
 import { createPerfBench } from './perfBench'
@@ -32,6 +33,7 @@ import { createZoneScene } from './zoneScenes'
  * Scene routing:
  * - `?dev=controller` — controller playground (E1.1 QA)
  * - `?dev=forest`     — forest zone standalone (E1.3 QA)
+ * - `?dev=mountains`  — mountains (Black Crown Pass) zone standalone (E8.2 QA)
  * - `?dev=caravan`    — caravan ambush playground (E3.3 QA)
  * - `?dev=orders`     — commander/order playground (E4.3 QA)
  * - `?dev=impostor`   — dense-forest tree-impostor benchmark (E5.1 QA)
@@ -76,6 +78,8 @@ export function GameCanvas() {
             ? createOrdersPlayground(canvas)
           : dev === 'forest'
             ? createForestScene(canvas)
+          : dev === 'mountains'
+            ? createMountainsScene(canvas)
           : dev === 'impostor'
             ? createImpostorBench(canvas)
           : dev === 'vegetation'
