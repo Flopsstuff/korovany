@@ -26,7 +26,7 @@ any Community/showcase page.
 
 | Asset | File | Tris | Size | Rig | Meshy task id |
 |-------|------|------|------|-----|---------------|
-| Player hero (elf) | `public/models/korovany_hero_player-default.glb` | 2894 | — | static (no skeleton) | — |
+| Player hero (elf) | `public/models/korovany_hero_player-default.glb` | 2884 | 455 KiB | static (no skeleton); natural arms-down idle, reposed FLO-434 | `019ee92c-e565-7b9c-b7e5-cad74053e786` (preview) / `019ee92e-c84f-74ba-9053-6798430a6e6a` (refine) |
 | Conifer tree | `public/models/forest-tree.glb` | 1357 | — | static | — |
 | Wooden hut | `public/models/wooden-hut.glb` | 1893 | — | static | — |
 | Chest | `public/models/chest.glb` | — | — | static | — |

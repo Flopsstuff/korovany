@@ -11,8 +11,12 @@ loaded at runtime via `loadModel()` (`src/scenes/modelLoader.ts`).
 ## Current models
 
 - `chest.glb` — textured low-poly chest (FLO-261/263).
-- `korovany_hero_player-default.glb` — player hero, low-poly (2,894 tris ·
-  471 KB · 4× 1024 PBR), within the v1.2 §5 Hero budget (FLO-260). Source
+- `korovany_hero_player-default.glb` — player hero, low-poly (2,884 tris ·
+  455 KB · 4× 1024 PBR), within the v1.2 §5 Hero budget (FLO-260). Arms rest in
+  a natural relaxed idle (no splayed A/T-pose) — reposed in FLO-434; the prior
+  asset baked a Meshy "T-pose" prompt, which read as a scarecrow in-scene. Same
+  outfit/palette (brown bomber jacket, grey hoodie, olive cargo pants); same
+  proportions/longest-extent so `loadModel(targetSize:1.8)` is unchanged. Source
   render + reproducible spec sheet in `assets/models/hero/`. Also serves as the
   **Phase-1 elf player avatar** (reuse-first; faction elf deferred to Phase 4 —
   FLO-299).
