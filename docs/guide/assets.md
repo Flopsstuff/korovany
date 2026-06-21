@@ -62,7 +62,7 @@ any Community/showcase page.
 | Chest *(wired: forest static loot decor, FLO-470)* | `public/models/chest.glb` | — | — | static | — |
 | **Empire soldier (enemy)** | `public/models/empire-soldier.glb` | **2794** | 130 KiB | static (no skeleton) | `019ee601-93f0-7988-86f8-e35ce1067881` |
 | **Roadside shrine (Salt Road)** | `public/models/roadside-shrine.glb` | **1984** | 394 KiB | static | `019ee73a-c8a6-73bd-a2ec-e21137a6dba2` (preview) / `019ee747-ae35-786a-a8c7-490e65d0cddd` (retexture) |
-| **Empire toll gate** | `public/models/toll-gate.glb` | **1947** | 4.1 MiB | static | preview `019ee748-205e-763a-a883-bdda11e91c7e` · retexture `019ee749-ae59-7680-aa94-e6a8842c7bd5` |
+| **Empire toll gate** | `public/models/toll-gate.glb` | **1947** | 378 KiB | static | preview `019ee748-205e-763a-a883-bdda11e91c7e` · retexture `019ee749-ae59-7680-aa94-e6a8842c7bd5` |
 | **Caravan wagon (Salt Road)** *(wired: caravan enemy visual + forest static prop, FLO-470)* | `public/models/caravan-wagon.glb` | **2827** | 394 KiB | static | `019ee749-d4cf-79b9-b813-d98be2201197` (preview) / `019ee74d-2300-772c-8a22-612c27dd99dc` (retexture) |
 | **Cargo crate (Salt Road)** *(wired: forest cargo decor, FLO-470)* | `public/models/cargo-crate.glb` | **1022** | 296 KiB | static | `019ee743-a02c-7878-a22e-7b67cdfbafa6` (preview) |
 | **Ruined watchtower (Salt Road)** | `public/models/watchtower.glb` | **2564** | 379 KiB | static | `019ee749-6051-7990-b286-98be4ecf82b4` (retexture) |
@@ -73,10 +73,11 @@ any Community/showcase page.
 
 Salt Road landmark and navigation anchor (world-specs.md §1). Generated for [FLO-373](/FLO/issues/FLO-373).
 
-- **Budget:** 1947 tris ≤ 2500 (v1.2). Bounding box ≈ 2.0 × 1.6 × 0.7 units (road-spanning prop). Textured (retexture pass).
+- **Budget:** 1947 tris ≤ 2500 (v1.2). Bounding box ≈ 2.0 × 1.6 × 0.7 units (road-spanning prop). Textured (retexture pass). Web payload **378 KiB** — in line with the other Salt Road props (296–394 KiB).
 - **Provenance:** Meshy text-to-3D preview at `--target-polycount 2000 --art-style realistic`, followed by retexture pass. Prompt: *"low-poly stylized empire toll gate, two wooden barrier arms across a road, small wooden ledger booth, tall flagpole with imperial banner, weathered wood and iron, faceted flat-shaded, austere straight imperial design, readable silhouette"*. Retexture style: *"weathered wood planks, rusted iron fittings, imperial red and gold banner, stone road surface, earthy tones, flat low-poly colors"*. 20 preview + 10 retexture = 30 Meshy credits.
+- **Texture budget (FLO-477):** Meshy retexture embedded a single 2048² PBR JPEG (~4.0 MiB), pushing the GLB to 4.1 MiB — ~10× over the Salt Road web budget on a 1947-tri mesh. Downscaled to **1024²** (q85) via `tools/meshy-3d/resize_glb_textures.py`, recompacting the BIN chunk; mesh/accessor data is byte-identical, so the faceted/matte silhouette is untouched (texture 4015 KiB → 263 KiB; GLB 4130 KiB → 378 KiB). No Meshy credits spent (purely local repack).
 - **Rig:** static mesh, no skeleton.
-- **Verification:** loads headless via `node tools/meshy-3d/smoke_load_glb.mjs public/models/toll-gate.glb` → 2 meshes, 1947 tris, no errors.
+- **Verification:** loads headless via `node tools/meshy-3d/smoke_load_glb.mjs public/models/toll-gate.glb` → 2 meshes, 1947 tris, no errors. Resized texture atlas inspected: empire palette (grey planks, red/gold banner) and matte stylized read preserved.
 - **Handoff:** scene wiring (replacing the placeholder box in `humanLandsScene.ts`) is engineering scope — see [FLO-373](/FLO/issues/FLO-373).
 
 ### Ruined watchtower (Salt Road landmark) — Phase 3.5 / MPG
