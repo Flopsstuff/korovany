@@ -89,3 +89,12 @@ instances inherit their source's LOD levels — keeping the layer compatible wit
 the future thin-instanced forest (E5.3). A dense-forest benchmark scene is
 reachable at `?dev=impostor`. See
 [Asset streaming › Tree impostors](./asset-streaming.md#tree-impostors-distance-lod).
+
+## Performance budget (60fps on mid hardware)
+
+The dense-forest layers above exist to hold a frame inside a fixed budget. That
+budget lives as data in `src/game/perf/budget.ts` (60fps / 16.67ms; draw-call and
+active-index ceilings) with a pure evaluator, a scene `FrameProfiler` that grades
+a rolling mean, and a DOM `PerfHud` overlay. A live profiling bench over a
+576-tree forest is reachable at `?dev=perf`. See
+[Performance budget](./performance-budget.md) (E5.4).

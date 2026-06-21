@@ -238,6 +238,10 @@ benchmark scene (`src/scenes/vegetationBench.ts`) plants a 16×16 grid (256 tree
 as one batch and logs the reduction to the console and
 `window.__korovanyVegetationBench`.
 
+**Holding the frame.** The draw-call and triangle ceilings these layers exist to
+respect — and the live profiler / `?dev=perf` bench that grades against them — are
+documented in [performance-budget.md](performance-budget.md) (E5.4).
+
 ## HUD wiring
 
 `GameCanvas` passes `onAssetLoadingState` into `createGameEngine`, which

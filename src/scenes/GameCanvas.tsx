@@ -18,6 +18,7 @@ import { createControllerPlayground } from './controllerPlayground'
 import { createForestScene } from './forestScene'
 import { createImpostorBench } from './impostorBench'
 import { createVegetationBench } from './vegetationBench'
+import { createPerfBench } from './perfBench'
 import { createOrdersPlayground } from './ordersPlayground'
 import { createZoneScene } from './zoneScenes'
 
@@ -32,6 +33,7 @@ import { createZoneScene } from './zoneScenes'
  * - `?dev=orders`     — commander/order playground (E4.3 QA)
  * - `?dev=impostor`   — dense-forest tree-impostor benchmark (E5.1 QA)
  * - `?dev=vegetation` — dense-forest thin-instance benchmark (E5.3 QA)
+ * - `?dev=perf`       — performance-budget profiler over a dense forest (E5.4 QA)
  * - `phase === menu`  — engine smoke scene (hero preview, streaming HUD)
  * - `phase === playing | paused` — the active zone's scene, keyed by
  *   `playerSlice.zoneId` (E3.1). Fast-travel changes `zoneId`, which remounts
@@ -75,6 +77,8 @@ export function GameCanvas() {
             ? createImpostorBench(canvas)
           : dev === 'vegetation'
             ? createVegetationBench(canvas)
+          : dev === 'perf'
+            ? createPerfBench(canvas)
             : inGame
             ? createZoneScene(zoneId, canvas, {
                 onPlayerDamaged: (amount) => dispatch(damagePlayer(amount)),
