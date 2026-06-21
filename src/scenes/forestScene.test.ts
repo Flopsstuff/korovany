@@ -370,15 +370,18 @@ describe('forest safe spawn & difficulty curve (FLO-412)', () => {
     expect(spawnGraceDamageScale(SPAWN_GRACE_SECONDS + 1)).toBe(1)
   })
 
-  // Acceptance (FLO-412): a New Game player must not be damaged in the immediate
-  // aftermath of spawn. The audit bug was an idle player dying in ~15 s because a
-  // soldier was already inside its aggro radius at spawn. With the 18 m buffer the
-  // nearest soldier (19 m away) cannot reach 10 m detection range in < 6 s even
-  // walking directly toward the player at patrol speed (1.5 m/s). We test the
-  // provably safe window (5 s) rather than an arbitrary long idle that depends on
-  // non-deterministic patrol direction changes. The geometry test below covers the
-  // structural safety (no soldier's aggro radius overlaps the path to caravans).
-  it('keeps a New Game player unharmed for the first 5 s of idle play (immediate spawn safety)', () => {
+  // Acceptance (FLO-412): a New Game player who clicks into the forest must
+  // survive ≥ 30 s. The audit bug was the inverse — an idle player at the origin
+  // was inside (or wandered into) a patrol's aggro radius and died in ~15 s.
+  //
+  // This was briefly narrowed to a 5 s window because the un-leashed patrol could
+  // drift into detection range over a long idle and the wander was seeded by
+  // Date.now() (non-deterministic, ~25 % CI flake). The patrol leash (soldierFSM
+  // `patrolLeashRadius`) now bounds every soldier to 6 m of its 19 m anchor — a
+  // 13 m closest approach, outside the 10 m detection radius — and the wander is
+  // deterministic, so the full ≥ 30 s window is provably and reproducibly safe.
+  // Restored to the real acceptance bound the band-aid had shrunk.
+  it('keeps a New Game player unharmed for 30+ s of idle play (survivable spawn)', () => {
     takeSpawn() // New Game → clearing centre (0,2,0)
     const onPlayerDamaged = vi.fn()
     const game = createForestScene(document.createElement('canvas'), {
@@ -387,9 +390,8 @@ describe('forest safe spawn & difficulty curve (FLO-412)', () => {
       onPlayerDamaged,
     })
 
-    // 300 frames ≈ 5 s at 1/60 step. Nearest soldier (19 m) cannot close to
-    // 10 m detection range in 5 s at 1.5 m/s patrol speed (needs ≥6 s worst-case).
-    for (let i = 0; i < 300; i++) game.step(1 / 60)
+    // 1900 frames ≈ 31.7 s at the fixed 1/60 step.
+    for (let i = 0; i < 1900; i++) game.step(1 / 60)
     expect(onPlayerDamaged).not.toHaveBeenCalled()
 
     game.dispose()
