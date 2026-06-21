@@ -17,8 +17,17 @@ describe('zone content table', () => {
   })
 
   it('keeps locked zones minimal', () => {
+    // Empire is the only remaining locked zone (mountains shipped in E8.2 / FLO-428).
     expect(getZoneContent('empire').landmarks).toHaveLength(0)
-    expect(getZoneContent('mountains').landmarks).toHaveLength(0)
+    expect(getZoneContent('empire').encounterAnchors).toHaveLength(0)
+  })
+
+  it('gives the mountains zone fort landmarks and a villain garrison (E8.2)', () => {
+    const mountains = getZoneContent('mountains')
+    expect(mountains.landmarks.length).toBeGreaterThanOrEqual(1)
+    expect(mountains.encounterAnchors.some((a) => a.kind === 'soldier')).toBe(true)
+    // A commander-placeholder ranged unit wires the E4.3 command/order slot.
+    expect(mountains.encounterAnchors.some((a) => a.kind === 'archer')).toBe(true)
   })
 
   it('validates the landmark shape for every entry (trust the boundary)', () => {

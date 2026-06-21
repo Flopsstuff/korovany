@@ -2,6 +2,40 @@
 
 **Zone role:** Mountain lands, villain fortress approach, vertical combat map.
 
+## Implementation status (E8.2 / FLO-428)
+
+The Mountains zone ships a **playable greybox scene** — the fourth and final
+canonical zone, so all four are now reachable from the world map. This section is
+the code-side truth; the rest of the doc is the prose content brief that the
+build draws from.
+
+- **Scene:** `src/scenes/mountainsScene.ts` (`createMountainsScene`, zone id
+  `mountains`). Mirrors `humanLandsScene` — walled snow-grey ground, the full
+  third-person controller rig, greybox fort landmarks, and raised rocky greybox
+  **peaks** ringing the pass for mountain identity (cliffs read visually but the
+  world bounds, not the peaks, contain the player).
+- **Content layer:** `src/game/world/zoneContent.ts` `mountains` entry — fort
+  landmarks (broken **crown tower**, inner **keep gate**, villain **command
+  tent**, **prison cages**) + encounter anchors (villain **soldiers**, a captured
+  **caravan** to free, and one commander-placeholder **archer**). Spawns keep the
+  ≥ 18 m soldier-free buffer the forest established (P7.1 / FLO-412).
+- **Registry:** unlocked in `src/game/world/zones.ts` (`status: 'available'`) and
+  routed in `src/scenes/zoneScenes.ts` (`case 'mountains'`). Streaming manifest is
+  empty (greybox props are procedural, like human-lands) until an asset ticket
+  streams the fort/rock kits via each landmark's `assetKey`.
+- **Faction tie-in / commander objective:** the villain commands their own troops
+  here. The single `archer` anchor (`commander-1`, by the command tent) is the
+  **commander-placeholder** for the command/order system (E4.3): today a lone
+  elevated ranged unit, later promoted to a real commander issuing orders. See the
+  `commanderObjective` note in `mountainsScene.ts`.
+- **Tests:** `src/scenes/mountainsScene.test.ts` (boot + step + spawn + non-empty
+  garrison + pause) and the `mountains` cases in `src/game/world/zoneContent.test.ts`
+  / `world.test.ts`.
+
+Not yet built (future tickets): real fort/rock GLB kits, elevation/vertical
+traversal (bridge, goat trail, avalanche arena), prisoner-rescue objective state,
+and the assault/defense variant spawn swap.
+
 **Design promise:** A dangerous climb toward a hostile fort where the same
 geometry supports two fantasies: assault the villain's stronghold, or defend it
 as the villain's faction.

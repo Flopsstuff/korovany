@@ -34,11 +34,12 @@ describe('zone registry', () => {
     }
   })
 
-  it('ships Forest and Human lands as available, Empire and Mountains locked', () => {
+  it('ships Forest, Human lands and Mountains as available, Empire locked', () => {
     expect(isZoneAvailable('forest')).toBe(true)
     expect(isZoneAvailable('human-lands')).toBe(true)
+    // Mountains (Black Crown Pass) shipped its scene in E8.2 (FLO-428).
+    expect(isZoneAvailable('mountains')).toBe(true)
     expect(isZoneAvailable('empire')).toBe(false)
-    expect(isZoneAvailable('mountains')).toBe(false)
   })
 
   it('resolves known ids and rejects unknown ones', () => {
@@ -61,7 +62,12 @@ describe('planTravel (fast-travel resolver)', () => {
 
   it('rejects travel to a locked zone', () => {
     expect(planTravel('forest', 'empire')).toEqual({ ok: false, reason: 'zone-locked' })
-    expect(planTravel('forest', 'mountains')).toEqual({ ok: false, reason: 'zone-locked' })
+  })
+
+  it('plans travel to the now-unlocked mountains zone (E8.2)', () => {
+    const result = planTravel('forest', 'mountains')
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.plan.zone.id).toBe('mountains')
   })
 
   it('rejects travel to an unknown zone', () => {

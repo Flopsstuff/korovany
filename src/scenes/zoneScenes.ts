@@ -3,6 +3,7 @@ import type { CombatKillTarget } from '../game/progression'
 import { getZone } from '../game/world'
 import { createForestScene } from './forestScene'
 import { createHumanLandsScene } from './humanLandsScene'
+import { createMountainsScene } from './mountainsScene'
 
 /**
  * Options common to every zone scene. The scenes layer hands these down from the
@@ -46,6 +47,8 @@ export function createZoneScene(
   switch (zone?.streaming.sceneKey) {
     case 'human-lands':
       return createHumanLandsScene(canvas, options)
+    case 'mountains':
+      return createMountainsScene(canvas, options)
     case 'forest':
     default:
       return createForestScene(canvas, options)

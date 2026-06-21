@@ -64,13 +64,14 @@ export interface ZoneContent {
 }
 
 /**
- * The per-zone content table. `human-lands` (Velya) and `forest` (Lysaen) are the
- * two `available` zones and carry real content; `empire`/`mountains` stay `locked`
- * and minimal until their scenes exist.
+ * The per-zone content table. `human-lands` (Velya), `forest` (Lysaen), and
+ * `mountains` (Black Crown Pass) are `available` and carry real content; `empire`
+ * stays `locked` and minimal until its scene exists.
  *
  * Sources:
  * - `human-lands` ← `docs/guide/worlds/velya-salt-road.md`
  * - `forest` ← `docs/guide/worlds/lysaen-emerald-thicket.md`
+ * - `mountains` ← `docs/guide/worlds/black-crown-pass.md`
  */
 export const ZONE_CONTENT: Readonly<Record<ZoneId, ZoneContent>> = {
   'human-lands': {
@@ -171,7 +172,65 @@ export const ZONE_CONTENT: Readonly<Record<ZoneId, ZoneContent>> = {
   // their scenes (and specs' content) are built. Black Crown Pass spec exists as
   // prose; its content binding lands with the mountains scene.
   empire: { landmarks: [], encounterAnchors: [] },
-  mountains: { landmarks: [], encounterAnchors: [] },
+  mountains: {
+    // Black Crown Pass (docs/guide/worlds/black-crown-pass.md) — the Villain's
+    // old fort, fourth and final canonical zone (E8.2 / FLO-428). Greybox
+    // landmarks stand in for the fort kit until an asset ticket streams GLBs via
+    // each landmark's `assetKey`; cold grey/blue palette per the spec's mood.
+    landmarks: [
+      {
+        id: 'crown-tower',
+        role: 'Broken crown tower — main silhouette / signal-fire platform',
+        position: { x: 0, z: 26 },
+        height: 9,
+        size: 3,
+        color: { r: 0.34, g: 0.34, b: 0.4 },
+      },
+      {
+        id: 'keep-gate',
+        role: 'Inner keep gate — locked expansion boundary',
+        position: { x: 0, z: 32 },
+        height: 5,
+        size: 5,
+        color: { r: 0.26, g: 0.26, b: 0.3 },
+      },
+      {
+        id: 'command-tent',
+        role: "Villain command tent — commander/order anchor (E4.3 hook)",
+        position: { x: 8, z: 22 },
+        height: 3,
+        size: 3,
+        color: { r: 0.18, g: 0.16, b: 0.2 },
+      },
+      {
+        id: 'prison-cages',
+        role: 'Prison cages — rescue objective / moral-pressure anchor',
+        position: { x: -9, z: 20 },
+        height: 2,
+        size: 3,
+        color: { r: 0.4, g: 0.36, b: 0.3 },
+      },
+    ],
+    // Villain forces hold the high ground (the fort sits to +Z); the player
+    // climbs from spawn (0,0,0). Every patrol sits ≥ 18 m out (clear of the
+    // soldier 10 m aggro radius) per the forest precedent (P7.1 / FLO-412): one
+    // lone lower-ambush soldier just past the buffer, two guarding the yard, and
+    // a commander-placeholder archer back by the command tent. The caravan is a
+    // captured prisoner wagon inside the buffer — a free first objective.
+    // Distances from spawn: s1 19.0, s2 24.2, s3 26.6, cmd 23.4 m.
+    encounterAnchors: [
+      { id: 'soldier-1', kind: 'soldier', position: { x: 0, y: 0.9, z: 19 } },
+      { id: 'soldier-2', kind: 'soldier', position: { x: 12, y: 0.9, z: 21 } },
+      { id: 'soldier-3', kind: 'soldier', position: { x: -10, y: 0.9, z: 24.6 } },
+      // Commander placeholder (E4.3): a ranged archer stationed at the command
+      // tent. The fort's command/order system will later promote this slot to a
+      // real commander issuing orders; today it is a lone elevated ranged unit.
+      { id: 'commander-1', kind: 'archer', position: { x: 8, y: 0.9, z: 22 } },
+      // Captured caravan held in the prison yard — a rescue/raid objective that
+      // ties the pass back into the human-caravan loop (spec "Faction pressure").
+      { id: 'caravan-1', kind: 'caravan', position: { x: -8, y: 1, z: -6 } },
+    ],
+  },
 }
 
 /**

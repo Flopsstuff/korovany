@@ -52,7 +52,7 @@ flowchart TD
 | `human-lands` | Human lands | The Salt Road of Velya | Neutral | available |
 | `forest` | Forest | The Emerald Thicket of Lysaen | Forest Elves | available |
 | `empire` | Empire | The Imperial March | The Emperor | locked |
-| `mountains` | Mountains | Black Crown Pass | The Villain | locked |
+| `mountains` | Mountains | Black Crown Pass | The Villain | available |
 
 Display order is fixed (registry order) so the grid is spatially stable between
 opens (Jakob's Law — the map never reshuffles under the player's muscle memory).

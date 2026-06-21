@@ -25,7 +25,7 @@ describe('WorldMap', () => {
 
   it('disables locked zones', () => {
     render(<WorldMap zones={zones} currentZoneId="forest" onTravel={vi.fn()} onClose={vi.fn()} />)
-    expect(screen.getAllByText('Locked')).toHaveLength(2) // Empire + Mountains
+    expect(screen.getAllByText('Locked')).toHaveLength(1) // Empire (Mountains unlocked in E8.2/FLO-428)
     const empire = screen.getByRole('button', { name: /Empire.*Locked/s })
     expect(empire).toBeDisabled()
   })
