@@ -57,10 +57,14 @@ The topple uses `dt` from the caller, which already reflects `engine.timeScale` 
 - `animator: CharacterAnimator` exposed as a public field.
 - Call `controller.setAttackPhase(meleeState.phase)` each frame after `stepMeleeAttack`.
 - Wire `controller.animator.node` to the avatar root. The player visual is the
-  procedural box-primitive fighter from `src/scenes/playerAvatar.ts`
-  (`buildPlayerAvatar`), built synchronously and parented to the capsule (P7.4 /
-  FLO-422). Its `root` satisfies the same `AnimatableNode` contract the old hero
-  GLB did, so bob/lean/lunge/topple apply unchanged.
+  flat-albedo survivor GLB (`korovany_hero_player-default.glb`), mounted
+  fire-and-forget and faceted in-engine by `mountSurvivorAvatar`
+  (`src/scenes/survivorAvatar.ts`, FLO-443). The load is async (mirrors
+  `soldierEnemy`/`archerEnemy`), so `animator.node` is assigned in the load
+  callback once the GLB resolves; gameplay runs on the invisible capsule from
+  frame 0 regardless. The GLB's single welded `root` satisfies the same
+  `AnimatableNode` contract, so the whole-body bob/lean/lunge/topple apply
+  unchanged on the rig-less mesh.
 
 **Soldiers (`SoldierEnemy`)**:
 - `animator: CharacterAnimator` exposed as a public field.

@@ -15,7 +15,7 @@ import { createInputController, type Intent } from '../game/input'
 import { FixedStepLoop } from '../game/loop'
 import { registerPlayer, takeSpawn } from '../game/save/playerRuntime'
 import type { PlayerTransform } from '../game/save/types'
-import { buildPlayerAvatar } from './playerAvatar'
+import { mountSurvivorAvatar } from './survivorAvatar'
 
 /**
  * Minimal dev/test scene for the third-person character controller (E1.1).
@@ -125,16 +125,10 @@ export function createControllerPlayground(
   capsuleMat.diffuseColor = new Color3(0.3, 0.5, 0.8)
   controller.mesh.material = capsuleMat
 
-  // Player visual: procedural low-poly fighter (P7.4 / FLO-422). `null` keeps the
-  // bare capsule (tests).
+  // Player visual: the flat-albedo survivor GLB faceted in-engine (FLO-443),
+  // mounted fire-and-forget on the capsule. `null` keeps the bare capsule (tests).
   if (heroUrl !== null) {
-    const avatar = buildPlayerAvatar(scene)
-    avatar.root.parent = controller.mesh
-    // Drop the visual so its feet sit at the capsule's feet (origin − halfHeight).
-    avatar.root.position = new Vector3(0, -0.9, 0)
-    controller.mesh.isVisible = false
-    controller.animator.node =
-      avatar.root as unknown as import('../game/animation/proceduralAnimator').AnimatableNode
+    mountSurvivorAvatar(scene, controller, heroUrl)
   }
 
   const loop = new FixedStepLoop({ world: undefined, dt: 1 / 60 })

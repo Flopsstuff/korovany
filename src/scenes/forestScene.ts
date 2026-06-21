@@ -11,7 +11,7 @@ import {
   Vector3,
 } from '@babylonjs/core'
 import { createWorldBounds } from './worldBounds'
-import { buildPlayerAvatar } from './playerAvatar'
+import { mountSurvivorAvatar } from './survivorAvatar'
 import { resizeEngineToDisplay } from '../engine'
 import { ThirdPersonCamera } from '../game/camera'
 import type { LocomotionMode } from '../game/health/locomotion'
@@ -223,9 +223,8 @@ export interface ForestSceneOptions {
   createEngine?: (canvas: HTMLCanvasElement) => AbstractEngine
   /**
    * Player visual control. `null` skips the avatar (headless tests). Any other
-   * value (including the default) mounts the procedural low-poly fighter from
-   * {@link buildPlayerAvatar}; the rig-less hero GLB was retired in P7.4
-   * (FLO-422) because its baked T-pose read as a scarecrow, not a fighter.
+   * value (including the default GLB path) mounts the flat-albedo survivor GLB,
+   * faceted in-engine, via {@link mountSurvivorAvatar} (FLO-443).
    */
   heroUrl?: string | null
   /** Called when an enemy hits the player. Caller dispatches damagePlayer. */
@@ -442,15 +441,10 @@ export function createForestScene(
   controller.mesh.material = capsuleMat
   controller.mesh.isVisible = false
 
-  // Player visual: a procedural low-poly fighter built from flat-shaded boxes
-  // (P7.4 / FLO-422). `heroUrl: null` (headless tests) skips it.
+  // Player visual: the flat-albedo survivor GLB faceted in-engine (FLO-443),
+  // mounted fire-and-forget on the capsule. `heroUrl: null` (headless tests) skips it.
   if (heroUrl !== null) {
-    const avatar = buildPlayerAvatar(scene)
-    avatar.root.parent = controller.mesh
-    avatar.root.position = new Vector3(0, -0.9, 0)
-    controller.mesh.isVisible = false
-    controller.animator.node =
-      avatar.root as unknown as import('../game/animation/proceduralAnimator').AnimatableNode
+    mountSurvivorAvatar(scene, controller, heroUrl)
   }
 
   // ------------------------------------------------------------------
