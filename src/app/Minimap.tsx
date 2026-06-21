@@ -74,19 +74,26 @@ export function Minimap({
     const draw = () => {
       ctx.clearRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE)
 
-      // Backdrop + world-bounds frame.
+      // Backdrop.
       ctx.fillStyle = COLOR_BG
       ctx.fillRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE)
-      ctx.strokeStyle = COLOR_BORDER
-      ctx.lineWidth = 1
-      ctx.strokeRect(0.5, 0.5, MINIMAP_SIZE - 1, MINIMAP_SIZE - 1)
 
       const snapshot = getSnapshotRef.current()
       if (snapshot) {
+        // The radar is zoomed in and centred on the player, who stays pinned at
+        // the canvas centre while the world pans beneath (FLO-467). Clip markers
+        // to the frame so blips outside the zoomed window are cut off at the
+        // edges instead of piling up on the rim.
+        const center = snapshot.player
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE)
+        ctx.clip()
+
         // Caravans (objective) — gold.
         ctx.fillStyle = COLOR_CARAVAN
         for (const c of snapshot.caravans) {
-          const p = worldToMinimap(c.x, c.z, MINIMAP_SIZE)
+          const p = worldToMinimap(c.x, c.z, MINIMAP_SIZE, center)
           ctx.beginPath()
           ctx.arc(p.x, p.y, CARAVAN_DOT, 0, Math.PI * 2)
           ctx.fill()
@@ -95,15 +102,16 @@ export function Minimap({
         // Threats (soldiers + archers) — red.
         ctx.fillStyle = COLOR_THREAT
         for (const s of snapshot.soldiers) {
-          const p = worldToMinimap(s.x, s.z, MINIMAP_SIZE)
+          const p = worldToMinimap(s.x, s.z, MINIMAP_SIZE, center)
           ctx.beginPath()
           ctx.arc(p.x, p.y, THREAT_DOT, 0, Math.PI * 2)
           ctx.fill()
         }
 
-        // Player — dot + facing line. World forward at yaw 0 is +Z (up on the
-        // radar); +X is east (right). So facing = (sin yaw, -cos yaw) in px.
-        const pp = worldToMinimap(snapshot.player.x, snapshot.player.z, MINIMAP_SIZE)
+        // Player — dot + facing line, fixed at the centre. World forward at yaw 0
+        // is +Z (up on the radar); +X is east (right). So facing = (sin yaw,
+        // -cos yaw) in px.
+        const pp = worldToMinimap(center.x, center.z, MINIMAP_SIZE, center)
         const fx = Math.sin(snapshot.player.rotationY)
         const fy = -Math.cos(snapshot.player.rotationY)
         ctx.strokeStyle = COLOR_PLAYER
@@ -116,7 +124,14 @@ export function Minimap({
         ctx.beginPath()
         ctx.arc(pp.x, pp.y, PLAYER_DOT, 0, Math.PI * 2)
         ctx.fill()
+
+        ctx.restore()
       }
+
+      // World-bounds frame, drawn on top so clipped markers tuck under it.
+      ctx.strokeStyle = COLOR_BORDER
+      ctx.lineWidth = 1
+      ctx.strokeRect(0.5, 0.5, MINIMAP_SIZE - 1, MINIMAP_SIZE - 1)
 
       frameId = requestAnimationFrame(draw)
     }
