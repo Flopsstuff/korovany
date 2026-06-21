@@ -25,6 +25,12 @@ Live app: <https://korovany.aimost.pl/> · Docs: <https://flopsstuff.github.io/k
 ## Workflow
 
 - Branch per issue: `flo-<issue>-<slug>`. Reference the issue in commits (`FLO-253`).
+- **Isolate your checkout.** This repo is a shared tree worked by concurrent
+  agent runs. Never stage/commit directly in `/home/flop/projects/korovany` —
+  do your work in your own `git worktree add ../korovany-<slug> origin/main`
+  (symlink `node_modules`) and push from there. Committing in the shared
+  checkout races the git index and can lose or cross-contaminate work
+  (see [ADR 0003](docs/decisions/0003-concurrent-run-checkout-isolation.md)).
 - Before pushing, run locally: `npm run lint && npm test && npm run build`.
 - Keep `AGENTS.md`, `CLAUDE.md`, and `docs/guide/project-rules.md` in sync.
 

@@ -23,6 +23,13 @@ contributors lives in [`AGENTS.md`](https://github.com/Flopsstuff/korovany/blob/
 - Branch per issue: `flo-<issue>-<slug>` (e.g. `flo-253-project-conventions`).
 - `main` is always green and deployable — never push work that fails CI.
 - Commit messages: imperative subject, reference the issue (`FLO-253`).
+- **Isolate your checkout — never work directly in the shared main checkout.**
+  Multiple agent runs share `/home/flop/projects/korovany`. Two runs
+  staging/committing there at once race the git index and can lose or
+  cross-contaminate work. Do your work in your own
+  `git worktree add ../korovany-<slug> origin/main` (symlink `node_modules`),
+  then commit and push from there. See
+  [ADR 0003](/decisions/0003-concurrent-run-checkout-isolation).
 
 ## 4. Testing is mandatory
 

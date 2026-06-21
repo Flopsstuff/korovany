@@ -29,6 +29,10 @@ Babylon.js · Redux Toolkit · Vite 6. App → Cloudflare Pages
   test engine code directly, inject Babylon's headless `NullEngine` (see
   `src/engine/index.test.ts`). Full guide:
   [`docs/guide/testing.md`](docs/guide/testing.md) (single source of truth).
+- **Shared tree — isolate your checkout:** this repo is worked by concurrent
+  runs. Never stage/commit in the shared `/home/flop/projects/korovany`; use your
+  own `git worktree add ../korovany-<slug> origin/main` (symlink `node_modules`)
+  and push from there. See AGENTS.md + ADR 0003 (`docs/decisions/`).
 - **Git auth:** the local PAT can't push/PR or read Actions secrets. Push over
   **SSH** (`git@github.com:Flopsstuff/korovany.git`). To trigger a deploy, push to
   `main` (an empty commit works); `workflow_dispatch` is not available to the PAT.
