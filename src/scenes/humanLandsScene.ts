@@ -38,6 +38,7 @@ import { getZoneContent, type EncounterKind } from '../game/world'
 import { ZONE_MAPS } from '../game/world/mapProps'
 import { renderMapProps } from './mapPropsRenderer'
 import { type PalaceGuardProp, spawnPalaceGuardProps } from './palaceGuardProp'
+import { type TollGateProp, spawnTollGateProp } from './tollGateProp'
 
 /** Zone id used for the human-lands scene's save/corpse persistence. */
 export const HUMAN_LANDS_ZONE_ID = 'human-lands'
@@ -83,6 +84,11 @@ export interface HumanLandsSceneOptions {
    * (headless tests) but still spawns placement roots.
    */
   palaceGuardGlbUrl?: string | null
+  /**
+   * Toll-gate landmark GLB (FLO-478); `null` skips the fetch (headless tests) but
+   * still spawns the placement root at the zone-content position.
+   */
+  tollGateGlbUrl?: string | null
 }
 
 export interface HumanLandsScene {
@@ -95,6 +101,8 @@ export interface HumanLandsScene {
   readonly soldiers: readonly SoldierEnemy[]
   /** Static ceremonial palace-guard decor at the toll gate (FLO-471). */
   readonly palaceGuards: readonly PalaceGuardProp[]
+  /** Empire toll gate landmark GLB (FLO-478). */
+  readonly tollGate: TollGateProp
   /** Advance one frame by `dt` seconds (tests drive this directly). */
   step(dt: number): void
   dispose(): void
@@ -144,6 +152,7 @@ export function createHumanLandsScene(
     onMinimapTick,
     onStaminaChange,
     palaceGuardGlbUrl,
+    tollGateGlbUrl,
   } = options
 
   const engine = createEngine(canvas)
@@ -163,11 +172,9 @@ export function createHumanLandsScene(
   // call per symbol; non-pickable so the player passes through. Swap to GLBs later.
   const mapProps = renderMapProps(scene, ZONE_MAPS[HUMAN_LANDS_ZONE_ID])
 
-  // Greybox marker boxes standing in for the Salt Road's landmarks (toll gate,
-  // shrine, watchtower) so the zone reads as visually distinct from the forest.
-  // Geometry/colour come from the zone-content table; a later asset ticket swaps
-  // these for streamed GLBs via each landmark's `assetKey`.
-  const landmarkMeshes = ZONE.landmarks.map((lm, i) => {
+  // Greybox marker boxes for landmarks not yet swapped to GLBs (shrine, watchtower).
+  // The toll gate is mounted via `spawnTollGateProp` (FLO-478).
+  const landmarkMeshes = ZONE.landmarks.filter((lm) => lm.id !== 'toll-gate').map((lm, i) => {
     const box = MeshBuilder.CreateBox(`landmark-${i}`, { size: lm.size, height: lm.height }, scene)
     box.position = new Vector3(lm.position.x, lm.height / 2, lm.position.z)
     const mat = new StandardMaterial(`landmarkMat-${i}`, scene)
@@ -221,6 +228,7 @@ export function createHumanLandsScene(
   const screenShake = new ScreenShakeManager()
 
   const palaceGuards = spawnPalaceGuardProps(scene, undefined, palaceGuardGlbUrl)
+  const tollGate = spawnTollGateProp(scene, tollGateGlbUrl)
 
   const soldiers = HUMAN_LANDS_SOLDIER_SPAWNS.map(
     (spawn) =>
@@ -361,6 +369,7 @@ export function createHumanLandsScene(
     caravans,
     soldiers,
     palaceGuards,
+    tollGate,
     step: frame,
     dispose() {
       if (disposed) return
@@ -372,6 +381,7 @@ export function createHumanLandsScene(
       mapProps.dispose(false, true) // disposes the thin-instanced map + its materials
       for (const mesh of landmarkMeshes) mesh.dispose()
       for (const g of palaceGuards) g.dispose()
+      tollGate.dispose()
       for (const s of soldiers) s.dispose()
       for (const c of caravans) c.dispose()
       scene.dispose()

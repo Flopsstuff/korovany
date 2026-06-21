@@ -9,6 +9,7 @@ function boot(opts: Parameters<typeof createHumanLandsScene>[1] = {}) {
   return createHumanLandsScene(canvas, {
     heroUrl: null,
     palaceGuardGlbUrl: null,
+    tollGateGlbUrl: null,
     createEngine: () => new NullEngine(),
     ...opts,
   })
@@ -60,6 +61,13 @@ describe('createHumanLandsScene', () => {
       'palace-guard-toll-left',
       'palace-guard-toll-right',
     ])
+    game.dispose()
+  })
+
+  it('mounts the toll-gate landmark root and drops the greybox placeholder (FLO-478)', () => {
+    const game = boot()
+    expect(game.tollGate.root.name).toBe('landmark:toll-gate')
+    expect(game.scene.getMeshByName('landmark-2')).toBeNull()
     game.dispose()
   })
 
