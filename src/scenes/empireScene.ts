@@ -83,6 +83,8 @@ export interface EmpireScene {
 }
 
 const DEFAULT_HERO_URL = '/models/korovany_hero_player-default.glb'
+/** Strike-pose twin shown while a melee swing is in flight (FLO-481 / FLO-480). */
+const ATTACK_HERO_URL = '/models/korovany_hero_player-attack.glb'
 
 /** This zone's content (landmarks + encounter anchors), the single source of
  * truth seeded from `docs/guide/worlds/imperial-palace.md` (E8.1, ADR-0004). */
@@ -196,9 +198,10 @@ export function createEmpireScene(
   controller.mesh.isVisible = false
 
   // Player visual: the flat-albedo survivor GLB faceted in-engine (FLO-443/447),
-  // mounted fire-and-forget on the capsule. `heroUrl: null` (headless tests) skips it.
+  // mounted fire-and-forget on the capsule, plus the attack-pose twin swapped in
+  // by combat state (FLO-481). `heroUrl: null` (headless tests) skips it.
   if (heroUrl !== null) {
-    mountSurvivorAvatar(scene, controller, heroUrl)
+    mountSurvivorAvatar(scene, controller, heroUrl, ATTACK_HERO_URL)
   }
 
   const hitFlash = new HitFlashManager()

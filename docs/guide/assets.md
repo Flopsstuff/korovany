@@ -37,6 +37,20 @@ any Community/showcase page.
 > `mesh.convertToFlatShadedMesh()` + a matte material at load (as `worldBounds.ts`
 > does for the ground) so the faceted hard-edge read lands, and whole-body
 > bob/lean/lunge/topple drive the single `root` via the animator contract.
+>
+> **Combat-state swap (FLO-481 / plan step 2 of FLO-474).** The player now has two
+> distinct visual states. Alongside the neutral `…-default.glb`, combat scenes mount
+> `korovany_hero_player-attack.glb` — a drop-in strike-pose twin (2,905 tris, same
+> bbox/scale/identity, FLO-480) — and toggle which one renders by combat state:
+> **default while idle, attack while a melee swing is in flight** (the
+> windup/active/recovery phases). `mountSurvivorAvatar(scene, mount, heroUrl,
+> attackUrl)` loads both and parents them under the capsule at the same foot offset;
+> `CharacterController.setAttackPhase` edge-fires a registered swap on the
+> idle↔swing transition (so it flips twice per swing, not every frame). Because the
+> two GLBs share a bbox the swap needs no scale/position correction, and there is no
+> animation playback — the static loader simply switches the visible mesh (FLO-440
+> swap-by-URL pattern). Live in forest, human-lands, mountains, and empire (every
+> scene with melee); the controller-playground (no combat) stays default-only.
 
 > **Art coherence — every character is faceted in-engine (FLO-452).**
 > The player is not the only character that gets the flat-shaded treatment. The
@@ -56,7 +70,8 @@ any Community/showcase page.
 
 | Asset | File | Tris | Size | Rig | Meshy task id |
 |-------|------|------|------|-----|---------------|
-| **Player hero (survivor)** *(v1.2-compliant; pending engine-wiring — see note above)* | `public/models/korovany_hero_player-default.glb` | 2884 | 298 KiB | static (no skeleton); arms-down idle (FLO-434) + flat-albedo re-author (FLO-440, v13) | `019ee92c-e565-7b9c-b7e5-cad74053e786` (geometry preview) / `019ee94d-b328-7308-a8fa-d5274bcc1a99` (flat retexture) |
+| **Player hero (survivor) — neutral/idle** *(v1.2-compliant; live)* | `public/models/korovany_hero_player-default.glb` | 2884 | 298 KiB | static (no skeleton); arms-down idle (FLO-434) + flat-albedo re-author (FLO-440, v13) | `019ee92c-e565-7b9c-b7e5-cad74053e786` (geometry preview) / `019ee94d-b328-7308-a8fa-d5274bcc1a99` (flat retexture) |
+| **Player hero (survivor) — attack pose** *(v1.2-compliant; live, swapped by combat state FLO-481)* | `public/models/korovany_hero_player-attack.glb` | 2905 | 295 KiB | static (no skeleton); forward strike, drop-in twin of default (FLO-480) | — |
 | Conifer tree | `public/models/forest-tree.glb` | 1357 | — | static | — |
 | Wooden hut | `public/models/wooden-hut.glb` | 1893 | — | static | — |
 | Chest *(wired: forest static loot decor, FLO-470)* | `public/models/chest.glb` | — | — | static | — |

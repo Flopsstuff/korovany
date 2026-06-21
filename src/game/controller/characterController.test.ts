@@ -231,4 +231,29 @@ describe('CharacterController save bridge', () => {
     expect(controller.snapshot().position.x).toBeCloseTo(8, 5)
     expect(controller.snapshot().position.z).toBeCloseTo(4, 5)
   })
+
+  it('edge-fires the combat visual swap on idle↔swing transitions (FLO-481)', () => {
+    const controller = new CharacterController({ scene: world.scene, getIntent: () => NEUTRAL })
+    const calls: boolean[] = []
+    controller.registerCombatVisual((inCombat) => calls.push(inCombat))
+
+    // Through a full swing the swap fires exactly twice: on enter and on exit, not
+    // on every intra-swing phase change — the visual only has two states.
+    controller.setAttackPhase('windup')
+    controller.setAttackPhase('active')
+    controller.setAttackPhase('recovery')
+    controller.setAttackPhase('idle')
+
+    expect(calls).toEqual([true, false])
+  })
+
+  it('does not fire the combat swap while staying idle', () => {
+    const controller = new CharacterController({ scene: world.scene, getIntent: () => NEUTRAL })
+    const calls: boolean[] = []
+    controller.registerCombatVisual((inCombat) => calls.push(inCombat))
+
+    controller.setAttackPhase('idle')
+
+    expect(calls).toEqual([])
+  })
 })

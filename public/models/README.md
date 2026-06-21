@@ -19,9 +19,12 @@ loaded at runtime via `loadModel()` (`src/scenes/modelLoader.ts`).
   in-engine procedural animator drives whole-body bob/lean/lunge/topple, and the
   scene loader applies `convertToFlatShadedMesh()` + a matte material at load so
   the faceted hard-edge read lands (FLO-443). Mounted live as the player visual
-  across the forest, human-lands, and controller-playground scenes via
-  `mountSurvivorAvatar` (`src/scenes/survivorAvatar.ts`); `loadModel(targetSize:
-  1.8)`. Source render + reproducible spec sheet in `assets/models/hero/`. Also
+  across the forest, human-lands, mountains, empire, and controller-playground
+  scenes via `mountSurvivorAvatar` (`src/scenes/survivorAvatar.ts`);
+  `loadModel(targetSize: 1.8)`. This is the **neutral/idle** pose — combat scenes
+  also mount `korovany_hero_player-attack.glb` and swap to it while a melee swing
+  is in flight (FLO-481, see below). Source render + reproducible spec sheet in
+  `assets/models/hero/`. Also
   serves as the **Phase-1 elf player avatar** (reuse-first; faction elf deferred
   to Phase 4 — FLO-299).
 - `korovany_hero_player-attack.glb` — same hero in an **attack pose** (forward
@@ -30,9 +33,13 @@ loaded at runtime via `loadModel()` (`src/scenes/modelLoader.ts`).
   retexture (FLO-440 pattern) so it stays coherent with the default — no PBR gloss.
   Drop-in twin of the default: same outfit/palette/identity, **height (2.0) as
   longest bbox extent** so `loadModel(targetSize:1.8)` renders it at the same
-  in-scene height — no scene change needed to swap normal↔attack by combat state
-  (wiring tracked on FLO-474). Spec + preview/textured renders in
-  `assets/models/hero/`.
+  in-scene height — no scene change needed to swap normal↔attack by combat state.
+  **Wired live (FLO-481):** `mountSurvivorAvatar` loads both GLBs and parents them
+  under the player capsule; `CharacterController` toggles which renders from its
+  melee state (default while idle, this strike pose while a swing is in flight —
+  windup/active/recovery), so the player has two clearly distinct states in every
+  combat scene (forest, human-lands, mountains, empire). Static swap, no animation
+  playback. Spec + preview/textured renders in `assets/models/hero/`.
 - `forest-tree.glb` — faceted low-poly forest conifer (1,357 tris · 77 KB · no
   textures, flat-shaded in-engine), v1.2 ≤3,000-tri budget. Streamed by the
   Phase-1 forest slice (E1.3). Spec + reference render in `assets/models/props/`

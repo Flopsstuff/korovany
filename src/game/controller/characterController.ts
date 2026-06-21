@@ -114,6 +114,13 @@ export class CharacterController implements System {
   private lastStaminaPct = 100
   private attackPhase: AttackPhase = 'idle'
   private dead = false
+  /**
+   * Combat-state visual swap registered by the avatar mount (FLO-481). Edge-fired
+   * from {@link setAttackPhase} so the player visual switches default↔attack GLB
+   * only on the idle↔swing transition, not every frame. Null until the avatar
+   * wires it (or never, for headless / attack-less mounts).
+   */
+  private combatVisual: ((inCombat: boolean) => void) | null = null
 
   constructor(options: CharacterControllerOptions) {
     this.scene = options.scene
@@ -174,9 +181,26 @@ export class CharacterController implements System {
     return { position: { x: p.x, y: p.y, z: p.z }, rotationY: this.mesh.rotation.y }
   }
 
-  /** Update the melee attack phase so the animator can drive the lunge. */
+  /**
+   * Update the melee attack phase so the animator can drive the lunge. Also
+   * edge-fires the combat-state visual swap (FLO-481): when the phase crosses
+   * idle↔(windup/active/recovery) the registered avatar swap flips the player
+   * model between the neutral and attack-pose GLBs.
+   */
   setAttackPhase(phase: AttackPhase): void {
+    const wasInCombat = this.attackPhase !== 'idle'
     this.attackPhase = phase
+    const inCombat = phase !== 'idle'
+    if (inCombat !== wasInCombat) this.combatVisual?.(inCombat)
+  }
+
+  /**
+   * Register the avatar's combat-state visual swap (FLO-481). Called once by
+   * {@link wireSurvivorAvatar} after both player GLBs load; the controller then
+   * drives it from {@link setAttackPhase}.
+   */
+  registerCombatVisual(swap: (inCombat: boolean) => void): void {
+    this.combatVisual = swap
   }
 
   /** Mark the player dead so the animator drives the topple. */

@@ -33,12 +33,20 @@ function makeModel(scene: Scene): LoadedModel {
   return { root, meshes: [body, head] }
 }
 
-/** A controller-capsule stand-in exposing only what the mount touches. */
+/**
+ * A controller-capsule stand-in exposing only what the mount touches. Captures
+ * the combat-visual swap so tests can drive it directly (FLO-481).
+ */
 function makeMount(scene: Scene) {
-  return {
+  const mount = {
     mesh: MeshBuilder.CreateCapsule('playerCapsule', { radius: 0.35, height: 1.8 }, scene),
     animator: { node: null as AnimatableNode | null },
+    combatSwap: null as ((inCombat: boolean) => void) | null,
+    registerCombatVisual(swap: (inCombat: boolean) => void) {
+      this.combatSwap = swap
+    },
   }
+  return mount
 }
 
 describe('wireSurvivorAvatar (FLO-443)', () => {
@@ -107,6 +115,57 @@ describe('wireSurvivorAvatar (FLO-443)', () => {
 
     expect(mount.animator.node).toBe(model.root)
   })
+
+  it('does not register a combat swap when no attack model is supplied', async () => {
+    const scene = makeScene()
+    const { wireSurvivorAvatar } = await import('./survivorAvatar')
+    const mount = makeMount(scene)
+
+    wireSurvivorAvatar(mount, makeModel(scene))
+
+    expect(mount.combatSwap).toBeNull()
+  })
+})
+
+describe('combat-state model swap (FLO-481)', () => {
+  it('mounts the attack twin hidden and facets both models', async () => {
+    const scene = makeScene()
+    const { wireSurvivorAvatar } = await import('./survivorAvatar')
+    const model = makeModel(scene)
+    const attack = makeModel(scene)
+    const spies = [...model.meshes, ...attack.meshes].map((m) =>
+      vi.spyOn(m as Mesh, 'convertToFlatShadedMesh'),
+    )
+
+    wireSurvivorAvatar(makeMount(scene), model, attack)
+
+    // Both models are faceted and parented; the default shows, attack starts hidden.
+    for (const spy of spies) expect(spy).toHaveBeenCalledTimes(1)
+    expect(model.root.parent).toBe(attack.root.parent) // both under the capsule
+    expect(model.root.isEnabled()).toBe(true)
+    expect(attack.root.isEnabled()).toBe(false)
+  })
+
+  it('swaps default↔attack visibility when combat state toggles', async () => {
+    const scene = makeScene()
+    const { wireSurvivorAvatar } = await import('./survivorAvatar')
+    const model = makeModel(scene)
+    const attack = makeModel(scene)
+    const mount = makeMount(scene)
+
+    wireSurvivorAvatar(mount, model, attack)
+    expect(mount.combatSwap).not.toBeNull()
+
+    // Enter combat: attack pose shows, neutral hides.
+    mount.combatSwap!(true)
+    expect(model.root.isEnabled()).toBe(false)
+    expect(attack.root.isEnabled()).toBe(true)
+
+    // Leave combat: back to the neutral pose.
+    mount.combatSwap!(false)
+    expect(model.root.isEnabled()).toBe(true)
+    expect(attack.root.isEnabled()).toBe(false)
+  })
 })
 
 describe('mountSurvivorAvatar (fire-and-forget load path, FLO-443)', () => {
@@ -139,5 +198,39 @@ describe('mountSurvivorAvatar (fire-and-forget load path, FLO-443)', () => {
     expect(mount.animator.node).toBe(captured!.root)
     expect(mount.mesh.isVisible).toBe(false)
     for (const m of captured!.meshes) expect(m.isPickable).toBe(false)
+  })
+
+  it('loads both GLBs and registers the combat swap when an attack URL is given', async () => {
+    const scene = makeScene()
+    const loaded: LoadedModel[] = []
+    vi.resetModules()
+    vi.doMock('./modelLoader', () => ({
+      loadModel: vi.fn((s: Scene) => {
+        const m = makeModel(s)
+        loaded.push(m)
+        return Promise.resolve(m)
+      }),
+    }))
+    const { mountSurvivorAvatar } = await import('./survivorAvatar')
+    const mount = makeMount(scene)
+
+    mountSurvivorAvatar(
+      scene,
+      mount,
+      '/models/korovany_hero_player-default.glb',
+      '/models/korovany_hero_player-attack.glb',
+    )
+    // Flush both the Promise.all and the chained .then() wiring.
+    await Promise.resolve()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(loaded).toHaveLength(2) // default + attack
+    expect(mount.combatSwap).not.toBeNull()
+    // The default is the one handed to the animator; the other is the attack twin.
+    const defaultModel = loaded.find((m) => m.root === mount.animator.node)!
+    const attackModel = loaded.find((m) => m.root !== mount.animator.node)!
+    expect(defaultModel.root.isEnabled()).toBe(true)
+    expect(attackModel.root.isEnabled()).toBe(false)
   })
 })

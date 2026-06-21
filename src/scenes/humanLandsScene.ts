@@ -109,6 +109,8 @@ export interface HumanLandsScene {
 }
 
 const DEFAULT_HERO_URL = '/models/korovany_hero_player-default.glb'
+/** Strike-pose twin shown while a melee swing is in flight (FLO-481 / FLO-480). */
+const ATTACK_HERO_URL = '/models/korovany_hero_player-attack.glb'
 
 /** Minimap publish cadence — ~10 Hz, decoupled from the render frame rate (FLO-449). */
 const MINIMAP_TICK_INTERVAL = 1 / 10
@@ -218,9 +220,10 @@ export function createHumanLandsScene(
   controller.mesh.isVisible = false
 
   // Player visual: the flat-albedo survivor GLB faceted in-engine (FLO-443),
-  // mounted fire-and-forget on the capsule. `null` skips it (headless tests).
+  // mounted fire-and-forget on the capsule, plus the attack-pose twin swapped in
+  // by combat state (FLO-481). `null` skips it (headless tests).
   if (heroUrl !== null) {
-    mountSurvivorAvatar(scene, controller, heroUrl)
+    mountSurvivorAvatar(scene, controller, heroUrl, ATTACK_HERO_URL)
   }
 
   const hitFlash = new HitFlashManager()
