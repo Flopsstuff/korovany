@@ -21,11 +21,18 @@ class FakeContext {
   state: AudioContextState = 'running'
   sampleRate = 44100
   destination = { id: 'destination' }
+  gain = { gain: { value: -1 }, connect: vi.fn() }
+  sources: {
+    buffer: unknown
+    connectedTo: unknown
+    started: boolean
+    stopped: boolean
+    loop: boolean
+  }[] = []
+
   resume = vi.fn(async () => {
     this.state = 'running'
   })
-  gain = { gain: { value: -1 }, connect: vi.fn() }
-  sources: { buffer: unknown; connectedTo: unknown; started: boolean }[] = []
   createGain() {
     return this.gain
   }
@@ -38,11 +45,16 @@ class FakeContext {
       buffer: null as unknown,
       connectedTo: null as unknown,
       started: false,
+      stopped: false,
+      loop: false as boolean,
       connect(target: unknown) {
         src.connectedTo = target
       },
       start() {
         src.started = true
+      },
+      stop() {
+        src.stopped = true
       },
     }
     this.sources.push(src)
@@ -162,5 +174,82 @@ describe('AudioBus', () => {
       storage: fakeStorage(),
     })
     expect(() => bus.play('hit')).not.toThrow()
+  })
+})
+
+describe('ambience', () => {
+  it('startAmbience plays a single looped, master-routed forest source', () => {
+    const { bus, ctx } = makeBus()
+    bus.startAmbience()
+    expect(bus.isAmbiencePlaying()).toBe(true)
+    expect(ctx.sources).toHaveLength(1)
+    const src = ctx.sources[0]
+    expect(src.buffer).not.toBeNull()
+    expect(src.loop).toBe(true)
+    expect(src.connectedTo).toBe(ctx.gain)
+    expect(src.started).toBe(true)
+  })
+
+  it('stopAmbience stops the source and clears playing state', () => {
+    const { bus, ctx } = makeBus()
+    bus.startAmbience()
+    bus.stopAmbience()
+    expect(bus.isAmbiencePlaying()).toBe(false)
+    expect(ctx.sources[0].stopped).toBe(true)
+  })
+
+  it('startAmbience is idempotent (one source while already looping)', () => {
+    const { bus, ctx } = makeBus()
+    bus.startAmbience()
+    bus.startAmbience()
+    expect(ctx.sources).toHaveLength(1)
+  })
+
+  it('stays silent (no source) while the context is suspended', () => {
+    const { bus, ctx } = makeBus({ state: 'suspended' })
+    bus.startAmbience()
+    expect(bus.isAmbiencePlaying()).toBe(false)
+    expect(ctx.sources).toHaveLength(0)
+  })
+})
+
+describe('footsteps', () => {
+  it('playFootstep plays a footstep sound immediately', () => {
+    const { bus, ctx } = makeBus()
+    bus.playFootstep()
+    expect(ctx.sources).toHaveLength(1)
+    expect(ctx.sources[0].buffer).not.toBeNull()
+  })
+
+  it('checkFootstep fires once when moving past the threshold while grounded', () => {
+    const { bus, ctx } = makeBus()
+    bus.checkFootstep(true, { x: 0, y: 0, z: 0 }, null, 1 / 60) // seed, no step
+    expect(ctx.sources).toHaveLength(0)
+    bus.checkFootstep(true, { x: 0.5, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, 1 / 60)
+    expect(ctx.sources).toHaveLength(1)
+  })
+
+  it('checkFootstep does not fire while airborne', () => {
+    const { bus, ctx } = makeBus()
+    bus.checkFootstep(false, { x: 0.5, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, 1 / 60)
+    expect(ctx.sources).toHaveLength(0)
+  })
+
+  it('checkFootstep does not fire below the movement threshold', () => {
+    const { bus, ctx } = makeBus()
+    bus.checkFootstep(true, { x: 0.001, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, 1 / 60)
+    expect(ctx.sources).toHaveLength(0)
+  })
+
+  it('checkFootstep enforces the cooldown, then fires again once it elapses', () => {
+    const { bus, ctx } = makeBus()
+    const move = (last: number, next: number, dt: number) =>
+      bus.checkFootstep(true, { x: next, y: 0, z: 0 }, { x: last, y: 0, z: 0 }, dt)
+    move(0, 0.5, 1 / 60) // first step
+    expect(ctx.sources).toHaveLength(1)
+    move(0.5, 1.0, 1 / 60) // immediately after — within cooldown, suppressed
+    expect(ctx.sources).toHaveLength(1)
+    move(1.0, 1.5, 0.5) // 0.5s later — past the 0.4s cooldown
+    expect(ctx.sources).toHaveLength(2)
   })
 })

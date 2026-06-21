@@ -22,6 +22,18 @@ export interface AudioSettings {
   volume: number
 }
 
+/** Minimal world-space position used for footstep movement detection. */
+export interface Vec3 {
+  x: number
+  y: number
+  z: number
+}
+
+/** Distance (world units) a grounded player must move before a step can fire. */
+const FOOTSTEP_MOVE_THRESHOLD = 0.01
+/** Minimum seconds between footstep sounds. */
+const FOOTSTEP_COOLDOWN = 0.4
+
 export interface AudioBusOptions {
   /** Builds the `AudioContext`. Defaults to the browser global. */
   createContext?: () => AudioContext
@@ -69,6 +81,12 @@ export class AudioBus {
   private readonly buffers = new Map<SfxName, AudioBuffer>()
   private readonly listeners = new Set<(s: AudioSettings) => void>()
   private settings: AudioSettings
+  // Footstep timing in seconds, advanced by checkFootstep() via the frame dt so
+  // the cooldown is frame-rate independent and deterministic in tests.
+  private stepClock = 0
+  private lastStepAt = -Infinity
+  // Looped forest ambience source; null while stopped.
+  private ambienceSource: AudioBufferSourceNode | null = null
 
   constructor(options: AudioBusOptions = {}) {
     this.createContext = options.createContext ?? defaultContextFactory
@@ -148,6 +166,68 @@ export class AudioBus {
     source.buffer = this.bufferFor(ctx, name)
     source.connect(this.master as GainNode)
     source.start()
+  }
+
+  /**
+   * Advance footstep timing by `dt` seconds and play a step when the player has
+   * moved far enough while grounded and the cooldown has elapsed. Call once per
+   * frame from the game loop. A `null` `lastPos` (first frame) only seeds timing.
+   */
+  checkFootstep(grounded: boolean, pos: Vec3, lastPos: Vec3 | null, dt: number): void {
+    this.stepClock += dt
+    if (!grounded || lastPos === null) return
+    const dx = pos.x - lastPos.x
+    const dy = pos.y - lastPos.y
+    const dz = pos.z - lastPos.z
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+    if (dist > FOOTSTEP_MOVE_THRESHOLD && this.stepClock - this.lastStepAt >= FOOTSTEP_COOLDOWN) {
+      this.play('footstep')
+      this.lastStepAt = this.stepClock
+    }
+  }
+
+  /** Play a single footstep now, bypassing movement/cooldown gating. */
+  playFootstep(): void {
+    this.play('footstep')
+    this.lastStepAt = this.stepClock
+  }
+
+  /**
+   * Start the looped forest ambience. Idempotent; a no-op while muted-silent is
+   * not enforced here (the master gain handles mute), but it stays silent until
+   * the context is unlocked. No-op if already playing or the context is missing.
+   */
+  startAmbience(): void {
+    if (this.ambienceSource) return
+    let ctx: AudioContext
+    try {
+      ctx = this.ensure()
+    } catch {
+      return // no Web Audio here — nothing to loop.
+    }
+    if (ctx.state === 'suspended') return // wait for unlock()
+    const source = ctx.createBufferSource()
+    source.buffer = this.bufferFor(ctx, 'forestAmbience')
+    source.loop = true
+    source.connect(this.master as GainNode)
+    source.start()
+    this.ambienceSource = source
+  }
+
+  /** Stop the forest ambience if playing. Idempotent. */
+  stopAmbience(): void {
+    if (!this.ambienceSource) return
+    try {
+      this.ambienceSource.stop()
+    } catch {
+      // Already stopped / never started — nothing to do.
+    }
+    this.ambienceSource = null
+  }
+
+  /** True while the forest ambience loop is active. */
+  isAmbiencePlaying(): boolean {
+    return this.ambienceSource !== null
   }
 
   private ensure(): AudioContext {

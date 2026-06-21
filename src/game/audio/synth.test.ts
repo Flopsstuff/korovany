@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mix, renderClip, renderTone } from './synth'
+import { renderSfx } from './sfx'
 
 const SR = 44100
 
@@ -56,5 +57,33 @@ describe('renderClip', () => {
     )
     expect(clip.length).toBe(Math.floor(0.1 * SR))
     expect(clip.some((s) => s !== 0)).toBe(true)
+  })
+})
+
+describe('footstep sound', () => {
+  it('produces a valid PCM buffer', () => {
+    const clip = renderSfx('footstep', SR)
+    expect(clip.length).toBeGreaterThan(0)
+    expect(clip.every((s) => Math.abs(s) <= 1)).toBe(true)
+  })
+
+  it('is deterministic', () => {
+    const a = renderSfx('footstep', SR)
+    const b = renderSfx('footstep', SR)
+    expect(Array.from(a)).toEqual(Array.from(b))
+  })
+})
+
+describe('forestAmbience sound', () => {
+  it('produces a valid PCM buffer (~6 seconds)', () => {
+    const clip = renderSfx('forestAmbience', SR)
+    expect(clip.length).toBeGreaterThan(0)
+    expect(clip.every((s) => Math.abs(s) <= 1)).toBe(true)
+  })
+
+  it('is deterministic', () => {
+    const a = renderSfx('forestAmbience', SR)
+    const b = renderSfx('forestAmbience', SR)
+    expect(Array.from(a)).toEqual(Array.from(b))
   })
 })

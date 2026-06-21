@@ -25,7 +25,7 @@ Source: [`src/game/audio/`](../../src/game/audio/).
 |------|------|
 | [`synth.ts`](../../src/game/audio/synth.ts) | Pure PCM generation: `renderTone`, `mix`, `renderClip`. No Web Audio — takes a sample rate, returns `Float32Array`. |
 | [`sfx.ts`](../../src/game/audio/sfx.ts) | The named-sound recipe registry (`SfxName` → voices) and `renderSfx`. |
-| [`audioBus.ts`](../../src/game/audio/audioBus.ts) | The `AudioBus`: lazy context, master gain, `play`, `unlock`, mute/volume + persistence. Exports the shared `audioBus` singleton. |
+| [`audioBus.ts`](../../src/game/audio/audioBus.ts) | The `AudioBus`: lazy context, master gain, `play`, `unlock`, mute/volume + persistence, plus locomotion/ambience (`checkFootstep`, `startAmbience`, `stopAmbience`). Exports the shared `audioBus` singleton. |
 | [`../../src/app/useGameAudio.ts`](../../src/app/useGameAudio.ts) | React hook that wires events → `play()`, unlocks on first gesture, and rides win/lose stings off the app phase. |
 | [`../../src/app/AudioControls.tsx`](../../src/app/AudioControls.tsx) | Mute toggle + volume slider rendered in the pause menu. |
 
@@ -40,6 +40,31 @@ Source: [`src/game/audio/`](../../src/game/audio/).
 | Run won | app phase → `won` | `win` (ascending major triad) |
 | Run lost | app phase → `lost` | `lose` (descending minor fall) |
 | UI button press | menu `onClick` | `uiClick` (tiny blip) |
+
+## Locomotion & ambience
+
+These two sounds are **transform-driven**, not `damageEvents`-driven, so they
+live as methods on the bus rather than in `useGameAudio`:
+
+| Game state | Driver | Sound |
+|------------|--------|-------|
+| Player walking on the ground | `audioBus.checkFootstep(...)` once per frame | `footstep` (short low thud + tap), gated by a `0.4 s` cooldown and a `0.01`-unit movement threshold |
+| In-run background bed | `audioBus.startAmbience()` / `stopAmbience()` | `forestAmbience` (looped wind + cricket + low drone) |
+
+Wiring lives in [`App.tsx`](../../src/app/App.tsx): a `requestAnimationFrame`
+loop active only while `phase === 'playing'` reads the player transform
+(`readPlayerTransform`), feeds the real frame `dt` (clamped to `0.1 s` so a
+backgrounded tab can't burst-fire steps) into `checkFootstep`, and starts/stops
+the looped ambience on phase entry/exit. The footstep cooldown is advanced by
+`dt` (not wall-clock), so it is frame-rate independent and deterministic in
+tests.
+
+- **`checkFootstep(grounded, pos, lastPos, dt)`** — advances the step clock by
+  `dt`; plays `footstep` when grounded, moved past the threshold, and the
+  cooldown has elapsed. A `null` `lastPos` (first frame) only seeds timing.
+- **`startAmbience()` / `stopAmbience()`** — idempotent; `startAmbience` is a
+  silent no-op while the context is suspended (pre-gesture), so the loop only
+  begins once audio is unlocked. `isAmbiencePlaying()` reports the state.
 
 ## Autoplay policy
 
@@ -86,6 +111,7 @@ jsdom has no real Web Audio API, so:
 - `audioBus` is tested against a **stubbed `AudioContext`** and an in-memory
   `Storage` double, both injected via `new AudioBus({ createContext, storage })`.
   Asserts routing (source → master gain → destination), mute/volume gating,
-  buffer caching, persistence round-trip, and the suspended-context no-op.
+  buffer caching, persistence round-trip, the suspended-context no-op, and the
+  footstep cooldown/threshold + ambience start/stop/idempotence behaviour.
 
 See [`testing.md`](testing.md) for the project-wide stubbing patterns.

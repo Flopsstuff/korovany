@@ -17,6 +17,8 @@ export type SfxName =
   | 'uiClick' // a UI button press
   | 'win' // run won
   | 'lose' // run lost
+  | 'footstep' // player footstep on ground
+  | 'forestAmbience' // background forest ambience (looped)
 
 /** name → the voices that make up that clip. */
 const RECIPES: Record<SfxName, ToneSpec[]> = {
@@ -53,6 +55,22 @@ const RECIPES: Record<SfxName, ToneSpec[]> = {
   lose: [
     { type: 'triangle', freq: 440, freqEnd: 262, duration: 0.55, gain: 0.45, decay: 0.2 },
     { type: 'sine', freq: 220, freqEnd: 131, duration: 0.55, gain: 0.3, decay: 0.2 },
+  ],
+  // Footstep: a short thud with a bit of low-frequency "thump" and a higher
+  // click/tap from the shoe hitting the ground.
+  footstep: [
+    { type: 'sine', freq: 120, freqEnd: 60, duration: 0.08, gain: 0.5, decay: 0.03 },
+    { type: 'noise', freq: 0, duration: 0.04, gain: 0.2, decay: 0.02 },
+  ],
+  // Forest ambience: a shorter loop (2 seconds) of wind and distant wildlife.
+  // Mix of wind (broad noise), crickets (high ticks), and ambient drone.
+  forestAmbience: [
+    // Wind: filtered noise, slow LFO modulation.
+    { type: 'noise', freq: 0, duration: 2, gain: 0.12, decay: 1, attack: 0.5 },
+    // Distant crickets: random high clicks.
+    { type: 'sine', freq: 2000, duration: 2, gain: 0.05, decay: 0.02 },
+    // Ambient drone: very low sine for depth.
+    { type: 'sine', freq: 55, duration: 2, gain: 0.08, decay: 0.5, attack: 1 },
   ],
 }
 

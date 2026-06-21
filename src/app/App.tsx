@@ -89,6 +89,8 @@ export function App() {
 
   const [damageNumbers, setDamageNumbers] = useState<DamageNumberEntry[]>([])
   const nextDmgId = useRef(0)
+  // Footstep tracking: last known position, or null on first frame
+  const lastPlayerPosRef = useRef<{ x: number; y: number; z: number } | null>(null)
 
   useEffect(() => {
     return onDamage((amount, screenX, screenY) => {
@@ -100,6 +102,53 @@ export function App() {
   // Audio: subscribe the bus to combat events, unlock on first gesture, and play
   // win/lose stings on phase change. Mirrors the HUD's event-driven consumption.
   useGameAudio(phase)
+
+  // Locomotion + ambience: loop forest ambience while playing and emit a
+  // footstep whenever the player's transform moves far enough on the ground.
+  useEffect(() => {
+    if (phase !== 'playing') {
+      audioBus.stopAmbience()
+      lastPlayerPosRef.current = null
+      return
+    }
+
+    audioBus.startAmbience()
+
+    // Browsers gate audio until a user gesture; unlock on the first interaction.
+    const tryUnlock = () => {
+      void audioBus.unlock()
+      audioBus.startAmbience() // start now that the context can produce sound
+      window.removeEventListener('pointerdown', tryUnlock)
+      window.removeEventListener('keydown', tryUnlock)
+    }
+    window.addEventListener('pointerdown', tryUnlock)
+    window.addEventListener('keydown', tryUnlock)
+
+    let frameId = 0
+    let lastTs: number | null = null
+    const tick = (ts: number) => {
+      // Real frame delta (seconds), clamped so a backgrounded tab can't fire a
+      // burst of steps on resume.
+      const dt = lastTs === null ? 1 / 60 : Math.min(0.1, (ts - lastTs) / 1000)
+      lastTs = ts
+      const transform = readPlayerTransform()
+      if (transform) {
+        const pos = { x: transform.position.x, y: transform.position.y, z: transform.position.z }
+        // The player walks on flat terrain here, so they are always grounded.
+        audioBus.checkFootstep(true, pos, lastPlayerPosRef.current, dt)
+        lastPlayerPosRef.current = pos
+      }
+      frameId = requestAnimationFrame(tick)
+    }
+    frameId = requestAnimationFrame(tick)
+
+    return () => {
+      window.removeEventListener('pointerdown', tryUnlock)
+      window.removeEventListener('keydown', tryUnlock)
+      cancelAnimationFrame(frameId)
+      audioBus.stopAmbience()
+    }
+  }, [phase])
 
   const [hasSaveSlot, setHasSaveSlot] = useState(false)
   // Main menu sub-view: the landing actions, or the New-Game faction picker.
