@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { IDBFactory } from 'fake-indexeddb'
 import { Provider } from 'react-redux'
@@ -71,11 +71,12 @@ function renderApp(
     },
   })
 
-  return render(
+  const view = render(
     <Provider store={store}>
       <App />
     </Provider>,
   )
+  return { store, ...view }
 }
 
 describe('<App />', () => {
@@ -300,6 +301,52 @@ describe('<App />', () => {
     renderApp('paused', {}, DEFAULT_PLAYER_STATE, { current: 0, max: 100 })
     expect(screen.getByRole('heading', { name: 'Paused' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'New Game' })).not.toBeInTheDocument()
+  })
+})
+
+describe('<App /> world map (E3.1-UX, FLO-390)', () => {
+  it('opens the world map with M while playing', () => {
+    renderApp('playing')
+
+    fireEvent.keyDown(window, { code: 'KeyM', key: 'm' })
+
+    expect(screen.getByRole('heading', { name: 'World map' })).toBeInTheDocument()
+  })
+
+  it('opens the world map from the HUD Travel button', async () => {
+    const user = userEvent.setup()
+    renderApp('playing')
+
+    await user.click(screen.getByRole('button', { name: /Travel/ }))
+
+    expect(screen.getByRole('heading', { name: 'World map' })).toBeInTheDocument()
+  })
+
+  it('closes the world map with Escape before toggling pause', async () => {
+    const user = userEvent.setup()
+    renderApp('playing')
+
+    await user.click(screen.getByRole('button', { name: /Travel/ }))
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('heading', { name: 'World map' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Paused' })).not.toBeInTheDocument()
+  })
+
+  it('fast-travels after select and confirm', async () => {
+    const user = userEvent.setup()
+    const { store } = renderApp('playing')
+
+    await user.click(screen.getByRole('button', { name: /Travel/ }))
+    await user.click(screen.getByRole('button', { name: /Human lands/ }))
+    await user.click(screen.getByRole('button', { name: 'Travel' }))
+
+    await waitFor(() => {
+      expect(store.getState().player.zoneId).toBe('human-lands')
+    })
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'World map' })).not.toBeInTheDocument()
+    })
   })
 })
 
