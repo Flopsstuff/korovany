@@ -143,13 +143,19 @@ export const ZONE_CONTENT: Readonly<Record<ZoneId, ZoneContent>> = {
         color: { r: 0.5, g: 0.4, b: 0.28 },
       },
     ],
-    // Seeded verbatim from FOREST_SOLDIER_SPAWNS / FOREST_CARAVAN_SPAWNS.
+    // Soldier anchors are ramped by distance from the player spawn (0,0,0) for a
+    // survivable first session (P7.1 / FLO-412): every patrol sits ≥ 18 m out
+    // (clear of the soldier aggro radius), with ONE lone first encounter just past
+    // the buffer and the other four clustered in pairs guarding the two far
+    // caravans — so the player meets one soldier first, not a wall of five on
+    // spawn. `caravan-1` stays inside the buffer (10 m) and soldier-free, giving a
+    // free first raid. Distances: s1 19.0, s2 25.6, s3 26.1, s4 24.4, s5 25.6 m.
     encounterAnchors: [
-      { id: 'soldier-1', kind: 'soldier', position: { x: 6, y: 0.9, z: 6 } },
-      { id: 'soldier-2', kind: 'soldier', position: { x: 12, y: 0.9, z: -8 } },
-      { id: 'soldier-3', kind: 'soldier', position: { x: -12, y: 0.9, z: 8 } },
-      { id: 'soldier-4', kind: 'soldier', position: { x: 16, y: 0.9, z: 12 } },
-      { id: 'soldier-5', kind: 'soldier', position: { x: -16, y: 0.9, z: -10 } },
+      { id: 'soldier-1', kind: 'soldier', position: { x: 0, y: 0.9, z: 19 } },
+      { id: 'soldier-2', kind: 'soldier', position: { x: 20, y: 0.9, z: -16 } },
+      { id: 'soldier-3', kind: 'soldier', position: { x: 14, y: 0.9, z: -22 } },
+      { id: 'soldier-4', kind: 'soldier', position: { x: -20, y: 0.9, z: 14 } },
+      { id: 'soldier-5', kind: 'soldier', position: { x: -16, y: 0.9, z: 20 } },
       { id: 'caravan-1', kind: 'caravan', position: { x: -8, y: 1, z: -6 } },
       { id: 'caravan-2', kind: 'caravan', position: { x: 10, y: 1, z: -14 } },
       { id: 'caravan-3', kind: 'caravan', position: { x: -14, y: 1, z: 12 } },

@@ -90,16 +90,48 @@ never while paused.
 ## Enemies & corpses
 
 The forest spawns at least five Empire soldier patrols (MPG.5, see
-[enemy-ai.md](enemy-ai.md)). When a soldier dies the scene converts it into a
-persistent, inert corpse via
-`reapDeadSoldiers` + `CorpseManager`. Corpses are capped and survive a zone
-re-enter within a session — full details in [corpses.md](corpses.md).
+[enemy-ai.md](enemy-ai.md)), placed from the zone-content `encounterAnchors`
+(`src/game/world/zoneContent.ts`, FLO-411). When a soldier dies the scene
+converts it into a persistent, inert corpse via `reapDeadSoldiers` +
+`CorpseManager`. Corpses are capped and survive a zone re-enter within a session
+— full details in [corpses.md](corpses.md).
+
+## Safe spawn & difficulty curve (P7.1 / FLO-412)
+
+A live audit of the deployed build found the forest first session **unwinnable**:
+the player spawned at the origin with a soldier seeded ~8.5 m away — *inside* its
+10 m aggro radius — so two patrols converged instantly (~20 HP/s) and killed a
+fresh player in ~15 s, before they reached any caravan. The first session is now
+made survivable **by placement first, lethality second**:
+
+- **Soldier-free spawn buffer.** No soldier anchor sits within
+  `SAFE_SPAWN_BUFFER` (18 m, comfortably above the 10 m `detectionRadius`) of the
+  player spawn. An idle player at the origin is never aggroed, and the nearest
+  caravan (`caravan-1`, 10 m) sits inside the buffer for a free first raid.
+- **Ramped encounter.** The five soldier anchors are distributed by distance:
+  one lone first encounter just past the buffer (19 m, dead ahead), the other
+  four clustered in pairs guarding the two far caravans (24–26 m). The player
+  meets **one** soldier first, not a wall of five on spawn. Total counts are
+  unchanged from MPG.5 — only the distribution. The anchors live in
+  `zoneContent.ts` (the single source of truth) so the curve is data, not magic
+  numbers in the scene.
+- **Spawn grace.** As a lethality backstop, soldier hits deal **zero damage** for
+  the first `SPAWN_GRACE_SECONDS` (2 s) of live play (`spawnGraceDamageScale`),
+  so a player who walks straight into a patrol gets a beat to react instead of
+  being deleted on contact. The grace clock advances only while unpaused.
+
+The player walks at 4 m/s versus the soldier chase speed of 3 m/s, so a careful
+player can kite a cluster and pull patrols one at a time — challenge is retained,
+not removed. Global `DEFAULT_SOLDIER_PARAMS` are untouched (the human-lands zone
+keeps its tuning); all changes are local to the forest zone.
 
 ## Tests
 
 - `forestScene.test.ts` — `seedForestAssets` (registry entries + sizes), spawn
   clutter placement, scene boot (live camera, capsule, ground pickable), dispose
   idempotency, corpse re-spawn on boot, the `reapDeadSoldiers` live→corpse
-  transition, and the **pause-gating** regression (FLO-326): stepping the scene
-  while paused moves no soldier and deals no player damage, with a live control
-  proving combat does advance when unpaused.
+  transition, the **pause-gating** regression (FLO-326): stepping the scene while
+  paused moves no soldier and deals no player damage, with a live control proving
+  combat does advance when unpaused, and the **safe-spawn & difficulty curve**
+  guards (FLO-412): no soldier within `SAFE_SPAWN_BUFFER` of the spawn, exactly
+  one first-encounter soldier, and the spawn grace nullifying then restoring damage.

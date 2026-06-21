@@ -282,6 +282,41 @@ function spawnsOf(kind: EncounterKind): Vector3[] {
 const FOREST_SOLDIER_SPAWNS = spawnsOf('soldier')
 const FOREST_CARAVAN_SPAWNS = spawnsOf('caravan')
 
+/** Derived soldier spawn points (from the zone-content `encounterAnchors`).
+ *  Exported so the safe-spawn buffer can be asserted in tests (P7.1 / FLO-412). */
+export { FOREST_SOLDIER_SPAWNS }
+
+/** World-space spawn pose of a New Game player in the forest (matches the
+ *  `new Vector3(0, 2, 0)` fallback below). Its XZ origin is what the difficulty
+ *  curve is measured against. */
+export const FOREST_PLAYER_SPAWN = new Vector3(0, 2, 0)
+
+/**
+ * Soldier-free clear radius around the player spawn (P7.1 / FLO-412). No soldier
+ * anchor may sit within this distance of `FOREST_PLAYER_SPAWN`, kept comfortably
+ * above `DEFAULT_SOLDIER_PARAMS.detectionRadius` (10 m) so a fresh player is never
+ * inside an aggro radius at spawn and can reach the nearest caravan before any
+ * soldier engages.
+ */
+export const SAFE_SPAWN_BUFFER = 18
+
+/**
+ * Seconds after spawn during which incoming soldier damage is nullified
+ * (P7.1 / FLO-412). A short grace so a player who walks straight into the first
+ * patrol's reach gets a beat to react instead of being deleted on contact. The
+ * buffer above is the primary safeguard; this is the lethality backstop.
+ */
+export const SPAWN_GRACE_SECONDS = 2
+
+/**
+ * Damage multiplier for a soldier hit `elapsedSeconds` into the session. Returns
+ * 0 during the post-spawn grace window, 1 afterwards. Pure + exported so the
+ * difficulty curve is unit-testable without a render loop.
+ */
+export function spawnGraceDamageScale(elapsedSeconds: number): number {
+  return elapsedSeconds < SPAWN_GRACE_SECONDS ? 0 : 1
+}
+
 function defaultEngineFactory(canvas: HTMLCanvasElement): Engine {
   return new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }, true)
 }
@@ -391,13 +426,19 @@ export function createForestScene(
   // ------------------------------------------------------------------
   // Enemy soldiers — E2.3 fight loop, populated for MPG.5.
   // ------------------------------------------------------------------
+  // Live-session clock (advances only while unpaused) driving the post-spawn
+  // damage grace (P7.1 / FLO-412).
+  let elapsed = 0
+
   const soldiers = FOREST_SOLDIER_SPAWNS.map(
     (spawn) =>
       new SoldierEnemy(scene, {
         spawn,
         getPlayerPos: () => controller.mesh.position,
         onAttackPlayer: (dmg) => {
-          onPlayerDamaged?.(dmg)
+          const dealt = dmg * spawnGraceDamageScale(elapsed)
+          if (dealt <= 0) return // spawn grace: swallow the hit (no damage, no shake)
+          onPlayerDamaged?.(dealt)
           emitShake() // player-hurt SFX + camera shake bridge (mirrors human-lands)
         },
         onDefeated: () => onEnemyDefeated?.('soldier'),
@@ -456,6 +497,7 @@ export function createForestScene(
       return
     }
 
+    elapsed += dt // live-session clock for the post-spawn damage grace (P7.1)
     frameIntent = input.sample()
 
     // Advance the player melee state machine (edge-triggered on F key).

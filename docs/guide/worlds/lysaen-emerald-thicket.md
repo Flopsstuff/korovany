@@ -112,6 +112,12 @@ Each row contains 20 cells. North is row 01, west is column 01.
 - **Night hunters:** lantern-bearing hunters enter from the western trees and
   make the fog glow before they are visible.
 
+**First-session safety (P7.1 / FLO-412):** the stump-hall spawn is a soldier-free
+clearing — no patrol starts within aggro range of the player. The first contact is
+a single lone soldier ahead; the rest cluster by the far caravans, so a new player
+meets one enemy first and can reach the nearest caravan unmolested. See
+[forest-zone.md](../forest-zone.md#safe-spawn--difficulty-curve-p71--flo-412).
+
 ## Traversal and camera notes
 
 - Trail paths should be wide enough for the third-person camera to swing without
