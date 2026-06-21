@@ -31,10 +31,17 @@ the [character controller](./character-controller.md):
 | ----- | ----------- | ---- | ---- |
 | Conifer tree | `env.forest-tree` | `public/models/forest-tree.glb` | 1357 |
 | Wooden hut | `env.wooden-hut` | `public/models/wooden-hut.glb` | 1893 |
+| Chest | `prop.forest-chest` | `public/models/chest.glb` | — |
+| Cargo crate | `prop.forest-cargo-crate` | `public/models/cargo-crate.glb` | 1022 |
+| Caravan wagon | `prop.forest-caravan-wagon` | `public/models/caravan-wagon.glb` | 2827 |
+| Static forest elf | `npc.forest-static-elf` | `public/models/korovany_hero_player-default.glb` | 2884 |
 
-Both were generated in [FLO-299](/FLO/issues/FLO-299) by Pygmalion using the
-Meshy pipeline under visual-language v1.2 (≤ 3000 tris). Register them via
-`seedForestAssets(registry)` from `src/scenes/forestScene.ts`.
+The tree and hut were generated in [FLO-299](/FLO/issues/FLO-299) by Pygmalion
+using the Meshy pipeline under visual-language v1.2 (≤ 3000 tris). FLO-470 adds
+the leftover chest, cargo crate, wagon, and two static elf placements. Register
+them via `seedForestAssets(registry)` from `src/scenes/forestScene.ts`; streamed
+GLBs are normalized and passed through the shared matte/faceted `flatShade()`
+conform before placement.
 
 ## How it works
 

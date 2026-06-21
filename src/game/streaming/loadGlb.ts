@@ -1,5 +1,6 @@
 import type { Scene } from '@babylonjs/core'
 import { loadModel, type LoadedModel } from '../../scenes/modelLoader'
+import { flatShade } from '../util'
 import type { LoadGlbFn } from './loader'
 import type { AssetMetadata } from './types'
 
@@ -13,4 +14,7 @@ export const defaultLoadGlb: LoadGlbFn = (
     targetSize: metadata.targetSize,
     groundIt: metadata.groundIt,
     yaw: metadata.yaw,
+  }).then((model) => {
+    flatShade(model.meshes)
+    return model
   })

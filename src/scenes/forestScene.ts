@@ -21,6 +21,10 @@ import { FixedStepLoop } from '../game/loop'
 import {
   AssetRegistry,
   AssetStreamLoader,
+  FOREST_CARGO_CRATE_ASSET_ID,
+  FOREST_CARAVAN_WAGON_ASSET_ID,
+  FOREST_CHEST_ASSET_ID,
+  FOREST_STATIC_ELF_ASSET_ID,
   FOREST_TREE_ASSET_ID,
   WOODEN_HUT_ASSET_ID,
   ZoneStreamingManager,
@@ -94,7 +98,14 @@ export function reapDeadSoldiers(
 // import path.
 // ---------------------------------------------------------------------------
 
-export { FOREST_TREE_ASSET_ID, WOODEN_HUT_ASSET_ID }
+export {
+  FOREST_CARGO_CRATE_ASSET_ID,
+  FOREST_CARAVAN_WAGON_ASSET_ID,
+  FOREST_CHEST_ASSET_ID,
+  FOREST_STATIC_ELF_ASSET_ID,
+  FOREST_TREE_ASSET_ID,
+  WOODEN_HUT_ASSET_ID,
+}
 
 type ForestSpawnPropKind = 'stump' | 'log' | 'rock' | 'shrub'
 
@@ -126,6 +137,22 @@ export function seedForestAssets(registry: AssetRegistry): void {
   registry.register(WOODEN_HUT_ASSET_ID, {
     url: '/models/wooden-hut.glb',
     metadata: { label: 'Wooden hut', targetSize: 3 },
+  })
+  registry.register(FOREST_CHEST_ASSET_ID, {
+    url: '/models/chest.glb',
+    metadata: { label: 'Forest chest', targetSize: 1.35 },
+  })
+  registry.register(FOREST_CARGO_CRATE_ASSET_ID, {
+    url: '/models/cargo-crate.glb',
+    metadata: { label: 'Forest cargo crate', targetSize: 1.25 },
+  })
+  registry.register(FOREST_CARAVAN_WAGON_ASSET_ID, {
+    url: '/models/caravan-wagon.glb',
+    metadata: { label: 'Forest caravan wagon', targetSize: 2.8, yaw: Math.PI / 2 },
+  })
+  registry.register(FOREST_STATIC_ELF_ASSET_ID, {
+    url: '/models/korovany_hero_player-default.glb',
+    metadata: { label: 'Static forest elf', targetSize: 1.8 },
   })
 }
 
@@ -277,6 +304,8 @@ export interface ForestSceneOptions {
   onMinimapTick?: (snapshot: MinimapSnapshot) => void
   /** Display-only stamina push for the HUD (FLO-465); fired on rounded-% change. */
   onStaminaChange?: (current: number, max: number) => void
+  /** Caravan visual GLB. `null` skips it for headless scene tests. */
+  caravanVisualUrl?: string | null
 }
 
 export interface ForestScene {
@@ -388,6 +417,7 @@ export function createForestScene(
     getLocomotionMode,
     onMinimapTick,
     onStaminaChange,
+    caravanVisualUrl = heroUrl === null ? null : undefined,
   } = options
 
   const engine = createEngine(canvas)
@@ -547,6 +577,7 @@ export function createForestScene(
         onEnemyDefeated?.('caravan')
         anchorRespawnState[index] = { defeatedAt: performance.now() }
       },
+      visualUrl: caravanVisualUrl,
     })
   }
 

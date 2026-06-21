@@ -15,6 +15,7 @@ import {
   MeshBuilder,
   type Scene,
   StandardMaterial,
+  type TransformNode,
   Vector3,
 } from '@babylonjs/core'
 import type { Damageable, Vec3 } from '../game/combat'
@@ -29,7 +30,17 @@ import {
 } from '../game/ai'
 import { DEFAULT_CARAVAN_LOOT, rollLoot, type LootDrop, type LootTable } from '../game/loot'
 import { createSeededRng, seedFromString } from '../game/util'
+import { flatShade } from '../game/util'
 import type { System } from '../game/loop'
+import { loadModel, type LoadedModel } from './modelLoader'
+
+export const DEFAULT_CARAVAN_WAGON_GLB = '/models/caravan-wagon.glb'
+
+type CaravanVisualLoadFn = (
+  scene: Scene,
+  url: string,
+  options: { targetSize: number; groundIt: boolean; yaw: number },
+) => Promise<LoadedModel>
 
 export interface CaravanEnemyOptions {
   spawn: Vector3
@@ -52,6 +63,10 @@ export interface CaravanEnemyOptions {
    * position so distinct caravans drop distinct (but reproducible) hauls.
    */
   lootSeed?: number
+  /** Wagon GLB mounted as the visible body. `null` keeps the procedural box. */
+  visualUrl?: string | null
+  /** Test seam for the async GLB load path. */
+  loadVisual?: CaravanVisualLoadFn
 }
 
 /** Build a default square wander loop centred on `spawn`. */
@@ -75,6 +90,8 @@ export class CaravanEnemy implements System, Damageable {
   private readonly onDefeated?: () => void
   private readonly lootTable: LootTable
   private readonly lootSeed: number
+  private visualRoot: TransformNode | null = null
+  private disposed = false
   /** The drop rolled on defeat — exposed for smoke tests / inspection. */
   loot: LootDrop | null = null
 
@@ -93,8 +110,8 @@ export class CaravanEnemy implements System, Damageable {
       options.lootSeed ?? seedFromString(`${options.spawn.x},${options.spawn.z}`)
     this.fsm = createCaravanFSM(this.params)
 
-    // A crate-on-wheels stand-in: a wide, low box reads as a wagon until a GLB
-    // ships. Pickable so the melee sweep's hit query can reach it.
+    // Gameplay proxy: keeps collision/position/FSM stable while the GLB visual
+    // loads asynchronously as a child. It remains the Damageable target.
     this.mesh = MeshBuilder.CreateBox('caravan', { width: 1.6, height: 1.2, depth: 2.4 }, scene)
     this.mesh.position = options.spawn.clone()
     this.mesh.isPickable = false
@@ -102,6 +119,26 @@ export class CaravanEnemy implements System, Damageable {
     const mat = new StandardMaterial('caravanMat', scene)
     mat.diffuseColor = new Color3(0.55, 0.4, 0.2) // weathered wood
     this.mesh.material = mat
+
+    const visualUrl = options.visualUrl === undefined ? DEFAULT_CARAVAN_WAGON_GLB : options.visualUrl
+    if (visualUrl !== null) {
+      const loadVisual = options.loadVisual ?? loadModel
+      void loadVisual(scene, visualUrl, { targetSize: 2.8, groundIt: true, yaw: Math.PI / 2 })
+        .then((model) => {
+          if (this.disposed) {
+            model.root.dispose(false, true)
+            return
+          }
+          flatShade(model.meshes)
+          model.root.parent = this.mesh
+          model.root.position = new Vector3(0, -0.6, 0)
+          this.visualRoot = model.root
+          this.mesh.visibility = 0
+        })
+        .catch(() => {
+          // Keep the box proxy visible as a graceful fallback if the GLB fails.
+        })
+    }
   }
 
   /** Damageable — called by the melee hit sweep when the player strikes. */
@@ -155,6 +192,9 @@ export class CaravanEnemy implements System, Damageable {
   }
 
   dispose(): void {
+    if (this.disposed) return
+    this.disposed = true
+    this.visualRoot?.dispose(false, true)
     this.mesh.dispose()
   }
 }

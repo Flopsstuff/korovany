@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { ZONE_ORDER } from '../world/zones'
 import {
   FOREST_TREE_ASSET_ID,
+  FOREST_CARGO_CRATE_ASSET_ID,
+  FOREST_CARAVAN_WAGON_ASSET_ID,
+  FOREST_CHEST_ASSET_ID,
+  FOREST_STATIC_ELF_ASSET_ID,
   WOODEN_HUT_ASSET_ID,
   ZONE_MANIFESTS,
   getZoneManifest,
@@ -15,12 +19,16 @@ describe('zone manifests', () => {
     }
   })
 
-  it('streams the forest props (12 trees + 3 huts)', () => {
+  it('streams the forest props plus leftover decor (12 trees, 3 huts, 5 leftovers)', () => {
     const forest = getZoneManifest('forest')
     const trees = forest.placements.filter((p) => p.assetId === FOREST_TREE_ASSET_ID)
     const huts = forest.placements.filter((p) => p.assetId === WOODEN_HUT_ASSET_ID)
     expect(trees).toHaveLength(12)
     expect(huts).toHaveLength(3)
+    expect(forest.placements.filter((p) => p.assetId === FOREST_CHEST_ASSET_ID)).toHaveLength(1)
+    expect(forest.placements.filter((p) => p.assetId === FOREST_CARGO_CRATE_ASSET_ID)).toHaveLength(1)
+    expect(forest.placements.filter((p) => p.assetId === FOREST_CARAVAN_WAGON_ASSET_ID)).toHaveLength(1)
+    expect(forest.placements.filter((p) => p.assetId === FOREST_STATIC_ELF_ASSET_ID)).toHaveLength(2)
   })
 
   it('grounds every forest placement at y = 0', () => {

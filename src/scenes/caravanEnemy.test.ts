@@ -1,4 +1,4 @@
-import { NullEngine, Scene, Vector3 } from '@babylonjs/core'
+import { NullEngine, Scene, TransformNode, Vector3 } from '@babylonjs/core'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { CaravanEnemy } from './caravanEnemy'
 import { DEFAULT_CARAVAN_PARAMS } from '../game/ai'
@@ -29,6 +29,7 @@ describe('CaravanEnemy (scene integration)', () => {
       onDefeated: () => {
         defeats += 1
       },
+      visualUrl: null,
     })
   }
 
@@ -95,5 +96,25 @@ describe('CaravanEnemy (scene integration)', () => {
     const frozen = caravan.position
     for (let i = 0; i < 30; i++) caravan.update(1 / 60, undefined)
     expect(caravan.position).toEqual(frozen)
+  })
+
+  it('mounts the wagon GLB as the visible caravan body when loaded', async () => {
+    const root = new TransformNode('wagon-root', scene)
+    const loadVisual = vi.fn().mockResolvedValue({ root, meshes: [] })
+    const caravan = new CaravanEnemy(scene, {
+      spawn: new Vector3(1, 1, 2),
+      getPlayerPos: () => player,
+      loadVisual,
+    })
+
+    await vi.waitFor(() => {
+      expect(loadVisual).toHaveBeenCalledWith(
+        scene,
+        '/models/caravan-wagon.glb',
+        expect.objectContaining({ targetSize: 2.8, groundIt: true }),
+      )
+      expect(root.parent).toBe(caravan.mesh)
+    })
+    expect(caravan.mesh.visibility).toBe(0)
   })
 })

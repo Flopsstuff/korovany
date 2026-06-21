@@ -59,12 +59,12 @@ any Community/showcase page.
 | **Player hero (survivor)** *(v1.2-compliant; pending engine-wiring — see note above)* | `public/models/korovany_hero_player-default.glb` | 2884 | 298 KiB | static (no skeleton); arms-down idle (FLO-434) + flat-albedo re-author (FLO-440, v13) | `019ee92c-e565-7b9c-b7e5-cad74053e786` (geometry preview) / `019ee94d-b328-7308-a8fa-d5274bcc1a99` (flat retexture) |
 | Conifer tree | `public/models/forest-tree.glb` | 1357 | — | static | — |
 | Wooden hut | `public/models/wooden-hut.glb` | 1893 | — | static | — |
-| Chest | `public/models/chest.glb` | — | — | static | — |
+| Chest *(wired: forest static loot decor, FLO-470)* | `public/models/chest.glb` | — | — | static | — |
 | **Empire soldier (enemy)** | `public/models/empire-soldier.glb` | **2794** | 130 KiB | static (no skeleton) | `019ee601-93f0-7988-86f8-e35ce1067881` |
 | **Roadside shrine (Salt Road)** | `public/models/roadside-shrine.glb` | **1984** | 394 KiB | static | `019ee73a-c8a6-73bd-a2ec-e21137a6dba2` (preview) / `019ee747-ae35-786a-a8c7-490e65d0cddd` (retexture) |
 | **Empire toll gate** | `public/models/toll-gate.glb` | **1947** | 4.1 MiB | static | preview `019ee748-205e-763a-a883-bdda11e91c7e` · retexture `019ee749-ae59-7680-aa94-e6a8842c7bd5` |
-| **Caravan wagon (Salt Road)** | `public/models/caravan-wagon.glb` | **2827** | 394 KiB | static | `019ee749-d4cf-79b9-b813-d98be2201197` (preview) / `019ee74d-2300-772c-8a22-612c27dd99dc` (retexture) |
-| **Cargo crate (Salt Road)** | `public/models/cargo-crate.glb` | **1022** | 296 KiB | static | `019ee743-a02c-7878-a22e-7b67cdfbafa6` (preview) |
+| **Caravan wagon (Salt Road)** *(wired: caravan enemy visual + forest static prop, FLO-470)* | `public/models/caravan-wagon.glb` | **2827** | 394 KiB | static | `019ee749-d4cf-79b9-b813-d98be2201197` (preview) / `019ee74d-2300-772c-8a22-612c27dd99dc` (retexture) |
+| **Cargo crate (Salt Road)** *(wired: forest cargo decor, FLO-470)* | `public/models/cargo-crate.glb` | **1022** | 296 KiB | static | `019ee743-a02c-7878-a22e-7b67cdfbafa6` (preview) |
 | **Ruined watchtower (Salt Road)** | `public/models/watchtower.glb` | **2564** | 379 KiB | static | `019ee749-6051-7990-b286-98be4ecf82b4` (retexture) |
 | **Ranged enemy (archer)** | `public/models/ranged-archer.glb` | **2589** | 258 KiB | static (no skeleton) | preview `019ee91a-3128-705b-8acc-3d10e03e9930` · retexture `019ee91c-7315-78b1-8841-a90f77930d17` |
 | **Empire palace-guard** | `public/models/empire-palace-guard.glb` | **2793** | 357 KiB | static (no skeleton) | retexture `019ee91c-7f15-78b4-9665-5f7c18268eec` (of soldier `019ee601-93f0-7988-86f8-e35ce1067881`) |
@@ -270,8 +270,10 @@ Generated for [FLO-371](/plan/game-plan).
 - **Verification:** loads headless via `node tools/meshy-3d/smoke_load_glb.mjs
   public/models/caravan-wagon.glb` → 2 meshes, 2827 tris, 1 embedded texture,
   no errors.
-- **Handoff:** wiring this GLB into the scene (replacing the procedural box in
-  `caravanEnemy.ts`) is engineering's job — handed to Daedalus/CTO.
+- **Wiring:** connected in FLO-470. `CaravanEnemy` now keeps the procedural box
+  as the invisible gameplay proxy and mounts this GLB as the visible wagon body,
+  with `flatShade()` applied at load. The forest manifest also places one static
+  wagon prop near the spawn-side raid route.
 
 ### Cargo crate (Salt Road) — Phase 3.5 (MPG)
 
@@ -296,5 +298,23 @@ Generated for [FLO-372](/FLO/issues/FLO-372).
 - **Verification:** loads headless via `node tools/meshy-3d/smoke_load_glb.mjs
   public/models/cargo-crate.glb` → 2 meshes, 1022 tris, 1 embedded texture,
   no errors.
-- **Handoff:** wiring crate clusters into the scene is engineering scope — separate
-  from this asset-only ticket.
+- **Wiring:** connected in FLO-470 as static forest loot decor via
+  `FOREST_CARGO_CRATE_ASSET_ID` in the zone streaming manifest.
+
+### Forest leftover props — FLO-470
+
+FLO-470 wires the remaining visible-but-unused GLBs into the forest scene through
+the same streaming manifest used by the tree/hut props:
+
+- `chest.glb` → `prop.forest-chest`, one static loot/decor chest near the
+  spawn-side caravan camp.
+- `cargo-crate.glb` → `prop.forest-cargo-crate`, one static cargo prop beside the
+  forest wagon camp.
+- `caravan-wagon.glb` → `prop.forest-caravan-wagon`, one prominent static wagon
+  prop; also the live `CaravanEnemy` visual.
+- `korovany_hero_player-default.glb` → `npc.forest-static-elf`, two static
+  decorative forest elves.
+
+All streamed GLBs go through `defaultLoadGlb`, which normalizes them with
+`loadModel()` and applies the shared `flatShade()` matte/faceted conform before
+placement so they stay in the v1.2 low-poly visual band.

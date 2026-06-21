@@ -1,5 +1,5 @@
 import type { Vec3 } from '../combat'
-import type { ZoneManifest } from './zoneStreaming'
+import type { ZoneAssetPlacement, ZoneManifest } from './zoneStreaming'
 
 /**
  * Per-zone streaming content (E3.2 wiring, FLO-345).
@@ -21,6 +21,14 @@ import type { ZoneManifest } from './zoneStreaming'
 export const FOREST_TREE_ASSET_ID = 'env.forest-tree'
 /** Wooden hut placed at the edge of the forest clearing (FLO-299). */
 export const WOODEN_HUT_ASSET_ID = 'env.wooden-hut'
+/** Static loot chest tucked into the forest as visible leftover decor (FLO-470). */
+export const FOREST_CHEST_ASSET_ID = 'prop.forest-chest'
+/** Static cargo crate used as forest caravan-camp decor (FLO-470). */
+export const FOREST_CARGO_CRATE_ASSET_ID = 'prop.forest-cargo-crate'
+/** Display wagon prop near the spawn-side raid route (FLO-470). */
+export const FOREST_CARAVAN_WAGON_ASSET_ID = 'prop.forest-caravan-wagon'
+/** Retired hero GLB reused as static forest elf NPC decor (FLO-470). */
+export const FOREST_STATIC_ELF_ASSET_ID = 'npc.forest-static-elf'
 
 /** Tree positions: (x, z) pairs in scene units. Keeps a 4-unit clearing. */
 const FOREST_TREE_POSITIONS: readonly [number, number][] = [
@@ -45,6 +53,34 @@ const FOREST_HUT_POSITIONS: readonly [number, number][] = [
   [-7, 15],
 ]
 
+const FOREST_LEFTOVER_PLACEMENTS: readonly ZoneAssetPlacement[] = [
+  {
+    assetId: FOREST_CARAVAN_WAGON_ASSET_ID,
+    position: { x: -5.5, y: 0, z: -9 },
+    rotationY: Math.PI / 2,
+  },
+  {
+    assetId: FOREST_CHEST_ASSET_ID,
+    position: { x: -2.6, y: 0, z: -6.8 },
+    rotationY: -0.35,
+  },
+  {
+    assetId: FOREST_CARGO_CRATE_ASSET_ID,
+    position: { x: -7.4, y: 0, z: -6.1 },
+    rotationY: 0.45,
+  },
+  {
+    assetId: FOREST_STATIC_ELF_ASSET_ID,
+    position: { x: 5.5, y: 0, z: 7.5 },
+    rotationY: -2.35,
+  },
+  {
+    assetId: FOREST_STATIC_ELF_ASSET_ID,
+    position: { x: -6.5, y: 0, z: 8.2 },
+    rotationY: 2.25,
+  },
+]
+
 /** Ground a scatter table at `y = 0`. */
 function ground([x, z]: readonly [number, number]): Vec3 {
   return { x, y: 0, z }
@@ -55,6 +91,7 @@ const FOREST_MANIFEST: ZoneManifest = {
   placements: [
     ...FOREST_TREE_POSITIONS.map((p) => ({ assetId: FOREST_TREE_ASSET_ID, position: ground(p) })),
     ...FOREST_HUT_POSITIONS.map((p) => ({ assetId: WOODEN_HUT_ASSET_ID, position: ground(p) })),
+    ...FOREST_LEFTOVER_PLACEMENTS,
   ],
 }
 

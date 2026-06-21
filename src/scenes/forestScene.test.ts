@@ -4,6 +4,10 @@ import {
   FOREST_PLAYER_SPAWN,
   FOREST_SOLDIER_SPAWNS,
   FOREST_ARCHER_SPAWNS,
+  FOREST_CARGO_CRATE_ASSET_ID,
+  FOREST_CARAVAN_WAGON_ASSET_ID,
+  FOREST_CHEST_ASSET_ID,
+  FOREST_STATIC_ELF_ASSET_ID,
   FOREST_TREE_ASSET_ID,
   FOREST_SPAWN_PROP_SPECS,
   FOREST_ZONE_ID,
@@ -40,13 +44,19 @@ function boot() {
 }
 
 describe('seedForestAssets', () => {
-  it('registers tree and hut with their canonical ids', () => {
+  it('registers forest environment and leftover decor with their canonical ids', () => {
     const registry = new AssetRegistry()
     seedForestAssets(registry)
     const tree = registry.resolve(FOREST_TREE_ASSET_ID)
     const hut = registry.resolve(WOODEN_HUT_ASSET_ID)
     expect(tree.url).toContain('forest-tree.glb')
     expect(hut.url).toContain('wooden-hut.glb')
+    expect(registry.resolve(FOREST_CHEST_ASSET_ID).url).toBe('/models/chest.glb')
+    expect(registry.resolve(FOREST_CARGO_CRATE_ASSET_ID).url).toBe('/models/cargo-crate.glb')
+    expect(registry.resolve(FOREST_CARAVAN_WAGON_ASSET_ID).url).toBe('/models/caravan-wagon.glb')
+    expect(registry.resolve(FOREST_STATIC_ELF_ASSET_ID).url).toBe(
+      '/models/korovany_hero_player-default.glb',
+    )
   })
 
   it('gives the tree a larger targetSize than the hut', () => {
