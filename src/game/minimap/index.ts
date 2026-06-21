@@ -41,34 +41,47 @@ export interface MinimapSnapshot {
 /** Side length of the world the minimap maps, in world units (the play area). */
 export const MINIMAP_WORLD_SIZE = WORLD_SIZE
 
+/**
+ * How far the radar is zoomed in relative to the full world (FLO-467). At a
+ * `worldSize` of 600 a zoom of 10 shows a 60×60-unit window centred on the
+ * player, so nearby blips spread out and read cleanly instead of collapsing into
+ * one indistinct cluster.
+ */
+export const MINIMAP_ZOOM = 10
+
 /** A 2D pixel coordinate inside the minimap canvas. */
 export interface MinimapPixel {
   readonly x: number
   readonly y: number
 }
 
+/** World origin — the default radar centre when no player point is supplied. */
+const WORLD_ORIGIN: MinimapPoint = { x: 0, z: 0 }
+
 /**
- * Map a world XZ position to a minimap pixel coordinate. Pure + exported so the
+ * Project a world XZ position onto the minimap canvas. Pure + exported so the
  * projection is unit-testable headlessly (no canvas).
  *
- * The world spans `[-worldSize/2, +worldSize/2]` on both axes. The minimap is a
- * `sizePx`-square canvas with the conventional screen origin at the top-left:
- * world **+X is east → right**, world **+Z is north → up** (so a larger Z maps
- * to a *smaller* pixel-y). Positions outside the world box are clamped to the
- * edge so a wandering enemy can never draw off-canvas.
+ * The radar is **player-centred and zoomed** (FLO-467): it shows a
+ * `worldSize / zoom`-wide window around `center` (the player), who sits fixed at
+ * the canvas centre while the world pans beneath. Screen origin is top-left, so
+ * world **+X is east → right** and world **+Z is north → up** (a larger Z maps to
+ * a *smaller* pixel-y). Nothing is clamped — points beyond the window fall
+ * outside `[0, sizePx]` and the caller clips them at the frame edge.
  */
 export function worldToMinimap(
   worldX: number,
   worldZ: number,
   sizePx: number,
+  center: MinimapPoint = WORLD_ORIGIN,
   worldSize: number = MINIMAP_WORLD_SIZE,
+  zoom: number = MINIMAP_ZOOM,
 ): MinimapPixel {
-  const half = worldSize / 2
-  const cx = Math.min(half, Math.max(-half, worldX))
-  const cz = Math.min(half, Math.max(-half, worldZ))
+  // Pixels per world unit across the zoomed-in visible window.
+  const scale = (sizePx * zoom) / worldSize
   return {
-    x: ((cx + half) / worldSize) * sizePx,
-    y: ((half - cz) / worldSize) * sizePx,
+    x: sizePx / 2 + (worldX - center.x) * scale,
+    y: sizePx / 2 - (worldZ - center.z) * scale,
   }
 }
 
