@@ -386,7 +386,7 @@ injury mechanics that have a **counterplay**, and (4) see a world that reads as
 *finished*. Build the thinnest version of each, wired into the live forest loop, and
 **re-verify in the deployed build** (rendered, not just unit-tested).
 
-- **P7.1 Safe spawn & difficulty curve** `[x]` ✅ — **[FLO-412](/FLO/issues/FLO-412)** (Wayland, done, `92a3586`) — 18 m soldier-free buffer, ramped 1-then-many encounter, 2 s spawn grace; 694 tests green.
+- **P7.1 Safe spawn & difficulty curve** `[x]` ✅ — **[FLO-412](/FLO/issues/FLO-412)** (Wayland, done, `c80e921`) — 18 m soldier-free buffer, ramped 1-then-many encounter, 2 s spawn grace; patrol leash prevents post-spawn wander into buffer; 705 tests green.
 - **P7.2 Dismemberment counterplay** `[x]` ✅ P0 — **[FLO-417](/FLO/issues/FLO-417)** (Wayland, done) — softened the E6.1.2 hook (threshold 15→20 HP, cap 0.6→0.15, base/ramp halved) and shipped a real **bandage** item (`BANDAGE_ITEM_ID`): it drops from caravans and the `useBandage()` thunk (bound to **B**) spends one to stop bleeding, so the "find a bandage" prompt now points at an item that exists. Docs in health-system.md / economy.md / README.
 - **P7.3 World presence: texture the soldier + populate the spawn area** `[x]` ✅ — **[FLO-419](/FLO/issues/FLO-419)** (Aldric, done, `51ac72f`) — forest presence props (logs/stumps) in spawn clearing.
 - **P7.4 Player-character & ground feel** `[ ]` (Iris-gated) — fix the "arms-raised" idle/
@@ -442,6 +442,7 @@ speculative batches (FLO-270).
 
 *Revision history*
 
+- **r33** (2026-06-21) — **P7.1 + P7.2 fully landed.** Rebased + merged patrol-leash fix (`c80e921`) — soldiers now leash to their spawn anchor so the 18 m buffer is durable post-spawn; 705 tests green. P7.2 dismemberment counterplay (`5eb7d8b`) merged by sibling. P7.1/P7.2/P7.3/P7.5 all ✅; P7.4 pending Iris. (Prospero)
 - **r30** (2026-06-21) — **Phase 7 — Playability hardening opened (FLO-409)** after a
   live audit of the deployed build. Drove korovany.aimost.pl end-to-end as a first-time
   player: plumbing all works (menu, 3-faction picker, onboarding, HUD, combat, win/lose)
