@@ -304,11 +304,40 @@ Epic: **[FLO-391](/FLO/issues/FLO-391)** — opened 2026-06-21.
 
 ### Phase 6 — Depth & polish `[ ]`
 
-- **E6.1 Prosthetics economy** `[ ]` — buy/fit hand/leg/eye prosthetics; wheelchair locomotion.
-- **E6.2 Audio** `[ ]` — footsteps, combat, ambience (streamed).
-- **E6.3 Quests / objectives** `[ ]` — per-faction objective chains.
-- **E6.4 Settings & accessibility** `[ ]` — graphics quality, controls, key rebinding UI.
-- **E6.5 Menu, save management, polish pass** `[ ]`.
+Decomposed 2026-06-21 (r25) from the canonical description (issue #2): dismemberment
++ prosthetics is a **core canonical mechanic** ("отрубить руку и если не вылечат —
+умрёт… выколоть глаз… протез… ногу — умрёт / ползать / на коляске / протез"), so
+E6.1 is broken into oneshot subtasks rather than treated as polish. Tickets are cut
+one at a time as predecessors land (no speculative spawns).
+
+- **E6.1 Dismemberment & prosthetics** `[ ]` — the canonical limb system. Subtasks:
+  - **E6.1.1 Injury state model** `[ ]` — Redux `injurySlice`: per-limb status
+    (intact / severed / prosthetic) for hand·leg·eye; bleed-out timer for untreated
+    severance; save-migration v_next (guard validates base fields only — see
+    [[korovany-save-migration-guard-pattern]]). Pure reducer + tests, no rendering.
+  - **E6.1.2 Combat → dismemberment hook** `[ ]` — high-damage/critical melee can
+    sever a limb instead of (or before) killing; emits a `dismemberEvent` on the
+    existing `damageEvents` bridge. Deterministic via seeded RNG.
+  - **E6.1.3 Hand loss & bleed-out** `[ ]` — severed hand disables attack/grab; if
+    not treated before the timer, player dies. Treatment item (bandage) stops it.
+  - **E6.1.4 Eye loss → half-screen overlay** `[ ]` — non-lethal; a post-process /
+    DOM vignette blacks out half the viewport until an eye prosthetic is fitted.
+  - **E6.1.5 Leg loss → locomotion modes** `[ ]` — severed leg degrades movement to
+    crawl (slow) or wheelchair (item); leg prosthetic restores normal gait. Wires
+    into the movement controller.
+  - **E6.1.6 Prosthetics shop (Daggerfall-style)** `[ ]` — buy/fit hand·leg·eye
+    prosthetics through the existing economy/transactions system; fitting clears the
+    injury penalty. Reuses E4.4 currency.
+- **E6.2 Audio** `[~ partial]` — combat SFX already shipped via the `damageEvents`
+  bridge (MPG.4/FLO-383, Web Audio bus). Remaining: footsteps, ambience (streamed),
+  UI clicks. Cut as E6.2.x once Phase 5 lands.
+- **E6.3 Quests / objectives** `[ ]` — per-faction objective chains (elf raids,
+  palace-guard commander orders, villain free-command). Builds on the objective
+  machine + commander/order system (E4.3).
+- **E6.4 Settings & accessibility** `[ ]` — graphics quality tiers (hook E5.4 perf
+  budgets), control rebinding UI, colour-blind-safe palette toggle.
+- **E6.5 Menu, save management, polish pass** `[ ]` — save slot management UI,
+  main-menu polish, final cross-zone playthrough verification.
 
 ## 4. Asset roadmap (gated, per-character only)
 
@@ -407,6 +436,11 @@ speculative batches (FLO-270).
   (board-UI): cancel stale dups FLO-382/FLO-364, close FLO-384 issue (work landed via
   FLO-387). Once MPG.4 lands, the MPG milestone is complete and ready for an end-to-end
   browser verification of the full New-Game→win/lose loop. (Daedalus)
+- **r25** (2026-06-21) — **Phase 6 decomposed from canon.** Broke E6.1 dismemberment
+  & prosthetics (a core canonical mechanic, not polish) into 6 oneshot subtasks
+  (injury model → combat hook → hand/eye/leg loss → prosthetics shop); marked E6.2
+  audio partially-done (combat SFX already shipped MPG.4); detailed E6.3/E6.4/E6.5.
+  No tickets cut yet — Phase 5 (E5.4/FLO-398) still in flight. (Daedalus)
 - **r24** (2026-06-21) — **E5.3 instanced vegetation done; E5.4 performance budget in flight.**
   `createInstancedVegetation` merged (`1b1b70a`, FLO-396/Wayland); 256 trees → 2 draw calls.
   FLO-398 (E5.4) assigned to Wayland. Board action still needed: FLO-353 close, Aldric error→recover. (Daedalus)
