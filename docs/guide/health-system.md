@@ -209,6 +209,13 @@ gap on two fronts:
    bleeding or has no bandage. `App.tsx` binds it to the **B** key during play,
    and the bleeding indicator switches to "press **B** to bandage (N)" once one is
    carried — so the "find a bandage" prompt now points at an item that exists.
+3. **A starting bandage (FLO-461).** A first session could still bleed out before
+   any loot dropped, leaving the counterplay unreachable when it mattered most
+   (FLO-453 audit). A New Game now seeds **one** bandage into the inventory via
+   `createStartingInventory()` (`STARTING_BANDAGE_COUNT`, `src/game/economy/inventory.ts`),
+   dispatched through `resetInventory()`. Loaded saves restore their own
+   inventory (`restoreInventory`) and are unaffected, so this only guarantees the
+   *first* wound has a recourse — subsequent bandages still come from caravan loot.
 
 ## Tests
 

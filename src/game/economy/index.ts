@@ -51,6 +51,8 @@ export {
 
 export {
   createInventory,
+  createStartingInventory,
+  STARTING_BANDAGE_COUNT,
   addItem,
   removeItem,
   equipItem,

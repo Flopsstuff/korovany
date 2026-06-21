@@ -12,7 +12,15 @@ import {
   sellItem,
   unequipItem,
 } from './inventorySlice'
-import { buyPrice, createInventory, sellPrice, type InventoryState } from '../game/economy'
+import {
+  BANDAGE_ITEM_ID,
+  buyPrice,
+  createInventory,
+  createStartingInventory,
+  STARTING_BANDAGE_COUNT,
+  sellPrice,
+  type InventoryState,
+} from '../game/economy'
 
 describe('inventorySlice', () => {
   it('starts empty', () => {
@@ -40,9 +48,14 @@ describe('inventorySlice', () => {
     expect(state.equippedItemId).toBeNull()
   })
 
-  it('resetInventory clears everything', () => {
+  it('resetInventory wipes carried goods down to the starting field kit (FLO-461)', () => {
     const start = inventoryReducer(undefined, pickUpLoot({ itemId: 'cloth', count: 2 }))
-    expect(inventoryReducer(start, resetInventory())).toEqual(createInventory())
+    const reset = inventoryReducer(start, resetInventory())
+    // New Game drops everything previously carried...
+    expect('cloth' in reset.counts).toBe(false)
+    // ...but seeds one bandage so bleed counterplay is reachable session 1 (FLO-453).
+    expect(reset.counts[BANDAGE_ITEM_ID]).toBe(STARTING_BANDAGE_COUNT)
+    expect(reset).toEqual(createStartingInventory())
   })
 
   it('restoreInventory overwrites from a save and decouples references', () => {

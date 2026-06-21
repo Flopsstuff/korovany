@@ -3,6 +3,7 @@ import {
   addItem,
   buy,
   createInventory,
+  createStartingInventory,
   equipItem,
   getBalance,
   removeItem,
@@ -71,9 +72,13 @@ const inventorySlice = createSlice({
       const result = sell(state, action.payload.itemId, action.payload.quantity ?? 1)
       return result.ok ? result.inventory : state
     },
-    /** Reset to an empty inventory (New Game). */
+    /**
+     * Reset to the starting field kit for a New Game (FLO-461): one bandage so
+     * the dismemberment bleed counterplay is reachable in the first session
+     * (FLO-453). Loaded saves use `restoreInventory` instead and keep their own.
+     */
     resetInventory() {
-      return createInventory()
+      return createStartingInventory()
     },
     /** Overwrite inventory from a loaded save (Continue). */
     restoreInventory(_state, action: PayloadAction<InventoryState>) {

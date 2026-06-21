@@ -11,7 +11,7 @@
  * inventory itself stores only ids + counts.
  */
 
-import { getItemDef, itemName, type ItemId } from './items'
+import { BANDAGE_ITEM_ID, getItemDef, itemName, type ItemId } from './items'
 
 /**
  * Carried inventory. `counts` holds positive integer quantities keyed by item id
@@ -34,6 +34,23 @@ export interface InventoryStack {
 /** A fresh, empty inventory. */
 export function createInventory(): InventoryState {
   return { counts: {}, equippedItemId: null }
+}
+
+/**
+ * Number of bandages a fresh run starts with (FLO-461). One field dressing makes
+ * the dismemberment bleed counterplay (P7.2) reachable in the very first session,
+ * before the player has found any loot — without it a first-session wound bled
+ * out with no recourse (FLO-453 audit finding).
+ */
+export const STARTING_BANDAGE_COUNT = 1
+
+/**
+ * Inventory a new game starts with: the empty inventory plus the starting field
+ * kit (a bandage). Loaded saves restore their own inventory via `restoreInventory`
+ * and are unaffected by this loadout.
+ */
+export function createStartingInventory(): InventoryState {
+  return addItem(createInventory(), BANDAGE_ITEM_ID, STARTING_BANDAGE_COUNT)
 }
 
 function normaliseQuantity(quantity: number): number {

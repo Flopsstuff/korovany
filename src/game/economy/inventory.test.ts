@@ -2,14 +2,17 @@ import { describe, expect, it } from 'vitest'
 import {
   addItem,
   createInventory,
+  createStartingInventory,
   equipItem,
   isInventoryEmpty,
   isInventoryState,
   listStacks,
   removeItem,
+  STARTING_BANDAGE_COUNT,
   totalItemCount,
   unequip,
 } from './inventory'
+import { BANDAGE_ITEM_ID } from './items'
 
 describe('createInventory', () => {
   it('starts empty with nothing equipped', () => {
@@ -17,6 +20,17 @@ describe('createInventory', () => {
     expect(inv).toEqual({ counts: {}, equippedItemId: null })
     expect(isInventoryEmpty(inv)).toBe(true)
     expect(totalItemCount(inv)).toBe(0)
+  })
+})
+
+describe('createStartingInventory', () => {
+  it('seeds the bleed-counterplay bandage for a fresh run (FLO-461)', () => {
+    const inv = createStartingInventory()
+    expect(inv.counts[BANDAGE_ITEM_ID]).toBe(STARTING_BANDAGE_COUNT)
+    expect(STARTING_BANDAGE_COUNT).toBeGreaterThan(0)
+    expect(inv.equippedItemId).toBeNull()
+    // Only the field kit — no stray goods.
+    expect(totalItemCount(inv)).toBe(STARTING_BANDAGE_COUNT)
   })
 })
 
