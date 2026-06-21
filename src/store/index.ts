@@ -90,11 +90,15 @@ export {
   dropItem,
   equip,
   unequipItem,
+  buyItem,
+  sellItem,
   resetInventory,
   restoreInventory,
   inventoryReducer,
+  selectInventory,
+  selectGold,
 } from './inventorySlice'
-export type { LootDrop } from './inventorySlice'
+export type { LootDrop, TradeRequest } from './inventorySlice'
 export {
   awardProgression,
   recordCombatKill,

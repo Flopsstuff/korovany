@@ -113,6 +113,22 @@ playing (E3.4).
   [Saving progress](#saving-progress)) and is restored on **Continue** / cleared on
   **New Game**.'
 
+### Currency & trade (E4.4)
+
+Money is **gold pieces** — and gold is just a carried item, so looted coin is
+spendable coin (no separate wallet, no save-schema bump). Each catalog item has a
+base `value`; merchants sell at that value and buy back at a markdown.
+
+- **Currency helpers** read/move the gold balance; pure **`buy` / `sell`**
+  transactions move goods + gold and return a typed success/failure result —
+  both in [`src/game/economy/`](src/game/economy/).
+- **Store seam:** `buyItem` / `sellItem` reducers and `selectGold` /
+  `selectInventory` selectors in
+  [`src/store/inventorySlice.ts`](src/store/inventorySlice.ts). Failed trades are
+  a no-op.
+- The merchant / shop **UI is a separate ticket**; this is the transaction logic
+  only. Full details: [`docs/guide/economy.md`](docs/guide/economy.md).
+
 ## 3D assets
 
 Binary game assets (GLB models, textures, audio) are stored in **Git LFS** — run

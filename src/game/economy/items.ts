@@ -24,6 +24,14 @@ export interface ItemDef {
   readonly description: string
   /** Whether the item can be equipped (e.g. a weapon). */
   readonly equippable: boolean
+  /**
+   * Base market value, in gold pieces, of a single unit (E4.4). This is the
+   * buy price at a merchant; the sell price applies a markdown (see
+   * {@link ../economy/transactions}). The currency item itself ({@link gold})
+   * has `value: 1` for completeness but is never bought or sold — it *is* the
+   * money. A value of `0` marks a good as not tradeable.
+   */
+  readonly value: number
 }
 
 /**
@@ -36,24 +44,28 @@ export const ITEMS = {
     name: 'Gold',
     description: 'Plundered coin from a raided caravan.',
     equippable: false,
+    value: 1,
   },
   grain: {
     id: 'grain',
     name: 'Grain',
     description: 'Sacks of caravan grain.',
     equippable: false,
+    value: 8,
   },
   cloth: {
     id: 'cloth',
     name: 'Bolt of Cloth',
     description: 'Fine traded cloth.',
     equippable: false,
+    value: 25,
   },
   blade: {
     id: 'blade',
     name: 'Looted Blade',
     description: "A caravan guard's sword — can be wielded.",
     equippable: true,
+    value: 60,
   },
 } as const satisfies Record<string, ItemDef>
 
@@ -73,4 +85,12 @@ export function itemName(id: ItemId): string {
 /** Whether an id refers to an equippable item in the catalog. */
 export function isEquippable(id: ItemId): boolean {
   return getItemDef(id)?.equippable ?? false
+}
+
+/**
+ * Base market value (buy price) of one unit in gold pieces, or `0` for an
+ * unknown / non-tradeable id. See {@link ItemDef.value}.
+ */
+export function itemValue(id: ItemId): number {
+  return getItemDef(id)?.value ?? 0
 }

@@ -1,9 +1,12 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import {
   addItem,
+  buy,
   createInventory,
   equipItem,
+  getBalance,
   removeItem,
+  sell,
   unequip,
   type InventoryState,
   type ItemId,
@@ -16,6 +19,11 @@ import {
  *
  * `pickUpLoot` is the integration seam for caravan loot drops (E3.3): the ambush
  * loop dispatches it with the item id + count a defeated caravan dropped.
+ * `buyItem` / `sellItem` are the economy seam (E4.4): currency is the carried
+ * `gold` stack, so trades move goods + gold inside this one inventory state; a
+ * trade that fails (unaffordable, out of stock, not tradeable) is a no-op here,
+ * and the shop UI (separate ticket) can call the pure `buy`/`sell` to surface
+ * the failure reason before dispatching.
  * `restoreInventory` overwrites state from a loaded save (Continue).
  */
 
@@ -23,6 +31,12 @@ import {
 export interface LootDrop {
   readonly itemId: ItemId
   readonly count: number
+}
+
+/** A buy/sell request: how many units of which item to trade (default 1). */
+export interface TradeRequest {
+  readonly itemId: ItemId
+  readonly quantity?: number
 }
 
 const initialState: InventoryState = createInventory()
@@ -47,6 +61,16 @@ const inventorySlice = createSlice({
     unequipItem(state) {
       return unequip(state)
     },
+    /** Buy goods from a merchant (E4.4); no-op if unaffordable / not tradeable. */
+    buyItem(state, action: PayloadAction<TradeRequest>) {
+      const result = buy(state, action.payload.itemId, action.payload.quantity ?? 1)
+      return result.ok ? result.inventory : state
+    },
+    /** Sell goods to a merchant (E4.4); no-op if not carried / not tradeable. */
+    sellItem(state, action: PayloadAction<TradeRequest>) {
+      const result = sell(state, action.payload.itemId, action.payload.quantity ?? 1)
+      return result.ok ? result.inventory : state
+    },
     /** Reset to an empty inventory (New Game). */
     resetInventory() {
       return createInventory()
@@ -61,6 +85,22 @@ const inventorySlice = createSlice({
   },
 })
 
-export const { pickUpLoot, dropItem, equip, unequipItem, resetInventory, restoreInventory } =
-  inventorySlice.actions
+export const {
+  pickUpLoot,
+  dropItem,
+  equip,
+  unequipItem,
+  buyItem,
+  sellItem,
+  resetInventory,
+  restoreInventory,
+} = inventorySlice.actions
 export const inventoryReducer = inventorySlice.reducer
+
+/** The whole inventory state. */
+export const selectInventory = (state: { inventory: InventoryState }): InventoryState =>
+  state.inventory
+
+/** Current spendable gold balance (E4.4) — the carried `gold` stack count. */
+export const selectGold = (state: { inventory: InventoryState }): number =>
+  getBalance(state.inventory)
