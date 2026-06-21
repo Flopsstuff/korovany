@@ -65,7 +65,7 @@ any Community/showcase page.
 | **Empire toll gate** *(wired: human-lands landmark, FLO-478)* | `public/models/toll-gate.glb` | **1947** | 378 KiB | static | preview `019ee748-205e-763a-a883-bdda11e91c7e` · retexture `019ee749-ae59-7680-aa94-e6a8842c7bd5` |
 | **Caravan wagon (Salt Road)** *(wired: caravan enemy visual + forest static prop, FLO-470)* | `public/models/caravan-wagon.glb` | **2827** | 394 KiB | static | `019ee749-d4cf-79b9-b813-d98be2201197` (preview) / `019ee74d-2300-772c-8a22-612c27dd99dc` (retexture) |
 | **Cargo crate (Salt Road)** *(wired: forest cargo decor, FLO-470)* | `public/models/cargo-crate.glb` | **1022** | 296 KiB | static | `019ee743-a02c-7878-a22e-7b67cdfbafa6` (preview) |
-| **Ruined watchtower (Salt Road)** | `public/models/watchtower.glb` | **2564** | 379 KiB | static | `019ee749-6051-7990-b286-98be4ecf82b4` (retexture) |
+| **Ruined watchtower (Salt Road)** *(wired: forest landmark, FLO-476)* | `public/models/watchtower.glb` | **2564** | 379 KiB | static | `019ee749-6051-7990-b286-98be4ecf82b4` (retexture) |
 | **Ranged enemy (archer)** | `public/models/ranged-archer.glb` | **2589** | 258 KiB | static (no skeleton) | preview `019ee91a-3128-705b-8acc-3d10e03e9930` · retexture `019ee91c-7315-78b1-8841-a90f77930d17` |
 | **Empire palace-guard** | `public/models/empire-palace-guard.glb` | **2793** | 357 KiB | static (no skeleton) | retexture `019ee91c-7f15-78b4-9665-5f7c18268eec` (of soldier `019ee601-93f0-7988-86f8-e35ce1067881`) |
 
@@ -114,9 +114,11 @@ in `src/scenes/humanLandsScene.ts`.
 - **Rig:** ships **static** (no skeleton) — it is scenery, not animated.
 - **Verification:** loads headless via `node tools/meshy-3d/smoke_load_glb.mjs
   public/models/watchtower.glb` → 2 meshes, 2564 tris, no errors.
-- **Handoff:** wiring the GLB into the scene (replacing the procedural
-  watchtower box at `humanLandsScene.ts:60`) is engineering's job — for
-  Daedalus/CTO, not done here.
+- **Wiring:** FLO-476 places the GLB in the first forest map as
+  `landmark.forest-watchtower`, streamed through `defaultLoadGlb()` with the
+  matte/faceted conform. The canonical Salt Road / human-lands landmark remains a
+  separate scene-wiring concern; this forest placement is the board-requested
+  first-map landmark.
 
 ### Empire soldier (enemy) — Phase 2
 
@@ -315,6 +317,8 @@ the same streaming manifest used by the tree/hut props:
   prop; also the live `CaravanEnemy` visual.
 - `korovany_hero_player-default.glb` → `npc.forest-static-elf`, two static
   decorative forest elves.
+- `watchtower.glb` → `landmark.forest-watchtower`, one large static ruined tower
+  placed near the first forest map as a visible silhouette landmark (FLO-476).
 
 All streamed GLBs go through `defaultLoadGlb`, which normalizes them with
 `loadModel()` and applies the shared `flatShade()` matte/faceted conform before

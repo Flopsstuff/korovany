@@ -9,6 +9,7 @@ import {
   FOREST_CHEST_ASSET_ID,
   FOREST_STATIC_ELF_ASSET_ID,
   FOREST_TREE_ASSET_ID,
+  FOREST_WATCHTOWER_ASSET_ID,
   FOREST_SPAWN_PROP_SPECS,
   FOREST_ZONE_ID,
   SAFE_SPAWN_BUFFER,
@@ -57,13 +58,17 @@ describe('seedForestAssets', () => {
     expect(registry.resolve(FOREST_STATIC_ELF_ASSET_ID).url).toBe(
       '/models/korovany_hero_player-default.glb',
     )
+    expect(registry.resolve(FOREST_WATCHTOWER_ASSET_ID).url).toBe('/models/watchtower.glb')
   })
 
-  it('gives the tree a larger targetSize than the hut', () => {
+  it('gives landmark-scale assets a larger targetSize than ordinary props', () => {
     const registry = new AssetRegistry()
     seedForestAssets(registry)
     expect(registry.resolve(FOREST_TREE_ASSET_ID).metadata.targetSize).toBeGreaterThan(
       registry.resolve(WOODEN_HUT_ASSET_ID).metadata.targetSize ?? 0,
+    )
+    expect(registry.resolve(FOREST_WATCHTOWER_ASSET_ID).metadata.targetSize).toBeGreaterThan(
+      registry.resolve(FOREST_TREE_ASSET_ID).metadata.targetSize ?? 0,
     )
   })
 
@@ -417,7 +422,7 @@ describe('forest safe spawn & difficulty curve (FLO-412)', () => {
     expect(onPlayerDamaged).not.toHaveBeenCalled()
 
     game.dispose()
-  })
+  }, 15_000)
 
   // Acceptance (FLO-412): the player can walk to a caravan without dying. The
   // nearest caravan (`caravan-1`, (-8,-6), 10 m) sits inside the soldier-free

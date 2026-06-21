@@ -29,6 +29,8 @@ export const FOREST_CARGO_CRATE_ASSET_ID = 'prop.forest-cargo-crate'
 export const FOREST_CARAVAN_WAGON_ASSET_ID = 'prop.forest-caravan-wagon'
 /** Retired hero GLB reused as static forest elf NPC decor (FLO-470). */
 export const FOREST_STATIC_ELF_ASSET_ID = 'npc.forest-static-elf'
+/** Ruined watchtower placed in the first forest map as a landmark (FLO-476). */
+export const FOREST_WATCHTOWER_ASSET_ID = 'landmark.forest-watchtower'
 
 /** Tree positions: (x, z) pairs in scene units. Keeps a 4-unit clearing. */
 const FOREST_TREE_POSITIONS: readonly [number, number][] = [
@@ -54,6 +56,11 @@ const FOREST_HUT_POSITIONS: readonly [number, number][] = [
 ]
 
 const FOREST_LEFTOVER_PLACEMENTS: readonly ZoneAssetPlacement[] = [
+  {
+    assetId: FOREST_WATCHTOWER_ASSET_ID,
+    position: { x: 12.5, y: 0, z: -13.5 },
+    rotationY: -0.55,
+  },
   {
     assetId: FOREST_CARAVAN_WAGON_ASSET_ID,
     position: { x: -5.5, y: 0, z: -9 },
