@@ -10,6 +10,11 @@ Files live under `public/models/*.glb` and stream into the scene through the
 LFS** (see `.gitattributes`). Generation is reproducible from the recorded Meshy
 task id (`python tools/meshy-3d/meshy.py status <task_id> --kind text-to-3d`).
 
+> **Audio:** this catalog covers **binary visual assets only**. The game ships
+> **no audio files** — sound effects are synthesized procedurally at runtime
+> (raw Web Audio), so there is nothing to license or store in LFS. See
+> [`audio.md`](./audio) for the SFX system and the synthesis rationale.
+
 ## Licensing
 
 Generated assets are cleared for FlopBut's intended (incl. commercial) use under

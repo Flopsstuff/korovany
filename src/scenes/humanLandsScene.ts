@@ -27,7 +27,7 @@ import {
 import { HitFlashManager } from '../game/combat/hitFlash'
 import { DeathEmphasisManager, type TimeScaleable } from '../game/combat/deathEmphasis'
 import { ScreenShakeManager } from '../game/camera/screenShake'
-import { emitDamage, emitKill, emitShake } from '../game/combat/damageEvents'
+import { emitAttack, emitDamage, emitKill, emitShake } from '../game/combat/damageEvents'
 import { SoldierEnemy } from './soldierEnemy'
 import { CaravanEnemy } from './caravanEnemy'
 
@@ -219,6 +219,7 @@ export function createHumanLandsScene(
     frameIntent = input.sample()
     const attackPressed = frameIntent.attack && !prevAttack
     prevAttack = frameIntent.attack
+    if (attackPressed) emitAttack() // swing SFX on the rising edge, before hit resolution
     meleeState = stepMeleeAttack(meleeState, attackPressed, dt)
     controller.setAttackPhase(meleeState.phase)
 

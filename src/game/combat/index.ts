@@ -9,4 +9,13 @@ export { HitFlashManager, DEFAULT_HIT_FLASH_PARAMS } from './hitFlash'
 export type { HitFlashParams } from './hitFlash'
 export { DeathEmphasisManager, DEFAULT_DEATH_EMPHASIS_PARAMS } from './deathEmphasis'
 export type { DeathEmphasisParams, TimeScaleable } from './deathEmphasis'
-export { emitDamage, emitShake, emitKill, onDamage, onShake, onKill } from './damageEvents'
+export {
+  emitDamage,
+  emitShake,
+  emitKill,
+  emitAttack,
+  onDamage,
+  onShake,
+  onKill,
+  onAttack,
+} from './damageEvents'

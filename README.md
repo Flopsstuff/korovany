@@ -154,6 +154,23 @@ baseline values). Full details, slot
 model, and the test approach (`fake-indexeddb`):
 [`docs/guide/save-system.md`](docs/guide/save-system.md).
 
+## Audio
+
+The game gives **audible feedback for every action** — enemy hit, enemy kill,
+player taking damage, swing, win, and lose — through a tiny raw Web Audio bus
+([`src/game/audio/`](src/game/audio/)). SFX are **synthesized procedurally** (no
+sample files, no Git LFS payload, no third-party licensing); the bus subscribes
+to the existing combat event bridge rather than scattering playback calls.
+
+- **Mute + volume** live in the **pause menu** (press `Escape`). Both persist
+  across reloads in `localStorage` under the **`korovany-audio`** key
+  (`{ muted, volume }`; default `{ false, 0.7 }`).
+- The `AudioContext` is created/resumed only on the **first user gesture**
+  (click or keypress) to respect browser autoplay policy — no autoplay warnings.
+
+Full design, the event map, and how to add a sound:
+[`docs/guide/audio.md`](docs/guide/audio.md).
+
 ## Deployment
 
 Two independent targets, both on push to `main` (details:

@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { GameCanvas } from '../scenes/GameCanvas'
 import { InventoryPanel } from './InventoryPanel'
 import { DamageNumbers, type DamageNumberEntry } from './DamageNumber'
+import { AudioControls } from './AudioControls'
+import { useGameAudio } from './useGameAudio'
 import { onDamage } from '../game/combat/damageEvents'
+import { audioBus } from '../game/audio'
 import { WorldMap } from '../components/WorldMap'
 import { OnboardingIntroCard } from '../components/OnboardingIntroCard'
 import { FactionPicker } from '../components/FactionPicker'
@@ -93,6 +96,10 @@ export function App() {
       setDamageNumbers((prev) => [...prev, { id, amount, x: screenX, y: screenY }])
     })
   }, [])
+
+  // Audio: subscribe the bus to combat events, unlock on first gesture, and play
+  // win/lose stings on phase change. Mirrors the HUD's event-driven consumption.
+  useGameAudio(phase)
 
   const [hasSaveSlot, setHasSaveSlot] = useState(false)
   // Main menu sub-view: the landing actions, or the New-Game faction picker.
@@ -252,6 +259,7 @@ export function App() {
   // New Game opens the faction picker; the campaign only starts once a faction
   // is chosen so the choice is recorded in `factionSlice` and the save.
   const onNewGame = useCallback(() => {
+    audioBus.play('uiClick')
     setMenuView('factions')
   }, [])
 
@@ -267,6 +275,7 @@ export function App() {
   // Restart from the win/lose screen: fresh run, same faction (no need to
   // re-pick), straight back into play (MPG.1).
   const onRestart = useCallback(() => {
+    audioBus.play('uiClick')
     resetRunState()
     dispatch(startNewGame())
   }, [resetRunState, dispatch])
@@ -425,7 +434,10 @@ export function App() {
                 ref={pausePrimaryActionRef}
                 type="button"
                 className="primary-action"
-                onClick={() => dispatch(togglePause())}
+                onClick={() => {
+                  audioBus.play('uiClick')
+                  dispatch(togglePause())
+                }}
               >
                 Resume
               </button>
@@ -433,6 +445,7 @@ export function App() {
                 Quit to Main Menu
               </button>
             </div>
+            <AudioControls />
           </div>
         </div>
       ) : null}
