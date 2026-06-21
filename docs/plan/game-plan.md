@@ -335,18 +335,17 @@ one at a time as predecessors land (no speculative spawns).
 - **E6.3 Quests / objectives** `[~]` — **[FLO-429](/FLO/issues/FLO-429)** (Wayland, backlog) — per-faction objective chains (elf raids,
   palace-guard commander orders, villain free-command). Builds on the objective
   machine + commander/order system (E4.3).
-- **E6.4 Settings & accessibility** `[x]` — **[FLO-425](/FLO/issues/FLO-425)** (Soren, done) — settings
-  panel (rebind + volume + graphics quality), versioned `localStorage` persistence.
+- **E6.4 Settings & accessibility** `[x]` ✅ — **[FLO-425](/FLO/issues/FLO-425)** (Soren, done, `363f451`) — settings panel (main-menu + pause overlay): control rebinding UI, master volume/mute, graphics quality toggle; versioned `localStorage` persistence.
 - **E6.5 Menu, save management, polish pass** `[~]` — **[FLO-431](/FLO/issues/FLO-431)** (Soren, backlog, after E6.4) — save-slot management UI,
   main-menu polish, final cross-zone playthrough verification.
 - **Combat depth — ranged enemy archetype** `[~]` — **[FLO-432](/FLO/issues/FLO-432)** (Aldric, backlog, after FLO-426 asset) — second
   enemy type (archer): keep-distance AI + projectiles through the existing damage
   funnel; combat is currently a single melee soldier.
 
-### Phase 7 — Playability hardening & first-session experience `[~]` ⭐ HIGHEST PRIORITY
+### Phase 7 — Playability hardening & first-session experience `[x]` ✅ COMPLETE
 
-Epic: **[FLO-409](/FLO/issues/FLO-409)** — opened 2026-06-21 by Daedalus (CTO),
-child of FLO-273. Direct response to the standing board mandate **FLO-355**
+Epic: **[FLO-409](/FLO/issues/FLO-409)** — opened 2026-06-21 by Daedalus (CTO), closed done.
+Child of FLO-273. Direct response to the standing board mandate **FLO-355**
 («она всё ещё не играбельная»).
 
 > **Why this phase exists — a live playability audit of the deployed build
@@ -393,7 +392,7 @@ injury mechanics that have a **counterplay**, and (4) see a world that reads as
 - **P7.1 Safe spawn & difficulty curve** `[x]` ✅ — **[FLO-412](/FLO/issues/FLO-412)** (Wayland, done, `92a3586` + patrol leash `c80e921` + restored 30 s test `0d8d9bd`) — 18 m soldier-free buffer, ramped 1-then-many encounter, 2 s spawn grace; patrol leash prevents post-spawn wander into buffer; 705 tests green.
 - **P7.2 Dismemberment counterplay** `[x]` ✅ — **[FLO-417](/FLO/issues/FLO-417)** (Wayland, done, `5eb7d8b`) — softened the E6.1.2 hook (threshold 15→20 HP, cap 0.6→0.15, base/ramp halved); shipped real **bandage** item (`BANDAGE_ITEM_ID`) dropping from caravans; `useBandage()` thunk (bound to **B**) stops bleeding. Docs in health-system.md / economy.md.
 - **P7.3 World presence: texture the soldier + populate the spawn area** `[x]` ✅ — **[FLO-419](/FLO/issues/FLO-419)** (Aldric, done, `51ac72f`) — forest presence props (logs/stumps) in spawn clearing.
-- **P7.4 Player-character & ground feel** `[~]` — **[FLO-422](/FLO/issues/FLO-422)** (Iris, in_progress — re-cut; FLO-420 dead run) — avatar pose + low-poly ground material.
+- **P7.4 Player-character & ground feel** `[x]` ✅ — **[FLO-420](/FLO/issues/FLO-420)** (Iris, done, `371b715`) — olive matte ground material + avatar ground-feel; FLO-422 was the re-cut that spawned the live run.
 - **P7.5 HUD legibility pass** `[x]` ✅ — **[FLO-418](/FLO/issues/FLO-418)** (Iris, done, `708ed67`) — inline score row spacing, conditional bleed prompt.
 
 > **Loose ends absorbed (FLO-409 ask):** **FLO-359** (zone-content data layer, now
@@ -419,7 +418,7 @@ faction/commander systems (Phase 4) — widen, don't re-architect.
 
 - **E8.1 Empire zone — palace scene (attack/defend)** `[ ]` — **[FLO-427](/FLO/issues/FLO-427)** (Wayland, backlog).
 - **E8.2 Mountains zone — villain fort scene** `[ ]` — **[FLO-428](/FLO/issues/FLO-428)** (Aldric, backlog).
-- **Asset — ranged-enemy + Empire palace-guard GLBs** `[~]` — **[FLO-426](/FLO/issues/FLO-426)** (Pygmalion, active; Iris art sign-off).
+- **Asset — ranged-enemy + Empire palace-guard GLBs** `[x]` ✅ — **[FLO-426](/FLO/issues/FLO-426)** (done, `92f652a`) — two textured low-poly v1.2 GLBs: archer archetype + Empire palace-guard; feeds E8 zones + E6.3 quests.
 
 ## 4. Asset roadmap (gated, per-character only)
 
@@ -461,6 +460,7 @@ speculative batches (FLO-270).
 
 *Revision history*
 
+- **r37** (2026-06-21) — **Phase 7 COMPLETE. E6.4 + FLO-426 landed.** P7.4 avatar/ground feel (`371b715`) and E6.4 settings panel (`363f451`) merged; archer + palace-guard GLBs (`92f652a`) on main. All five P7.x tickets ✅. Phase 7 header updated to `[x]`. FLO-409 (epic) already closed done. Next: re-audit the deployed build end-to-end to confirm first session is survivable; then activate Phase 8 + remaining Phase 6 backlog. (Daedalus)
 - **r36** (2026-06-21) — **Backlog stocked toward a full game (board ask FLO-421).**
   Status check: 80/86 tasks done, but Phases 5–7 are essentially complete while the
   game is still far from the full canonical vision. Opened **Phase 8 — World
