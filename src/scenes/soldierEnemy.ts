@@ -170,8 +170,12 @@ export class SoldierEnemy implements System, Damageable {
       }
     }
 
-    // Derive animator inputs from FSM state: moving = chasing/following, attacking = attack phase.
-    const isMoving = this.fsm.phase === 'chase' || this.fsm.phase === 'follow'
+    // Derive animator inputs from FSM state: moving = chasing/following/commanded-move,
+    // attacking = attack phase.
+    const isMoving =
+      this.fsm.phase === 'chase' ||
+      this.fsm.phase === 'follow' ||
+      this.fsm.phase === 'move-to'
     const isAttacking = this.fsm.phase === 'attack' || this.fsm.phase === 'attack-target'
     this.animator.update({
       dt,

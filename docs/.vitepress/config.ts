@@ -45,6 +45,7 @@ export default defineConfig({
           { text: 'Enemy AI', link: '/guide/enemy-ai' },
           { text: 'Caravans', link: '/guide/caravans' },
           { text: 'Objective & win/lose loop', link: '/guide/objective-loop' },
+          { text: 'Procedural animation', link: '/guide/procedural-animation' },
           { text: 'Seeded RNG', link: '/guide/seeded-rng' },
           { text: 'Faction system', link: '/guide/faction-system' },
           { text: 'Character progression', link: '/guide/character-progression' },
