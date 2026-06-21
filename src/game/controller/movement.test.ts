@@ -163,4 +163,9 @@ describe('DEFAULT_MOVEMENT_PARAMS', () => {
     expect(DEFAULT_MOVEMENT_PARAMS.jumpSpeed).toBeGreaterThan(0)
     expect(DEFAULT_MOVEMENT_PARAMS.coyoteTime).toBeGreaterThan(0)
   })
+
+  it('sprints at 9 units/s — 2.25× walk for a clearly faster sprint (FLO-465)', () => {
+    expect(DEFAULT_MOVEMENT_PARAMS.sprintSpeed).toBe(9)
+    expect(DEFAULT_MOVEMENT_PARAMS.walkSpeed).toBe(4)
+  })
 })

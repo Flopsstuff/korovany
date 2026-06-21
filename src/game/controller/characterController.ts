@@ -18,6 +18,13 @@ import {
   createMovementState,
   stepMovement,
 } from './movement'
+import {
+  DEFAULT_STAMINA_PARAMS,
+  type StaminaParams,
+  type StaminaState,
+  createStaminaState,
+  stepStamina,
+} from './stamina'
 import type { AttackPhase } from '../combat/meleeAttack'
 import { CharacterAnimator } from '../animation/proceduralAnimator'
 
@@ -56,8 +63,16 @@ export interface CharacterControllerOptions {
    * Defaults to `'normal'`.
    */
   readonly getLocomotionMode?: () => LocomotionMode
+  /**
+   * Display-only stamina push (FLO-465). Called from the per-frame tick *only*
+   * when the rounded percentage changes, so the HUD slice updates without a
+   * 60 fps dispatch storm. Stamina stays authoritative in this controller.
+   */
+  readonly onStaminaChange?: (current: number, max: number) => void
   /** Movement tuning. Defaults to {@link DEFAULT_MOVEMENT_PARAMS}. */
   readonly params?: MovementParams
+  /** Stamina tuning. Defaults to {@link DEFAULT_STAMINA_PARAMS}. */
+  readonly staminaParams?: StaminaParams
   /** Spawn position of the capsule origin (centre). Default `(0, 1, 0)`. */
   readonly spawn?: Vector3
   /** Initial capsule yaw in radians (e.g. restored from a save). Default 0. */
@@ -87,10 +102,16 @@ export class CharacterController implements System {
   private readonly getIntent: () => Intent
   private readonly getSpeedMultiplier: () => number
   private readonly getLocomotionMode: () => LocomotionMode
+  private readonly onStaminaChange?: (current: number, max: number) => void
   private readonly params: MovementParams
+  private readonly staminaParams: StaminaParams
   private readonly groundProbe: number
   private readonly isGround: (mesh: AbstractMesh) => boolean
   private state: MovementState
+  /** Authoritative sprint-stamina pool — advanced every step, pushed to the HUD. */
+  private stamina: StaminaState
+  /** Last rounded stamina percentage dispatched, to guard the 60 fps push. */
+  private lastStaminaPct = 100
   private attackPhase: AttackPhase = 'idle'
   private dead = false
 
@@ -100,6 +121,9 @@ export class CharacterController implements System {
     this.getIntent = options.getIntent
     this.getSpeedMultiplier = options.getSpeedMultiplier ?? (() => 1)
     this.getLocomotionMode = options.getLocomotionMode ?? (() => 'normal')
+    this.onStaminaChange = options.onStaminaChange
+    this.staminaParams = options.staminaParams ?? DEFAULT_STAMINA_PARAMS
+    this.stamina = createStaminaState(this.staminaParams)
     this.groundProbe = options.groundProbe ?? 0.4
 
     const height = options.capsuleHeight ?? 1.8
@@ -184,12 +208,19 @@ export class CharacterController implements System {
     // so a slowed player keeps turning normally.
     const speedMultiplier = this.getSpeedMultiplier()
 
+    // Advance the authoritative stamina pool first: it gates whether the held
+    // sprint key is *effective* this step. When the pool empties, `sprintActive`
+    // drops to false and the player auto-falls back to walk speed (still moving).
+    const staminaStep = stepStamina(this.stamina, intent.sprint, dt, this.staminaParams)
+    this.stamina = staminaStep
+    const sprintActive = staminaStep.sprintActive
+
     this.state = stepMovement(
       this.state,
       {
         dirX: dir.x * speedMultiplier,
         dirZ: dir.z * speedMultiplier,
-        sprint: intent.sprint,
+        sprint: sprintActive,
         jump: intent.jump,
       },
       ground,
@@ -199,14 +230,29 @@ export class CharacterController implements System {
 
     this.mesh.position.set(this.state.posX, this.state.posY, this.state.posZ)
 
+    // Push stamina to the HUD only when the rounded percentage changes — the
+    // value moves every frame, but React only needs whole-percent updates.
+    const pct = Math.round((this.stamina.stamina / this.staminaParams.max) * 100)
+    if (pct !== this.lastStaminaPct) {
+      this.lastStaminaPct = pct
+      this.onStaminaChange?.(Math.round(this.stamina.stamina), this.staminaParams.max)
+    }
+
     // Face the direction of travel so a parented visual turns with movement.
     if (dir.x !== 0 || dir.z !== 0) {
       this.mesh.rotation.y = Math.atan2(dir.x, dir.z)
     }
 
+    // Feed the *actual* horizontal speed so the animator can pick its bob tier
+    // (idle/move/sprint). Sprint engages the deeper sprint-bob (FLO-465); a
+    // slowed crawl-sprint stays below the threshold and bobs like a walk.
+    const moving = dir.x !== 0 || dir.z !== 0
+    const groundSpeed =
+      (sprintActive ? this.params.sprintSpeed : this.params.walkSpeed) * speedMultiplier
+
     this.animator.update({
       dt,
-      speed: dir.x !== 0 || dir.z !== 0 ? 4 : 0,
+      speed: moving ? groundSpeed : 0,
       attackPhase: this.attackPhase,
       isDead: this.dead,
       locomotionMode: this.getLocomotionMode(),

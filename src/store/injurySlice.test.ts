@@ -8,6 +8,7 @@ import { playerReducer } from './playerSlice'
 import { healthReducer, damagePlayer } from './healthSlice'
 import { inventoryReducer, pickUpLoot, equip } from './inventorySlice'
 import { progressionReducer } from './progressionSlice'
+import { staminaReducer } from './staminaSlice'
 import {
   advanceBleed,
   fitPlayerProsthetic,
@@ -41,6 +42,7 @@ function makeStore() {
       injury: injuryReducer,
       inventory: inventoryReducer,
       progression: progressionReducer,
+      stamina: staminaReducer,
     },
   })
 }

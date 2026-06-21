@@ -81,6 +81,42 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Sprint stamina (FLO-465) — mirrors the health bar; cyan→green so it reads as
+   a distinct, non-health resource. Empties to the track background at 0. */
+.hud-stamina {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.hud-stamina-label {
+  letter-spacing: 0.04em;
+}
+
+.hud-stamina-bar {
+  display: inline-block;
+  width: 10rem;
+  height: 0.625rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.hud-stamina-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #2bd4d4, #4ade80);
+  transition: width 120ms linear;
+}
+
+.hud-stamina-value {
+  font-variant-numeric: tabular-nums;
+}
+
 /* Bleeding indicator (MPG.6) — shown while an untreated wound drains HP. */
 .hud-bleeding {
   display: flex;

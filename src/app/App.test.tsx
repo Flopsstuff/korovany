@@ -21,6 +21,7 @@ import { selectHasHalfScreenBlackout, selectLocomotionSpeedMultiplier } from '..
 import { FACTION_IDS } from '../game/faction'
 import { DEFAULT_PLAYER_STATE, playerReducer, type PlayerState } from '../store/playerSlice'
 import { progressionReducer } from '../store/progressionSlice'
+import { staminaReducer, type StaminaStoreState } from '../store/staminaSlice'
 import { streamingReducer } from '../store/streamingSlice'
 import { App } from './App'
 
@@ -46,6 +47,7 @@ function renderApp(
   },
   progression: ProgressionState = createProgression(),
   showOnboardingIntro = false,
+  stamina: StaminaStoreState = { current: 100, max: 100 },
 ) {
   const store = configureStore({
     reducer: {
@@ -57,6 +59,7 @@ function renderApp(
       inventory: inventoryReducer,
       player: playerReducer,
       progression: progressionReducer,
+      stamina: staminaReducer,
       streaming: streamingReducer,
     },
     preloadedState: {
@@ -67,6 +70,7 @@ function renderApp(
       inventory,
       player,
       progression,
+      stamina,
       streaming: { phases: streamingPhases },
       injury,
     },
@@ -300,6 +304,42 @@ describe('<App />', () => {
   it('hides the health HUD in the main menu', () => {
     renderApp('menu')
     expect(screen.queryByText('100/100')).not.toBeInTheDocument()
+  })
+
+  it('shows the stamina HUD bar while playing with the current value (FLO-465)', () => {
+    renderApp(
+      'playing',
+      {},
+      DEFAULT_PLAYER_STATE,
+      { current: 100, max: 100 },
+      createInventory(),
+      createInjuryState(),
+      { kills: 0, caravansRaided: 0, objectiveTarget: OBJECTIVE_CARAVAN_TARGET, score: 0 },
+      createProgression(),
+      false,
+      { current: 60, max: 100 },
+    )
+    const hud = screen.getByRole('group', { name: 'Player stamina: 60 of 100' })
+    expect(hud).toBeInTheDocument()
+    expect(screen.getByText('60/100')).toBeInTheDocument()
+  })
+
+  it('renders the stamina HUD cleanly at empty (0)', () => {
+    renderApp(
+      'playing',
+      {},
+      DEFAULT_PLAYER_STATE,
+      { current: 100, max: 100 },
+      createInventory(),
+      createInjuryState(),
+      { kills: 0, caravansRaided: 0, objectiveTarget: OBJECTIVE_CARAVAN_TARGET, score: 0 },
+      createProgression(),
+      false,
+      { current: 0, max: 100 },
+    )
+    const hud = screen.getByRole('group', { name: 'Player stamina: 0 of 100' })
+    expect(hud).toBeInTheDocument()
+    expect(screen.getByText('0/100')).toBeInTheDocument()
   })
 
   it('shows the inventory panel empty-state while playing with no loot', () => {

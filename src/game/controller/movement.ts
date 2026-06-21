@@ -34,7 +34,7 @@ export interface MovementParams {
 /** Sensible defaults for a human-scale elf on solid ground. */
 export const DEFAULT_MOVEMENT_PARAMS: MovementParams = {
   walkSpeed: 4,
-  sprintSpeed: 7,
+  sprintSpeed: 9,
   gravity: 24,
   jumpSpeed: 8,
   coyoteTime: 0.12,

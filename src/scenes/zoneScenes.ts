@@ -35,6 +35,8 @@ export interface ZoneSceneOptions {
    * minimap (FLO-449). Positions stay scene-owned; this never touches Redux.
    */
   onMinimapTick?: (snapshot: MinimapSnapshot) => void
+  /** Display-only stamina push for the HUD (FLO-465); fired on rounded-% change. */
+  onStaminaChange?: (current: number, max: number) => void
 }
 
 /** The minimal handle the GameCanvas needs to tear a zone scene down. */

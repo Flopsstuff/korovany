@@ -80,6 +80,31 @@ describe('stepAnimator — moving', () => {
     expect(output.bobY).toBeCloseTo(0.055, 2)
   })
 
+  it('selects the deeper sprint-tier bob above the sprint speed (FLO-465)', () => {
+    // Quarter period of SPRINT_BOB_FREQ=3.4 Hz → sin peak, so bobY ≈ amplitude.
+    const sprintQuarter = 1 / (4 * 3.4)
+    const { output: sprint } = stepAnimator(createAnimatorState(), {
+      dt: sprintQuarter,
+      speed: 9, // > 7.5 sprint threshold
+      attackPhase: 'idle',
+      isDead: false,
+    })
+    // Sprint amplitude 0.085, deeper than the move tier's 0.055.
+    expect(sprint.bobY).toBeCloseTo(0.085, 2)
+
+    // A walking speed stays on the shallower move tier.
+    const moveQuarter = 1 / (4 * 2.4)
+    const { output: move } = stepAnimator(createAnimatorState(), {
+      dt: moveQuarter,
+      speed: 4, // walk: > 0.05 but < 7.5
+      attackPhase: 'idle',
+      isDead: false,
+    })
+    expect(move.bobY).toBeCloseTo(0.055, 2)
+    // Sprint peak is strictly deeper than the move peak.
+    expect(sprint.bobY).toBeGreaterThan(move.bobY)
+  })
+
   it('produces lean proportional to speed up to max', () => {
     const state = createAnimatorState()
     const { output: slowOut } = stepAnimator(state, {

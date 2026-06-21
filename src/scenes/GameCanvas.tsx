@@ -8,6 +8,7 @@ import {
   recordKill,
   selectLocomotionSpeedMultiplier,
   selectLocomotionMode,
+  setStamina,
   severPlayerLimb,
   store,
   useAppDispatch,
@@ -132,6 +133,10 @@ export function GameCanvas() {
                 // ~10 Hz; we stash the snapshot on the module bridge for the
                 // <Minimap> rAF draw — no Redux/React state per tick.
                 onMinimapTick: (snapshot) => publishMinimapSnapshot(snapshot),
+                // Sprint stamina (FLO-465): the controller keeps the pool
+                // authoritative and pushes the rounded value here for the HUD
+                // bar — never a 60 fps dispatch, only on whole-percent change.
+                onStaminaChange: (current, max) => dispatch(setStamina({ current, max })),
               })
             : createGameEngine(canvas, {
                 onAssetLoadingState: (id, phase) => dispatch(setAssetPhase({ id, phase })),

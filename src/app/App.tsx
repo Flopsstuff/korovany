@@ -94,6 +94,7 @@ export function App() {
   const phase = useAppSelector((state) => state.app.phase)
   const showOnboardingIntro = useAppSelector((state) => state.app.showOnboardingIntro)
   const health = useAppSelector((state) => state.health.player)
+  const stamina = useAppSelector((state) => state.stamina)
   const zoneId = useAppSelector((state) => state.player.zoneId)
   const inventory = useAppSelector((state) => state.inventory)
   const injury = useAppSelector(selectInjury)
@@ -538,6 +539,22 @@ export function App() {
             </span>
             <span className="hud-health-value">
               {health.current}/{health.max}
+            </span>
+          </div>
+          <div
+            className="hud-stamina"
+            role="group"
+            aria-label={`Player stamina: ${stamina.current} of ${stamina.max}`}
+          >
+            <span className="hud-stamina-label">STA</span>
+            <span className="hud-stamina-bar" aria-hidden="true">
+              <span
+                className="hud-stamina-fill"
+                style={{ width: `${Math.max(0, (stamina.current / stamina.max) * 100)}%` }}
+              />
+            </span>
+            <span className="hud-stamina-value">
+              {stamina.current}/{stamina.max}
             </span>
           </div>
           <p

@@ -275,6 +275,8 @@ export interface ForestSceneOptions {
    * snapshot for the HUD minimap (FLO-449). Positions stay scene-owned.
    */
   onMinimapTick?: (snapshot: MinimapSnapshot) => void
+  /** Display-only stamina push for the HUD (FLO-465); fired on rounded-% change. */
+  onStaminaChange?: (current: number, max: number) => void
 }
 
 export interface ForestScene {
@@ -385,6 +387,7 @@ export function createForestScene(
     getSpeedMultiplier,
     getLocomotionMode,
     onMinimapTick,
+    onStaminaChange,
   } = options
 
   const engine = createEngine(canvas)
@@ -440,6 +443,7 @@ export function createForestScene(
     getIntent: () => frameIntent,
     getSpeedMultiplier,
     getLocomotionMode,
+    onStaminaChange,
     spawn: spawnPos,
     spawnRotationY: initialSpawn?.rotationY ?? 0,
   })

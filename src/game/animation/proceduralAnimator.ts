@@ -59,6 +59,15 @@ const MOVE_BOB_AMP = 0.055
 const MOVE_BOB_FREQ = 2.4   // Hz (run cadence)
 const MOVE_LEAN_MAX = 0.12  // radians
 
+/**
+ * Sprint: deeper, faster bob so the player can *see* sprint is engaged (FLO-465).
+ * Selected when the fed locomotion speed exceeds {@link SPRINT_BOB_SPEED} — i.e.
+ * sprintSpeed (9) but not walkSpeed (4), and not a slowed crawl-sprint.
+ */
+const SPRINT_BOB_AMP = 0.085
+const SPRINT_BOB_FREQ = 3.4 // Hz
+const SPRINT_BOB_SPEED = 7.5 // units/s — between walk (4) and sprint (9)
+
 /** Crawl: prone lean and a lower visual anchor. */
 const CRAWL_LEAN = 0.42
 const CRAWL_OFFSET_Y = -0.55
@@ -115,9 +124,13 @@ export function stepAnimator(
   const time = state.time + dt
 
   // ── Bob ──────────────────────────────────────────────────────────────────
+  // Three speed tiers: idle → move → sprint. The sprint tier (deeper/faster
+  // bob) makes an active sprint visible without any new plumbing — it is driven
+  // straight off the fed locomotion speed.
   const isMoving = speed > 0.05
-  let bobAmp = isMoving ? MOVE_BOB_AMP : IDLE_BOB_AMP
-  let bobFreq = isMoving ? MOVE_BOB_FREQ : IDLE_BOB_FREQ
+  const isSprinting = speed > SPRINT_BOB_SPEED
+  let bobAmp = isSprinting ? SPRINT_BOB_AMP : isMoving ? MOVE_BOB_AMP : IDLE_BOB_AMP
+  let bobFreq = isSprinting ? SPRINT_BOB_FREQ : isMoving ? MOVE_BOB_FREQ : IDLE_BOB_FREQ
   if (locomotionMode === 'crawl') {
     bobAmp *= CRAWL_BOB_SCALE
     bobFreq *= 0.75
