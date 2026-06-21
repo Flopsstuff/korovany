@@ -24,6 +24,15 @@ loaded at runtime via `loadModel()` (`src/scenes/modelLoader.ts`).
   1.8)`. Source render + reproducible spec sheet in `assets/models/hero/`. Also
   serves as the **Phase-1 elf player avatar** (reuse-first; faction elf deferred
   to Phase 4 — FLO-299).
+- `korovany_hero_player-attack.glb` — same hero in an **attack pose** (forward
+  lunging strike, lead fist raised), low-poly (2,905 tris · 295 KB · 1× 1024 flat
+  unlit base-color), within the v1.2 §5 Hero budget (FLO-480 / FLO-474). Flat-matte
+  retexture (FLO-440 pattern) so it stays coherent with the default — no PBR gloss.
+  Drop-in twin of the default: same outfit/palette/identity, **height (2.0) as
+  longest bbox extent** so `loadModel(targetSize:1.8)` renders it at the same
+  in-scene height — no scene change needed to swap normal↔attack by combat state
+  (wiring tracked on FLO-474). Spec + preview/textured renders in
+  `assets/models/hero/`.
 - `forest-tree.glb` — faceted low-poly forest conifer (1,357 tris · 77 KB · no
   textures, flat-shaded in-engine), v1.2 ≤3,000-tri budget. Streamed by the
   Phase-1 forest slice (E1.3). Spec + reference render in `assets/models/props/`
