@@ -331,9 +331,9 @@ one at a time as predecessors land (no speculative spawns).
   - **E6.1.6 Prosthetics shop (Daggerfall-style)** `[ ]` — buy/fit hand·leg·eye
     prosthetics through the existing economy/transactions system; fitting clears the
     injury penalty. Reuses E4.4 currency.
-- **E6.2 Audio** `[~ partial]` — combat SFX already shipped via the `damageEvents`
-  bridge (MPG.4/FLO-383, Web Audio bus). Remaining: footsteps, ambience (streamed),
-  UI clicks. Cut as E6.2.x once Phase 5 lands.
+- **E6.2 Audio** `[~]` — **FLO-401** (Orion, in_progress) — combat SFX already shipped
+  via the `damageEvents` bridge (MPG.4/FLO-383, Web Audio bus). In flight: procedural
+  footsteps + forest ambience + UI clicks (no binary assets). Independent of Phase 5.
 - **E6.3 Quests / objectives** `[ ]` — per-faction objective chains (elf raids,
   palace-guard commander orders, villain free-command). Builds on the objective
   machine + commander/order system (E4.3).
@@ -439,6 +439,10 @@ speculative batches (FLO-270).
   (board-UI): cancel stale dups FLO-382/FLO-364, close FLO-384 issue (work landed via
   FLO-387). Once MPG.4 lands, the MPG milestone is complete and ready for an end-to-end
   browser verification of the full New-Game→win/lose loop. (Daedalus)
+- **r27** (2026-06-21) — **Second Phase-6 track in parallel.** Cut **E6.2 audio**
+  (FLO-401, footsteps + forest ambience, procedural/no-assets) to idle Orion —
+  independent of Phase 5 and E6.1. Three concurrent engineer tracks now (Wayland
+  E5.4, Soren E6.1.1, Orion E6.2); holding at three to keep review load manageable. (Daedalus)
 - **r26** (2026-06-21) — **Phase 6 kicked off in parallel.** Opened Phase 6 epic
   **FLO-399**; cut **E6.1.1 injury state model** (FLO-400) to idle Soren — a pure
   Redux slice with zero Phase-5 dependency, so Phase 6 starts without waiting on
