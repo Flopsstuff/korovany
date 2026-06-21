@@ -32,7 +32,7 @@ import {
 import {
   allZoneIds,
   getZoneDirective,
-  isDevZoneUnlockEnabled,
+  isAllZonesTravelUnlocked,
   listZones,
   planTravel,
   ZONE_CARAVAN_QUOTAS,
@@ -101,12 +101,12 @@ const AVAILABLE_ZONE_IDS = ZONES.filter((zone) => zone.status === 'available').m
  */
 const CONQUEST_CHAIN = ZONE_CONQUEST_ORDER.filter((id) => AVAILABLE_ZONE_IDS.includes(id))
 /**
- * Dev-only zone unlock (FLO-469). When on, the world map treats every registered
- * zone as unlocked so the board can fast-travel to any map for inspection; the
- * conquest gate is bypassed for travel only (no save/conquest side effects). Off
- * in prod builds, so shipped progression is unchanged. See docs/guide/dev-tools.md.
+ * Zone unlock override (FLO-469 dev build, FLO-475 prod opt-in). When on, the
+ * world map treats every registered zone as unlocked; the conquest gate is
+ * bypassed for travel only (no save/conquest side effects). Off by default in
+ * prod unless the board opts in. See docs/guide/dev-tools.md.
  */
-const DEV_UNLOCK_ALL_ZONES = isDevZoneUnlockEnabled()
+const ALL_ZONES_TRAVEL_UNLOCKED = isAllZonesTravelUnlocked()
 /** Number of worlds the player must conquer to win (data-driven, ADR 0005). */
 const WORLD_COUNT = AVAILABLE_ZONE_IDS.length
 /** Display name of the first campaign world (the New-Game spawn). */
@@ -164,7 +164,7 @@ export function App() {
   // Sequentially-unlocked worlds (ADR 0005): the next world opens once the prior
   // is conquered. Gates fast-travel in the world map below. The dev-unlock
   // override (FLO-469) opens every registered zone for inspection.
-  const unlockedZones = DEV_UNLOCK_ALL_ZONES
+  const unlockedZones = ALL_ZONES_TRAVEL_UNLOCKED
     ? allZoneIds()
     : unlockedZoneIds(CONQUEST_CHAIN, caravansRaidedByZone, ZONE_CARAVAN_QUOTAS)
   const menuPrimaryActionRef = useRef<HTMLButtonElement>(null)
@@ -452,7 +452,7 @@ export function App() {
   const onTravel = useCallback(
     (target: ZoneId) => {
       const snap = snapshotRef.current
-      const unlocked = DEV_UNLOCK_ALL_ZONES
+      const unlocked = ALL_ZONES_TRAVEL_UNLOCKED
         ? allZoneIds()
         : unlockedZoneIds(CONQUEST_CHAIN, snap.caravansRaidedByZone, ZONE_CARAVAN_QUOTAS)
       const result = planTravel(snap.zoneId, target, unlocked)

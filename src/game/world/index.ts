@@ -12,8 +12,15 @@ export type {
   ZoneLandmark,
 } from './zoneContent'
 export { ZONE_CONTENT, getZoneContent } from './zoneContent'
-export type { DevUnlockEnv } from './devUnlock'
-export { isDevZoneUnlockEnabled, allZoneIds } from './devUnlock'
+export type { DevUnlockEnv, ProdUnlockRuntime } from './devUnlock'
+export {
+  PROD_ZONE_UNLOCK_QUERY,
+  PROD_ZONE_UNLOCK_STORAGE_KEY,
+  allZoneIds,
+  isAllZonesTravelUnlocked,
+  isDevZoneUnlockEnabled,
+  resolveProdZoneUnlockOptIn,
+} from './devUnlock'
 export type { DirectiveKind, ZoneDirective } from './zoneDirectives'
 export { getZoneDirective, ownerFactionId } from './zoneDirectives'
 
