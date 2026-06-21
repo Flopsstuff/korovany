@@ -112,7 +112,7 @@ ambush a caravan (forest scene)
   → createForestScene onCaravanLooted callback
   → GameCanvas: caravanLootToPickups(drop).forEach(p => dispatch(pickUpLoot(p)))
   → inventory slice accumulates the stacks
-  → <InventoryPanel> re-renders the new counts in the HUD "Loot" panel
+  → <InventoryPanel> re-renders the new counts in the HUD "Carried" panel
 ```
 
 `createForestScene` and `createHumanLandsScene` accept an `onCaravanLooted?`

@@ -10,6 +10,12 @@ describe('<InventoryPanel />', () => {
     expect(screen.getByRole('region', { name: 'Inventory: 0 items carried' })).toBeInTheDocument()
   })
 
+  it('titles the panel "Carried" so it does not collide with the score Loot tally', () => {
+    render(<InventoryPanel inventory={createInventory()} />)
+    expect(screen.getByRole('heading', { name: 'Carried' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Loot' })).not.toBeInTheDocument()
+  })
+
   it('lists carried stacks with their display names and counts', () => {
     const inv: InventoryState = { counts: { gold: 12, grain: 3 }, equippedItemId: null }
     render(<InventoryPanel inventory={inv} />)

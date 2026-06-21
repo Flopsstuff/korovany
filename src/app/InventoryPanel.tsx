@@ -7,9 +7,12 @@ import { listStacks, totalItemCount, type InventoryState } from '../game/economy
  * the equipped item, falling back to an explicit empty state before any loot is
  * picked up.
  *
+ * The panel title reads "Carried" (not "Loot") to avoid colliding with the
+ * score-panel `Loot N` tally in App.tsx, which is the glanceable running count;
+ * this panel is the detailed per-stack breakdown of what's currently carried.
+ *
  * Visual styling lives in `src/styles/global.css` (`.hud-inventory*`), matching
- * the health HUD's translucent-overlay treatment. Loop Iris for a polish pass on
- * the visual language before this is considered final.
+ * the health HUD's translucent-overlay treatment.
  */
 export function InventoryPanel({ inventory }: { inventory: InventoryState }) {
   const stacks = listStacks(inventory)
@@ -20,7 +23,7 @@ export function InventoryPanel({ inventory }: { inventory: InventoryState }) {
       className="hud-inventory"
       aria-label={`Inventory: ${total} ${total === 1 ? 'item' : 'items'} carried`}
     >
-      <h2 className="hud-inventory-title">Loot</h2>
+      <h2 className="hud-inventory-title">Carried</h2>
       {stacks.length === 0 ? (
         <p className="hud-inventory-empty">Nothing looted yet.</p>
       ) : (
@@ -30,12 +33,12 @@ export function InventoryPanel({ inventory }: { inventory: InventoryState }) {
               key={stack.itemId}
               className={`hud-inventory-item${stack.equipped ? ' is-equipped' : ''}`}
             >
-              <span className="hud-inventory-name">{stack.name}</span>
               {stack.equipped ? (
                 <span className="hud-inventory-equipped" aria-label="equipped">
                   ⚔
                 </span>
               ) : null}
+              <span className="hud-inventory-name">{stack.name}</span>
               <span className="hud-inventory-count" aria-hidden="true">
                 ×{stack.count}
               </span>
