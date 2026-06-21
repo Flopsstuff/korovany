@@ -9,8 +9,9 @@ import { WorldMap } from '../components/WorldMap'
 import { OnboardingIntroCard } from '../components/OnboardingIntroCard'
 import { SettingsPanel } from '../components/SettingsPanel'
 import { FactionPicker } from '../components/FactionPicker'
+import { ProstheticsShop, prostheticFailureMessage } from '../components/ProstheticsShop'
 import { PLAYABLE_FACTIONS, type PlayableFactionId } from '../game/faction'
-import { BANDAGE_ITEM_ID, totalItemCount } from '../game/economy'
+import { BANDAGE_ITEM_ID, totalItemCount, type ProstheticKind } from '../game/economy'
 import { hasSave, loadLatest, saveGame } from '../game/save'
 import { listZones, planTravel, type ZoneId } from '../game/world'
 import {
@@ -33,7 +34,10 @@ import {
   restorePlayerHealth,
   restoreProgression,
   returnToMenu,
+  purchaseProsthetic,
   selectHasHalfScreenBlackout,
+  selectGold,
+  selectInjury,
   selectIsBleeding,
   selectIsStreamingLoading,
   selectPlayerFactionId,
@@ -74,6 +78,8 @@ export function App() {
   const health = useAppSelector((state) => state.health.player)
   const zoneId = useAppSelector((state) => state.player.zoneId)
   const inventory = useAppSelector((state) => state.inventory)
+  const injury = useAppSelector(selectInjury)
+  const goldBalance = useAppSelector(selectGold)
   const playerFactionId = useAppSelector(selectPlayerFactionId)
   const progression = useAppSelector((state) => state.progression)
   const caravansRaided = useAppSelector((state) => state.game.caravansRaided)
@@ -161,6 +167,8 @@ export function App() {
   const [worldMapOpen, setWorldMapOpen] = useState(false)
   const [traveling, setTraveling] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [prostheticsOpen, setProstheticsOpen] = useState(false)
+  const [prostheticsMessage, setProstheticsMessage] = useState<string | null>(null)
 
   // Win/lose loop (MPG.1). Each frame the live progress — caravans raided + the
   // player's death — flows through the pure `evaluateOutcome` machine, which
@@ -251,6 +259,11 @@ export function App() {
       // Escape closes the world map first (if open), otherwise toggles pause.
       if (event.code === 'Escape') {
         event.preventDefault()
+        if (prostheticsOpen) {
+          setProstheticsOpen(false)
+          setProstheticsMessage(null)
+          return
+        }
         if (worldMapOpen) {
           if (!traveling) setWorldMapOpen(false)
           return
@@ -261,7 +274,20 @@ export function App() {
       // M opens/closes the world map, but only during live play.
       if (event.code === 'KeyM' && phase === 'playing') {
         event.preventDefault()
-        if (!traveling) setWorldMapOpen((open) => !open)
+        if (!traveling) {
+          setProstheticsOpen(false)
+          setProstheticsMessage(null)
+          setWorldMapOpen((open) => !open)
+        }
+      }
+      // P opens the prosthetics shop from any safe HUD moment in live play.
+      if (event.code === 'KeyP' && phase === 'playing') {
+        event.preventDefault()
+        if (!traveling) {
+          setWorldMapOpen(false)
+          setProstheticsMessage(null)
+          setProstheticsOpen((open) => !open)
+        }
       }
       // B spends a carried bandage to stop bleeding (P7.2 counterplay). The
       // thunk is a no-op when not bleeding or out of bandages, so it's safe to
@@ -274,7 +300,27 @@ export function App() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [dispatch, phase, worldMapOpen, traveling, showOnboardingIntro, settingsOpen])
+  }, [
+    dispatch,
+    phase,
+    prostheticsOpen,
+    worldMapOpen,
+    traveling,
+    showOnboardingIntro,
+    settingsOpen,
+  ])
+
+  const onBuyProsthetic = useCallback(
+    (kind: ProstheticKind) => {
+      const result = dispatch(purchaseProsthetic(kind))
+      if (result.ok) {
+        setProstheticsMessage(`Fitted ${kind} prosthetic for ${result.price} gold pieces.`)
+        return
+      }
+      setProstheticsMessage(prostheticFailureMessage(result.reason))
+    },
+    [dispatch],
+  )
 
   // Fast-travel: validate the destination, stage its spawn on the playerRuntime
   // bridge, then switch zones. Changing `zoneId` remounts the GameCanvas with the
@@ -308,6 +354,8 @@ export function App() {
     if (phase === 'menu') {
       setWorldMapOpen(false)
       setTraveling(false)
+      setProstheticsOpen(false)
+      setProstheticsMessage(null)
       setMenuView('main')
     }
     if (phase !== 'menu' && phase !== 'paused') {
@@ -443,15 +491,44 @@ export function App() {
           </div>
           <InventoryPanel inventory={inventory} />
           {phase === 'playing' ? (
-            <button
-              type="button"
-              className="hud-travel"
-              onClick={() => setWorldMapOpen(true)}
-            >
-              Travel <kbd>M</kbd>
-            </button>
+            <>
+              <button
+                type="button"
+                className="hud-travel"
+                onClick={() => {
+                  setProstheticsOpen(false)
+                  setProstheticsMessage(null)
+                  setWorldMapOpen(true)
+                }}
+              >
+                Travel <kbd>M</kbd>
+              </button>
+              <button
+                type="button"
+                className="hud-prosthetics"
+                onClick={() => {
+                  setWorldMapOpen(false)
+                  setProstheticsMessage(null)
+                  setProstheticsOpen(true)
+                }}
+              >
+                Prosthetics <kbd>P</kbd>
+              </button>
+            </>
           ) : null}
         </div>
+      ) : null}
+      {prostheticsOpen ? (
+        <ProstheticsShop
+          injury={injury}
+          goldBalance={goldBalance}
+          message={prostheticsMessage}
+          onBuy={onBuyProsthetic}
+          onClose={() => {
+            setProstheticsOpen(false)
+            setProstheticsMessage(null)
+          }}
+        />
       ) : null}
       {worldMapOpen ? (
         <WorldMap

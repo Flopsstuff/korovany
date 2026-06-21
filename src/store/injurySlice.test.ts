@@ -12,6 +12,7 @@ import {
   advanceBleed,
   fitPlayerProsthetic,
   injuryReducer,
+  purchaseProsthetic,
   resetInjuries,
   selectHasHalfScreenBlackout,
   selectIsBleeding,
@@ -165,5 +166,31 @@ describe('useBandage thunk (P7.2 counterplay)', () => {
 
     expect(used).toBe(false)
     expect(store.getState().inventory.counts.bandage).toBe(1)
+  })
+})
+
+describe('purchaseProsthetic thunk (E6.1.6 counterplay)', () => {
+  it('buys and fits a prosthetic through the economy boundary', () => {
+    const store = makeStore()
+    store.dispatch(pickUpLoot({ itemId: 'gold', count: 150 }))
+    store.dispatch(severPlayerLimb('rightLeg'))
+
+    const result = store.dispatch(purchaseProsthetic('leg'))
+
+    expect(result).toMatchObject({ ok: true, limb: 'rightLeg', price: 120, balance: 30 })
+    expect(store.getState().inventory.counts.gold).toBe(30)
+    expect(selectLocomotionSpeedMultiplier(store.getState())).toBe(1)
+  })
+
+  it('rejects unaffordable prosthetics without changing injury or gold', () => {
+    const store = makeStore()
+    store.dispatch(pickUpLoot({ itemId: 'gold', count: 10 }))
+    store.dispatch(severPlayerLimb('leftEye'))
+
+    const result = store.dispatch(purchaseProsthetic('eye'))
+
+    expect(result).toEqual({ ok: false, reason: 'insufficient-funds' })
+    expect(store.getState().inventory.counts.gold).toBe(10)
+    expect(selectHasHalfScreenBlackout(store.getState())).toBe(true)
   })
 })

@@ -17,6 +17,7 @@ import { injuryReducer } from '../store/injurySlice'
 import { inventoryReducer } from '../store/inventorySlice'
 import { createInjuryState, severLimb, type InjuryState } from '../game/health/injuryModel'
 import { createInventory, type InventoryState } from '../game/economy'
+import { selectHasHalfScreenBlackout, selectLocomotionSpeedMultiplier } from '../store'
 import { FACTION_IDS } from '../game/faction'
 import { DEFAULT_PLAYER_STATE, playerReducer, type PlayerState } from '../store/playerSlice'
 import { progressionReducer } from '../store/progressionSlice'
@@ -465,6 +466,67 @@ describe('<App /> surfaced injury & score systems (MPG.6)', () => {
       score: 3,
     })
     expect(screen.queryByRole('group', { name: 'Score' })).not.toBeInTheDocument()
+  })
+
+  it('buys and fits an eye prosthetic, clearing the blackout without overdrawing gold', async () => {
+    const user = userEvent.setup()
+    const { container, store } = renderApp(
+      'playing',
+      {},
+      DEFAULT_PLAYER_STATE,
+      full,
+      { counts: { gold: 60 }, equippedItemId: null },
+      eyeLost,
+    )
+
+    expect(container.querySelector('.injury-vignette')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Prosthetics/ }))
+    await user.click(screen.getByRole('button', { name: 'Fit eye' }))
+
+    expect(selectHasHalfScreenBlackout(store.getState())).toBe(false)
+    expect(store.getState().inventory.counts.gold).toBeUndefined()
+    expect(container.querySelector('.injury-vignette')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Fitted eye prosthetic for 60 gold pieces.')
+  })
+
+  it('buys and fits a leg prosthetic, restoring the locomotion multiplier', async () => {
+    const user = userEvent.setup()
+    const { store } = renderApp(
+      'playing',
+      {},
+      DEFAULT_PLAYER_STATE,
+      full,
+      { counts: { gold: 150 }, equippedItemId: null },
+      severLimb(createInjuryState(), 'rightLeg'),
+    )
+
+    expect(selectLocomotionSpeedMultiplier(store.getState())).toBeLessThan(1)
+
+    await user.keyboard('p')
+    await user.click(screen.getByRole('button', { name: 'Fit leg' }))
+
+    expect(selectLocomotionSpeedMultiplier(store.getState())).toBe(1)
+    expect(store.getState().inventory.counts.gold).toBe(30)
+  })
+
+  it('keeps prosthetic buys disabled when the player lacks gold', async () => {
+    const user = userEvent.setup()
+    const { store } = renderApp(
+      'playing',
+      {},
+      DEFAULT_PLAYER_STATE,
+      full,
+      { counts: { gold: 10 }, equippedItemId: null },
+      severLimb(createInjuryState(), 'leftLeg'),
+    )
+
+    await user.click(screen.getByRole('button', { name: /Prosthetics/ }))
+
+    expect(screen.getByRole('button', { name: 'Fit leg' })).toBeDisabled()
+    expect(screen.getByText('Need 110 more gold pieces')).toBeInTheDocument()
+    expect(store.getState().inventory.counts.gold).toBe(10)
+    expect(selectLocomotionSpeedMultiplier(store.getState())).toBeLessThan(1)
   })
 })
 

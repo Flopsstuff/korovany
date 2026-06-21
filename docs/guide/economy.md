@@ -46,6 +46,33 @@ The **Bandage** is also the dismemberment counterplay consumable (P7.2): it drop
 from caravans and can be spent to stop bleeding from a severed limb — see
 [health-system.md](./health-system.md#dismemberment-counterplay-p72).
 
+## Prosthetics shop
+
+E6.1.6 adds the Daggerfall-style prosthetics shop as the recovery path for
+severed limbs. The shop opens from the live HUD with **Prosthetics** or the `P`
+hotkey and lists three service offers:
+
+| Offer | Price | Repairs |
+| --- | ---: | --- |
+| Hand prosthetic | 80 gold pieces | One severed hand slot |
+| Leg prosthetic | 120 gold pieces | One severed leg slot |
+| Eye patch lens | 60 gold pieces | One severed eye slot |
+
+The rules live in `src/game/economy/prostheticsShop.ts`. They validate at the
+shop edge: the matching limb kind must currently be severed and the carried
+`gold` stack must cover the price. A successful purchase debits gold through the
+currency helpers and returns the exact `Limb` to restore; the Redux thunk then
+calls `fitPlayerProsthetic(limb)`. Failed purchases are no-ops, so the player
+cannot go negative even if UI state races.
+
+The overlay handles:
+
+- **Empty state:** every tracked limb is intact.
+- **Loading/error states:** supported by the component contract for future
+  merchant inventory loading.
+- **Insufficient funds:** the buy button is disabled and states the missing
+  amount in gold pieces.
+
 Price helpers in `src/game/economy/transactions.ts`: `itemValue(id)`,
 `buyPrice(id, qty)`, `unitSellPrice(id)`, `sellPrice(id, qty)`, and
 `isTradeable(id)` (false for the currency and for unknown / zero-value goods).
@@ -97,3 +124,7 @@ can call the pure `buy` / `sell` directly to validate and surface the failure
 reason to the player *before* dispatching, and can dispatch `recordPurchase`
 (see [character-progression.md](character-progression.md)) to award trade-skill
 XP on a successful buy.
+
+`purchaseProsthetic(kind)` follows the same no-overdraw rule for service
+purchases, but it does not add a carried item: it spends gold and immediately
+fits the matching prosthetic through `injurySlice`.

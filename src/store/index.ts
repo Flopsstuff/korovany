@@ -71,6 +71,7 @@ export type { HealthStoreState } from './healthSlice'
 export {
   advanceBleed,
   fitPlayerProsthetic,
+  purchaseProsthetic,
   resetInjuries,
   selectHasHalfScreenBlackout,
   selectInjury,

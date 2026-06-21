@@ -35,6 +35,20 @@ export {
 } from './transactions'
 
 export {
+  PROSTHETIC_OFFERS,
+  prostheticOffer,
+  limbNeedingProsthetic,
+  canUseProsthetic,
+  buyProsthetic,
+  type ProstheticKind,
+  type ProstheticOffer,
+  type ProstheticPurchaseFailure,
+  type ProstheticPurchaseResult,
+  type ProstheticPurchaseSuccess,
+  type ProstheticPurchaseRejected,
+} from './prostheticsShop'
+
+export {
   createInventory,
   addItem,
   removeItem,

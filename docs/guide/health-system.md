@@ -102,6 +102,23 @@ Bleed drains `BLEED_DAMAGE_PER_INTERVAL` (3) HP every `BLEED_INTERVAL_SECONDS`
 (1). A prosthetic/patch (`fitProsthetic`) restores a slot to intact (clearing
 the half-screen); `treatBleeding` stops a bleed without restoring the hand.
 
+### Prosthetics shop (E6.1.6)
+
+The player can recover severed limbs from the live HUD via **Prosthetics** or
+the `P` hotkey. The shop uses the economy's carried `gold` balance, validates
+the selected prosthetic against the current `injurySlice`, then calls
+`fitPlayerProsthetic(limb)` on success.
+
+| Prosthetic | Cost | Cleared penalty |
+| --- | ---: | --- |
+| Hand | 80 gold pieces | Restores one severed hand slot for hand-gated actions |
+| Leg | 120 gold pieces | Removes crawl slowdown once no severed legs remain |
+| Eye | 60 gold pieces | Removes the half-screen blackout once no severed eyes remain |
+
+Insufficient funds disables the fitting button and leaves the `gold` stack
+unchanged. See [Economy › Prosthetics shop](./economy.md#prosthetics-shop) for
+the purchase rules and UI states.
+
 ### Redux actions & selectors
 
 | Action | Payload | Effect |
@@ -112,6 +129,7 @@ the half-screen); `treatBleeding` stops a bleed without restoring the hand.
 | `advanceBleed(dt)` | `number` | Advance the bleed timer (no damage funnelling) |
 | `resetInjuries()` | — | Restore every slot to intact |
 | `tickInjuries(dt)` *(thunk)* | `number` | Advance bleed **and** funnel damage into `health` |
+| `purchaseProsthetic(kind)` *(thunk)* | `'hand' \| 'leg' \| 'eye'` | Spend gold and fit the matching severed slot |
 
 Selectors: `selectInjury`, `selectIsBleeding`, `selectHasHalfScreenBlackout`,
 `selectIsCrawling`, `selectLocomotionSpeedMultiplier` — all importable from

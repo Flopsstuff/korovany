@@ -1,7 +1,12 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import * as injuryModel from '../game/health/injuryModel'
 import type { InjuryState, Limb } from '../game/health/injuryModel'
-import { BANDAGE_ITEM_ID } from '../game/economy'
+import {
+  BANDAGE_ITEM_ID,
+  CURRENCY_ITEM_ID,
+  buyProsthetic,
+  type ProstheticKind,
+} from '../game/economy'
 import { damagePlayer } from './healthSlice'
 import { dropItem } from './inventorySlice'
 import type { AppDispatch, RootState } from './index'
@@ -64,6 +69,22 @@ export const useBandage =
     dispatch(dropItem({ itemId: BANDAGE_ITEM_ID, count: 1 }))
     dispatch(treatPlayerBleeding())
     return true
+  }
+
+/**
+ * Prosthetics shop purchase (E6.1.6): validate the repair against the current
+ * injury + gold balance, debit the gold, then trust `fitPlayerProsthetic` to
+ * restore the selected slot. Returns the pure shop result so UI can surface
+ * insufficient funds or "already intact" without duplicating the rules.
+ */
+export const purchaseProsthetic =
+  (kind: ProstheticKind) =>
+  (dispatch: AppDispatch, getState: () => RootState): ReturnType<typeof buyProsthetic> => {
+    const result = buyProsthetic(getState().inventory, getState().injury, kind)
+    if (!result.ok) return result
+    dispatch(dropItem({ itemId: CURRENCY_ITEM_ID, count: result.price }))
+    dispatch(fitPlayerProsthetic(result.limb))
+    return result
   }
 
 // --- Selectors --------------------------------------------------------------
