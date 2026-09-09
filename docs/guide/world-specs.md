@@ -215,15 +215,79 @@ above the player. It is the map for assaulting or defending a stronghold.
   dedicated rule for it; use invisible blocker rails where needed.
 - Full spec: [Black Crown Pass](./worlds/black-crown-pass.md).
 
+## 4. The Imperial March
+
+**Role:** Empire lands, the palace seat, asymmetric attack/defend map.
+
+**Lore:** The Imperial March is the crown's parade ground and last wall - a
+pale-stone plaza beneath the palace keep where the Emperor musters the Palace
+Guard, receives tribute wagons off the Salt Road, and stages the columns that
+push into the forest. To the Guard it is home and duty. To the Forest Elves it is
+the source of every axe in Lysaen. To the villain it is the throat of the Empire.
+All three come to the same plaza for opposite reasons.
+
+**Playable fantasy:** One plaza that reads two ways. The same geometry is a seat
+you are sworn to hold and a crown you have come to raid, so the zone is never
+directionless - the player's faction stance decides which fantasy the map serves.
+
+**Layout:**
+
+- Pale crown-stone plaza enclosed by the standard perimeter bounding box, with
+  the approach running toward the keep.
+- Palace keep at the far end as objective focus and skyline anchor; the crown
+  gate funnels the approach in front of it.
+- Guard barracks and crown banner pillar frame the plaza on opposite flanks -
+  straight fortified lines against the forest's organic clutter and the Salt
+  Road's patched reuse.
+- Outer roads carry tribute caravans, so the raid objective has live targets away
+  from the keep itself.
+- The player spawns on the plaza approach with patrols set back far enough that
+  arrival is not an ambush.
+
+**Landmarks:**
+
+| Landmark | Purpose |
+| -------- | ------- |
+| Palace keep | Objective focus for both directives; the commander's seat. |
+| Crown gate | Fortified approach and escalation point before the keep. |
+| Guard barracks | Palace-Guard muster point and patrol origin. |
+| Crown banner pillar | Imperial gold silhouette; orientation marker on the march. |
+
+**Encounter hooks:**
+
+- Palace-Guard patrols ring the keep, and a wall archer covers the approach from
+  behind it.
+- Tribute wagons on the outer roads are raided or escorted depending on the
+  player's standing order.
+- Faction stance toward the Empire resolves that order - defend for the Palace
+  Guard, raid for elves and villain, patrol for the unaffiliated - surfaced in
+  the HUD as a directive.
+- The directive is flavour and direction only; the win condition stays the
+  caravan-raid count.
+
+**Asset needs:**
+
+- Palace-guard character (replacing the placeholder soldier), palace keep, crown
+  gate, barracks, banner pillar, plaza stonework, tribute wagons.
+
+**Implementation notes:**
+
+- Ships today as a playable greybox: landmarks are boxes swapped for streamed
+  GLBs through each landmark's `assetKey`, so the asset pass needs no scene
+  change.
+- This is the zone that proves asymmetric directives. Keep the keep readable from
+  the approach so both fantasies orient on the same object.
+- Full spec: [The Imperial March](./worlds/imperial-palace.md).
+
 ## Cross-map continuity
 
-| Continuity thread | Velya | Lysaen | Black Crown Pass |
-| ----------------- | ----- | ------ | ---------------- |
-| Caravans | Main route and robbery loop | Rare supply pack trains on border trail | Captured wagons and prisoner aftermath |
-| Empire | Toll gate tax force | Axecut logging camp | Scout assault on villain fort |
-| Forest Elves | Ambush from pines | Homeland and faction hub | Possible rescue allies |
-| Villain | Tower scouts | Night hunters | Fortress and command base |
-| Economy | Trade hub and stolen goods | Herbal healing and charms | Prisoner rescue rewards, contraband |
+| Continuity thread | Velya | Lysaen | Black Crown Pass | The Imperial March |
+| ----------------- | ----- | ------ | ---------------- | ------------------ |
+| Caravans | Main route and robbery loop | Rare supply pack trains on border trail | Captured wagons and prisoner aftermath | Tribute wagons arriving off the Salt Road |
+| Empire | Toll gate tax force | Axecut logging camp | Scout assault on villain fort | Home ground: crown seat and muster point |
+| Forest Elves | Ambush from pines | Homeland and faction hub | Possible rescue allies | Raiders striking crown caravans and patrols |
+| Villain | Tower scouts | Night hunters | Fortress and command base | Besieger at the palace gate |
+| Economy | Trade hub and stolen goods | Herbal healing and charms | Prisoner rescue rewards, contraband | Tribute flow and crown loot |
 
 ## Future task candidates
 

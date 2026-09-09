@@ -39,6 +39,7 @@ export default defineConfig({
               { text: 'Salt Road of Velya', link: '/guide/worlds/velya-salt-road' },
               { text: 'Emerald Thicket of Lysaen', link: '/guide/worlds/lysaen-emerald-thicket' },
               { text: 'Black Crown Pass', link: '/guide/worlds/black-crown-pass' },
+              { text: 'The Imperial March', link: '/guide/worlds/imperial-palace' },
             ],
           },
           { text: 'Save system', link: '/guide/save-system' },

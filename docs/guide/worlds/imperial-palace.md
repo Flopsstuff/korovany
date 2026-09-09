@@ -12,6 +12,13 @@ zones (E8.1 / FLO-427).
 > (`getZoneContent('empire')`), and the scene is `src/scenes/empireScene.ts`. See
 > [ADR-0004](../decisions/0004-world-spec-to-zone-binding.md).
 
+> **One Empire spec.** This file is the canonical brief for the `empire` zone; its
+> index entry is [world-specs](../world-specs.md) §4. A parallel road-corridor
+> draft (`empire-imperial-march.md` - Iron Gate, drainage ditch, twelve-mile road
+> to a capital wall) was written for the same zone and never merged. Its geography
+> contradicts the palace plaza that shipped, so it is superseded: do not revive it
+> alongside this file.
+
 ## Lore
 
 The Imperial March is the crown's parade ground and last wall — a pale-stone
