@@ -54,7 +54,10 @@ Signature features from the brief, mapped to where they live in this plan:
   (camera, physics, GLB import, instancing/LOD) before any bespoke engine code.
 - **Assets are generated per concrete character ticket only** — never
   speculatively (board directive FLO-270). Low-poly visual language v1.2
-  (≤3000 tris/object) is binding; see the visual-language doc.
+  (≤3000 tris/object) is binding as a **target**, not a hard gate — a slight
+  overage ships, and over-budget meshes are reduced by a local remesh rather
+  than by a second generation (credits are the scarce resource). See the
+  visual-language doc and `tools/meshy-3d/SKILL.md`.
 
 ## 2. System architecture (target)
 

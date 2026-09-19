@@ -5,6 +5,14 @@ concrete character/prop ticket only** (never speculatively — board directive
 [FLO-270](/plan/game-plan)) via the `tools/meshy-3d` pipeline, in **low-poly
 visual language v1.2** (≤ 3000 tris/object, flat-shaded palette materials).
 
+**The tri budget is a target, not a hard gate** (board directive). Generations
+cost credits and credits are the binding constraint, so a mesh that comes back
+slightly over budget ships as-is; an over-budget mesh is brought down by a
+*local* remesh (`gltf-transform` weld → simplify, free) or by Meshy's
+`--target-polycount`, never by re-generating the asset. Re-prompt only when the
+*subject* is wrong, not the triangle count — recipe in
+`tools/meshy-3d/SKILL.md`.
+
 Files live under `public/models/*.glb` and stream into the scene through the
 [asset-streaming](./asset-streaming) registry. Binaries are stored in **Git
 LFS** (see `.gitattributes`). Generation is reproducible from the recorded Meshy

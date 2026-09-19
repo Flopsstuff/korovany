@@ -21,6 +21,28 @@ python tools/meshy-3d/meshy.py balance
 # -> {"balance": <credits>}
 ```
 
+## Polycount: the ceiling is soft, generations are the scarce resource (read first)
+
+The v1.2 budget is **≤ 3000 tris/object as a target, not a hard gate**. Credits —
+i.e. the number of generations we can afford — are the binding constraint, so a
+first-pass mesh that lands *slightly* over budget **ships**. Never spend a second
+generation to shave a few hundred triangles.
+
+When a mesh does come back too heavy, reduce it **locally, for free**, and keep
+the texture/silhouette you already paid for:
+
+```bash
+# Weld + decimate an existing GLB to the target (geometry-preserving enough that
+# bbox and faceted read survive; raise --ratio until the silhouette holds).
+npx --yes @gltf-transform/cli weld in.glb welded.glb
+npx --yes @gltf-transform/cli simplify welded.glb out.glb --ratio 0.9 --error 0.01
+node tools/meshy-3d/smoke_load_glb.mjs out.glb    # confirm tri count + no errors
+```
+
+Meshy's own `--target-polycount` remesh is the cheap first lever (set it at
+create time); local `simplify` is the second. **Re-prompting is the last resort**,
+and only when the *subject* is wrong — not when the count is.
+
 ## Texturing is mandatory (read first)
 
 **Every model we ship must be textured — never deliver a grey/untextured mesh.**
@@ -47,7 +69,7 @@ and only refine when the geometry is good — this is the credit-saving discipli
 
 ```bash
 # 1. Preview: create → poll → fetch, save GLB + thumbnail.
-#    Meshy defaults to target_polycount=30000 — WAY over the v1.1 ≤3000-tri
+#    Meshy defaults to target_polycount=30000 — WAY over the v1.2 ≤3000-tri
 #    budget. Always pass --target-polycount for a game/web prop.
 python tools/meshy-3d/meshy.py text "a low-poly stylized treasure chest, game asset" \
     --art-style realistic --target-polycount 3000 --topology triangle \
